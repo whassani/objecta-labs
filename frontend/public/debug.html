@@ -25,6 +25,11 @@
     <h1>🔍 LocalStorage Debug Tool</h1>
     
     <div class="section">
+        <h2>🚨 Last 401 Error:</h2>
+        <pre id="last-error"></pre>
+    </div>
+    
+    <div class="section">
         <h2>🔷 Debug Logs (Persisted):</h2>
         <pre id="debug-logs"></pre>
     </div>
@@ -50,6 +55,14 @@
     </div>
     
     <script>
+        // Display 401 error
+        const lastError = localStorage.getItem('last-401-error');
+        if (lastError) {
+            document.getElementById('last-error').textContent = JSON.stringify(JSON.parse(lastError), null, 2);
+        } else {
+            document.getElementById('last-error').textContent = 'No 401 errors yet';
+        }
+        
         // Display debug logs
         const debugLogs = localStorage.getItem('debug-logs');
         if (debugLogs) {

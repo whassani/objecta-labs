@@ -25,15 +25,25 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error('🚨 API 401 ERROR!', {
+      const errorDetails = {
+        time: new Date().toISOString(),
         url: error.config?.url,
         method: error.config?.method,
-        headers: error.config?.headers,
+        authHeader: error.config?.headers?.Authorization ? 'EXISTS' : 'MISSING',
         response: error.response?.data
-      })
-      // Clear auth store on 401
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+      }
+      
+      console.error('🚨 API 401 ERROR!', errorDetails)
+      
+      // Save to localStorage so we can see it after redirect
+      localStorage.setItem('last-401-error', JSON.stringify(errorDetails))
+      
+      // DON'T logout yet - let's see the error first
+      // useAuthStore.getState().logout()
+      // window.location.href = '/login'
+      
+      // Just log for now
+      alert('API 401 ERROR! Check /debug.html for details. NOT redirecting for debugging.')
     }
     return Promise.reject(error)
   }
