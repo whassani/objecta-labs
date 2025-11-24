@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
+import { Organization } from '../organizations/entities/organization.entity';
 import { RegisterDto } from './dto/auth.dto';
 
 @Injectable()
@@ -11,6 +12,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Organization)
+    private organizationsRepository: Repository<Organization>,
     private jwtService: JwtService,
   ) {}
 
@@ -27,22 +30,37 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-    // Create user (organization will be created via relationship)
+    // Create organization first
+    const organizationName = registerDto.organizationName || `${registerDto.firstName}'s Organization`;
+    const subdomain = organizationName.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50);
+    
+    const organization = this.organizationsRepository.create({
+      name: organizationName,
+      subdomain: subdomain + '-' + Date.now(), // Ensure uniqueness
+      plan: 'starter',
+      planStatus: 'trial',
+      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+    });
+
+    const savedOrganization = await this.organizationsRepository.save(organization);
+
+    // Create user with organization
     const user = this.usersRepository.create({
       email: registerDto.email,
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
       passwordHash: hashedPassword,
       role: 'admin', // First user is admin
+      organizationId: savedOrganization.id,
     });
 
-    await this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
 
     // Generate token
-    const token = this.generateToken(user);
+    const token = this.generateToken(savedUser);
 
     return {
-      user: this.sanitizeUser(user),
+      user: this.sanitizeUser(savedUser),
       token,
     };
   }
