@@ -60,12 +60,11 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (shouldRedirect) {
-      console.log('❌ Redirecting to login...')
-      // DEBUG: Delay redirect to see logs
-      setTimeout(() => {
-        console.log('Actually redirecting now...')
-        window.location.href = '/login'
-      }, 5000) // 5 second delay to see logs
+      console.log('❌ Should redirect to login...')
+      // DISABLED for debugging - show alert instead of redirect
+      alert('Would redirect to login. Staying here for debugging.')
+      // DO NOT REDIRECT - just stay on page
+      // window.location.href = '/login'
     }
   }, [shouldRedirect])
 

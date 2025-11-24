@@ -59,10 +59,18 @@ export default function LoginPage() {
       toast.success('Welcome back!')
       
       // BLOCKING ALERT - You MUST click OK to continue
-      alert('LOGIN COMPLETE! localStorage saved. Click OK to navigate to dashboard. CHECK CONSOLE NOW!')
+      alert('LOGIN COMPLETE! localStorage saved. Click OK to TRY navigate to dashboard.')
       
-      console.log('User clicked OK, navigating to dashboard...')
-      window.location.href = '/dashboard'
+      console.log('User clicked OK, attempting navigation...')
+      
+      try {
+        console.log('Calling window.location.href...')
+        window.location.href = '/dashboard'
+        console.log('Navigation call completed (page should be loading...)')
+      } catch (navError: any) {
+        console.error('Navigation error:', navError)
+        alert('NAVIGATION ERROR: ' + navError.message)
+      }
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')
