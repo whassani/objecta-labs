@@ -33,7 +33,8 @@ export default function LoginPage() {
       const response = await authApi.login(data)
       const { user, token } = response.data
       
-      console.log('Login successful, received token:', token ? 'yes' : 'no')
+      console.log('=== LOGIN SUCCESS ===')
+      console.log('Received token:', token ? 'YES' : 'NO')
       console.log('User data:', user)
       
       // Set token first (which also sets localStorage)
@@ -41,14 +42,29 @@ export default function LoginPage() {
       // Then set user
       setUser(user)
       
-      // Verify localStorage
-      const storedToken = localStorage.getItem('token')
-      console.log('Token stored in localStorage:', storedToken ? 'yes' : 'no')
+      // Wait a bit for Zustand to persist
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Verify localStorage after setting
+      const authStorage = localStorage.getItem('auth-storage')
+      const directToken = localStorage.getItem('token')
+      console.log('After setting - auth-storage exists:', authStorage ? 'YES' : 'NO')
+      console.log('After setting - direct token exists:', directToken ? 'YES' : 'NO')
+      
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage)
+        console.log('Token in auth-storage:', parsed?.state?.token ? 'EXISTS' : 'MISSING')
+      }
       
       toast.success('Welcome back!')
       
-      // Force a hard navigation to dashboard to ensure state is loaded
-      window.location.href = '/dashboard'
+      console.log('Navigating to dashboard in 500ms...')
+      
+      // Wait a bit more before navigation
+      setTimeout(() => {
+        console.log('NOW NAVIGATING...')
+        window.location.href = '/dashboard'
+      }, 500)
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')

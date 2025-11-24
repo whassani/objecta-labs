@@ -14,17 +14,29 @@ export default function DashboardLayout({
 
   useEffect(() => {
     // Read directly from localStorage on client
+    console.log('=== DASHBOARD LAYOUT MOUNTED ===')
+    
+    // Check all localStorage keys
+    console.log('All localStorage keys:', Object.keys(localStorage))
+    
     const storedData = localStorage.getItem('auth-storage')
+    console.log('auth-storage raw data:', storedData)
+    
+    const directToken = localStorage.getItem('token')
+    console.log('Direct token key:', directToken)
     
     if (storedData) {
       try {
         const parsed = JSON.parse(storedData)
+        console.log('Parsed auth-storage:', parsed)
         const tokenValue = parsed?.state?.token
-        console.log('Dashboard - Token from localStorage:', tokenValue ? 'exists' : 'missing')
+        console.log('Token from parsed data:', tokenValue ? 'EXISTS' : 'MISSING')
         setToken(tokenValue)
       } catch (e) {
         console.error('Failed to parse auth-storage:', e)
       }
+    } else {
+      console.log('NO auth-storage found in localStorage')
     }
     
     setIsLoading(false)
