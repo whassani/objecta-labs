@@ -55,7 +55,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-2">
             <SparklesIcon className="h-10 w-10 text-primary-600" />
-            <span className="text-3xl font-bold text-gray-900 dark:text-white">AgentForge</span>
+            <span className="text-3xl font-bold text-gray-900 dark:text-white">Objecta Labs</span>
           </Link>
           <p className="mt-2 text-gray-600 dark:text-gray-400">Create your account</p>
         </div>

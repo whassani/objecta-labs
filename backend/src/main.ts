@@ -26,7 +26,7 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle('AgentForge API')
+    .setTitle('Objecta Labs API')
     .setDescription('Multi-tenant AI Agent Platform API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -36,7 +36,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`🚀 AgentForge API running on http://localhost:${port}`);
+  console.log(`🚀 Objecta Labs API running on http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 bootstrap();

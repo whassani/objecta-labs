@@ -33,7 +33,7 @@ export function Sidebar() {
         <div className="flex h-16 shrink-0 items-center">
           <Link href="/dashboard" className="flex items-center space-x-2">
             <SparklesIcon className="h-8 w-8 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900 dark:text-white">AgentForge</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Objecta Labs</span>
           </Link>
         </div>
 

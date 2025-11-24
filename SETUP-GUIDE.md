@@ -1,6 +1,6 @@
-# AgentForge Setup Guide
+# Objecta Labs Setup Guide
 
-This guide will help you set up the complete AgentForge application (Backend + Frontend).
+This guide will help you set up the complete Objecta Labs application (Backend + Frontend).
 
 ## Prerequisites
 
@@ -31,11 +31,11 @@ Create a PostgreSQL database:
 
 ```bash
 # Using psql
-createdb agentforge
+createdb objecta_labs
 
 # Or using SQL
 psql -U postgres
-CREATE DATABASE agentforge;
+CREATE DATABASE objecta_labs;
 \q
 ```
 
@@ -51,7 +51,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USER=postgres
 DATABASE_PASSWORD=your_password
-DATABASE_NAME=agentforge
+DATABASE_NAME=objecta_labs
 
 # JWT Secret (generate a random string)
 JWT_SECRET=your-super-secret-jwt-key-change-this
@@ -62,7 +62,7 @@ OPENAI_API_KEY=sk-your-openai-api-key
 # Optional: Pinecone for vector storage
 PINECONE_API_KEY=your-pinecone-api-key
 PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX=agentforge
+PINECONE_INDEX=objecta_labs
 
 # Optional: Ollama for local models
 USE_OLLAMA=false
@@ -124,7 +124,7 @@ wait
 ## Project Structure
 
 ```
-agentforge/
+objecta-labs/
 ├── backend/                  # NestJS API
 │   ├── src/
 │   │   ├── modules/         # Feature modules
@@ -209,7 +209,7 @@ The UI is fully implemented. The backend structure is ready. Now you need to imp
 pg_isready
 
 # Check connection
-psql -U postgres -h localhost -d agentforge
+psql -U postgres -h localhost -d objecta_labs
 ```
 
 ### Port Already in Use

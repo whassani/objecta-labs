@@ -4,6 +4,7 @@
 
 **Branch**: `feature/ui-setup`
 **Commit**: Complete UI setup with NestJS backend and Next.js frontend
+**Company**: Objecta Labs
 
 ### What We Have
 - ✅ Full backend API structure (NestJS + TypeORM)
@@ -31,7 +32,7 @@
 ./setup.sh
 
 # 2. Set up database
-createdb agentforge
+createdb objecta_labs
 
 # 3. Configure .env files
 # backend/.env - Add database credentials and API keys
@@ -171,11 +172,11 @@ async processDocument(file: Buffer, organizationId: string) {
 **Setup Pinecone**:
 ```bash
 # 1. Create account at https://www.pinecone.io
-# 2. Create index: agentforge (dimension: 1536)
+# 2. Create index: objecta_labs (dimension: 1536)
 # 3. Add to backend/.env:
 PINECONE_API_KEY=your-key
 PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX=agentforge
+PINECONE_INDEX=objecta_labs
 ```
 
 **Files to Modify**:

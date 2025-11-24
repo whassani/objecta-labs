@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Setting up AgentForge..."
+echo "🚀 Setting up Objecta Labs..."
 
 # Backend setup
 echo ""

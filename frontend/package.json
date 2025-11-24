@@ -1,7 +1,7 @@
 {
-  "name": "agentforge-frontend",
+  "name": "objecta-labs-frontend",
   "version": "1.0.0",
-  "description": "AgentForge Frontend - Multi-tenant AI Agent Platform",
+  "description": "Objecta Labs Frontend - Multi-tenant AI Agent Platform",
   "private": true,
   "scripts": {
     "dev": "next dev",

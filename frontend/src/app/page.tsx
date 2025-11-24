@@ -9,7 +9,7 @@ export default function HomePage() {
         <nav className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <SparklesIcon className="h-8 w-8 text-primary-600" />
-            <span className="text-2xl font-bold text-gray-900 dark:text-white">AgentForge</span>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">Objecta Labs</span>
           </div>
           <div className="flex items-center space-x-4">
             <Link 
@@ -94,7 +94,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 text-center text-gray-600 dark:text-gray-400">
-        <p>© 2024 AgentForge. All rights reserved.</p>
+        <p>© 2024 Objecta Labs. All rights reserved.</p>
       </footer>
     </div>
   )

@@ -1,8 +1,8 @@
 {
-  "name": "agentforge-backend",
+  "name": "objecta-labs-backend",
   "version": "1.0.0",
-  "description": "AgentForge Backend API - Multi-tenant AI Agent Platform",
-  "author": "AgentForge Team",
+  "description": "Objecta Labs Backend API - Multi-tenant AI Agent Platform",
+  "author": "Objecta Labs Team",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

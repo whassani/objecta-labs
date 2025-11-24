@@ -1,8 +1,8 @@
-# 🎉 AgentForge Project Setup - COMPLETE
+# 🎉 Objecta Labs Project Setup - COMPLETE
 
 ## Status: ✅ Full UI Implementation Ready
 
-The complete AgentForge platform has been set up with:
+The complete Objecta Labs platform has been set up with:
 - ✅ Backend API structure (NestJS)
 - ✅ Frontend UI (Next.js 14)
 - ✅ All pages and components implemented
@@ -281,10 +281,10 @@ The following features have the API endpoints, database schema, and UI ready, bu
 
 ---
 
-## 📝 File Structure Summary
+## 📁 File Structure Summary
 
 ```
-agentforge/
+objecta-labs/
 ├── backend/
 │   ├── src/
 │   │   ├── modules/

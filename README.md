@@ -1,4 +1,4 @@
-# AgentForge - Multi-Tenant AI Agent Platform
+# Objecta Labs - Multi-Tenant AI Agent Platform
 
 🤖 Build, deploy, and manage AI agents with advanced capabilities including knowledge base integrations and action execution.
 

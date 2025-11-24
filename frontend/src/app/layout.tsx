@@ -6,7 +6,7 @@ import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'AgentForge - AI Agent Platform',
+  title: 'Objecta Labs - AI Agent Platform',
   description: 'Build, deploy, and manage AI agents with advanced capabilities',
 }
 
