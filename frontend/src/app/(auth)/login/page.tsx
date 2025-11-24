@@ -58,13 +58,11 @@ export default function LoginPage() {
       
       toast.success('Welcome back!')
       
-      console.log('Navigating to dashboard in 500ms...')
+      // BLOCKING ALERT - You MUST click OK to continue
+      alert('LOGIN COMPLETE! localStorage saved. Click OK to navigate to dashboard. CHECK CONSOLE NOW!')
       
-      // Wait a bit more before navigation
-      setTimeout(() => {
-        console.log('NOW NAVIGATING...')
-        window.location.href = '/dashboard'
-      }, 500)
+      console.log('User clicked OK, navigating to dashboard...')
+      window.location.href = '/dashboard'
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')
