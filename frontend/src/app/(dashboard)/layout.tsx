@@ -11,6 +11,7 @@ export default function DashboardLayout({
 }) {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
     // Ensure we're fully client-side
@@ -18,49 +19,45 @@ export default function DashboardLayout({
     
     console.log('=== DASHBOARD LAYOUT MOUNTED ===')
     
-    // Small delay to ensure localStorage is accessible
-    const timer = setTimeout(() => {
-      try {
-        // Check all localStorage keys
-        console.log('All localStorage keys:', Object.keys(localStorage))
-        
-        const storedData = localStorage.getItem('auth-storage')
-        console.log('auth-storage exists:', storedData ? 'YES' : 'NO')
-        
-        if (storedData) {
-          const parsed = JSON.parse(storedData)
-          const tokenValue = parsed?.state?.token
-          console.log('Token from auth-storage:', tokenValue ? 'EXISTS' : 'MISSING')
-          
-          if (tokenValue) {
-            console.log('✅ TOKEN FOUND - Setting state')
-            setToken(tokenValue)
-          } else {
-            console.log('❌ NO TOKEN in auth-storage')
-          }
-        } else {
-          console.log('❌ auth-storage NOT FOUND')
-        }
-      } catch (e) {
-        console.error('Error reading localStorage:', e)
-      }
+    try {
+      // Read immediately (no delay)
+      const storedData = localStorage.getItem('auth-storage')
+      console.log('auth-storage exists:', storedData ? 'YES' : 'NO')
       
+      if (storedData) {
+        const parsed = JSON.parse(storedData)
+        const tokenValue = parsed?.state?.token
+        console.log('Token from auth-storage:', tokenValue ? 'EXISTS' : 'MISSING')
+        
+        if (tokenValue) {
+          console.log('✅ TOKEN FOUND - Setting state')
+          setToken(tokenValue)
+          setIsLoading(false)
+        } else {
+          console.log('❌ NO TOKEN in auth-storage')
+          setShouldRedirect(true)
+          setIsLoading(false)
+        }
+      } else {
+        console.log('❌ auth-storage NOT FOUND')
+        setShouldRedirect(true)
+        setIsLoading(false)
+      }
+    } catch (e) {
+      console.error('Error reading localStorage:', e)
+      setShouldRedirect(true)
       setIsLoading(false)
-    }, 100)
-    
-    return () => clearTimeout(timer)
+    }
   }, [])
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!token) {
-        console.log('❌ No token in state, redirecting to login')
+    if (shouldRedirect) {
+      console.log('❌ Redirecting to login...')
+      setTimeout(() => {
         window.location.href = '/login'
-      } else {
-        console.log('✅ Token exists in state, staying on dashboard')
-      }
+      }, 100)
     }
-  }, [isLoading, token])
+  }, [shouldRedirect])
 
   // Show loading while checking auth
   if (isLoading) {
@@ -74,9 +71,17 @@ export default function DashboardLayout({
     )
   }
 
+  // If we should redirect, show nothing
+  if (shouldRedirect) {
+    return null
+  }
+
+  // If no token after loading, show nothing (will redirect)
   if (!token) {
     return null
   }
+
+  console.log('🎉 Rendering dashboard with token')
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
