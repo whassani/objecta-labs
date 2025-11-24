@@ -37,6 +37,8 @@ export const useAuthStore = create<AuthState>()(
         set({ token })
       },
       logout: () => {
+        console.error('🚨 LOGOUT CALLED!', new Error().stack)
+        localStorage.setItem('logout-called', new Date().toISOString())
         localStorage.removeItem('token')
         set({ user: null, token: null })
       },
