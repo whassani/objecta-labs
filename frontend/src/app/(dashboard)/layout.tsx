@@ -24,6 +24,9 @@ export default function DashboardLayout({
       const storedData = localStorage.getItem('auth-storage')
       console.log('auth-storage exists:', storedData ? 'YES' : 'NO')
       
+      // BLOCKING ALERT
+      alert(`DASHBOARD CHECK!\nauth-storage exists: ${storedData ? 'YES' : 'NO'}\nCheck console now!`)
+      
       if (storedData) {
         const parsed = JSON.parse(storedData)
         const tokenValue = parsed?.state?.token
@@ -31,20 +34,24 @@ export default function DashboardLayout({
         
         if (tokenValue) {
           console.log('✅ TOKEN FOUND - Setting state')
+          alert('✅ TOKEN FOUND! Dashboard should load. Check console for details.')
           setToken(tokenValue)
           setIsLoading(false)
         } else {
           console.log('❌ NO TOKEN in auth-storage')
+          alert('❌ NO TOKEN in auth-storage! Will redirect to login.')
           setShouldRedirect(true)
           setIsLoading(false)
         }
       } else {
         console.log('❌ auth-storage NOT FOUND')
+        alert('❌ auth-storage NOT FOUND! Will redirect to login.')
         setShouldRedirect(true)
         setIsLoading(false)
       }
     } catch (e) {
       console.error('Error reading localStorage:', e)
+      alert('❌ ERROR reading localStorage: ' + e.message)
       setShouldRedirect(true)
       setIsLoading(false)
     }
