@@ -1,73 +1,151 @@
-# AgentForge - Customized AI Agent Platform
+# AgentForge - Multi-Tenant AI Agent Platform
 
-## Overview
+🤖 Build, deploy, and manage AI agents with advanced capabilities including knowledge base integrations and action execution.
 
-AgentForge is a SaaS platform that enables businesses to create, deploy, and manage customized AI agents tailored to their specific needs. Our platform democratizes access to AI technology, allowing companies of all sizes to leverage intelligent automation without requiring deep technical expertise.
+## 🚀 Quick Start
 
-## Vision
+### Prerequisites
+- Node.js 18+ and npm
+- PostgreSQL 14+
+- Redis (optional, for caching)
 
-To become the leading platform for customized AI agent creation, empowering businesses to automate workflows, enhance customer experiences, and unlock new capabilities through intelligent AI assistants.
+### Backend Setup
 
-## Mission
-
-Provide an intuitive, scalable platform that transforms how businesses interact with AI technology, making sophisticated AI agents accessible to everyone.
-
-## Key Features
-
-- **No-Code Agent Builder**: Visual interface for creating AI agents without programming
-- **Pre-built Templates**: Industry-specific agent templates (customer support, sales, HR, etc.)
-- **Multi-LLM Support**: Integration with multiple AI providers (OpenAI, Anthropic, open-source models)
-- **Custom Training**: Fine-tune agents on your company's data and knowledge base
-- **Omnichannel Deployment**: Deploy agents across web, mobile, Slack, Teams, email, and more
-- **Analytics & Insights**: Comprehensive dashboards for agent performance and user interactions
-- **Enterprise Security**: SOC 2 compliant with enterprise-grade security features
-- **API & Integrations**: Connect with existing tools and workflows
-
-## Project Structure
-
-```
-/docs/              - Comprehensive documentation
-/architecture/      - Technical architecture and design documents
-/business/          - Business plans, strategy, and market analysis
-/product/           - Product specifications and roadmaps
-/development/       - Development guides and standards
-/marketing/         - Marketing strategies and materials
-/legal/             - Legal documents and compliance information
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run start:dev
 ```
 
-## Technology Stack
+Backend will run on http://localhost:3001
+API Documentation: http://localhost:3001/api/docs
 
-**Backend**: NestJS (TypeScript) + TypeORM + LangChain.js  
-**Frontend**: Next.js 14 (React + TypeScript)  
-**Database**: PostgreSQL 15 + Redis 7  
-**AI**: LangChain.js with OpenAI, Anthropic, Hugging Face  
-**Infrastructure**: AWS/Kubernetes + Docker
+### Frontend Setup
 
-## Getting Started
+```bash
+cd frontend
+npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm run dev
+```
 
-### For Business & Strategy
-1. Review the [Business Plan](./business/business-plan.md)
-2. Check the [Product Roadmap](./product/roadmap.md)
-3. See [Go-to-Market Strategy](./marketing/go-to-market.md)
-4. Read [Quick Start Guide](./QUICK-START.md)
+Frontend will run on http://localhost:3000
 
-### For Development
-1. Read [Tech Stack Update](./TECH-STACK-UPDATE.md) - **NEW: Now using NestJS + TypeORM!**
-2. Follow [NestJS Getting Started](./development/nestjs-getting-started.md)
-3. Explore [Technical Architecture](./architecture/system-architecture.md)
-4. See [Development Guide](./development/getting-started.md)
+## 📚 Documentation
 
-## Status
+See the `/docs` folder and project markdown files for detailed documentation:
+- [Architecture](./architecture/system-architecture.md)
+- [Database Schema](./architecture/database-schema.sql)
+- [Features](./product/features.md)
+- [Tech Stack](./development/tech-stack.md)
 
-🚀 **Phase**: Ready for Development
-📅 **Created**: November 2024
-🎯 **Next Milestone**: MVP Development (90 days)
-💻 **Tech Stack**: 100% TypeScript/JavaScript
+## 🏗️ Project Structure
 
-## Contact & Team
+```
+agentforge/
+├── backend/           # NestJS API
+│   ├── src/
+│   │   ├── modules/   # Feature modules
+│   │   ├── main.ts    # Application entry
+│   │   └── app.module.ts
+│   └── package.json
+├── frontend/          # Next.js UI
+│   ├── src/
+│   │   ├── app/       # Next.js 14 app router
+│   │   ├── components/
+│   │   ├── lib/
+│   │   └── styles/
+│   └── package.json
+├── architecture/      # System design docs
+├── product/          # Product specs
+└── README.md
+```
 
-This project is in the early planning stages. Documentation will evolve as the platform develops.
+## 🔑 Key Features
 
-## License
+- ✅ **Multi-tenant architecture** - Organization and workspace isolation
+- ✅ **AI Agent Builder** - Create custom agents with system prompts
+- ✅ **Knowledge Base** - Connect to GitHub, Confluence, Notion, Jira, etc.
+- ✅ **Agent Actions** - Execute CRUD operations across systems
+- ✅ **Conversations** - Chat with agents and maintain history
+- ✅ **Fine-tuning** - Train custom models (planned)
+
+## 🛠️ Tech Stack
+
+**Backend:**
+- NestJS (TypeScript)
+- PostgreSQL + TypeORM
+- LangChain for AI
+- JWT Authentication
+- Swagger API docs
+
+**Frontend:**
+- Next.js 14 (App Router)
+- React 18
+- TailwindCSS
+- TypeScript
+- React Query
+
+## 📦 Database Setup
+
+```bash
+# Create PostgreSQL database
+createdb agentforge
+
+# Run migrations (auto with synchronize in dev)
+npm run start:dev
+```
+
+## 🔐 Environment Variables
+
+### Backend (.env)
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=agentforge
+JWT_SECRET=your-secret-key
+OPENAI_API_KEY=sk-...
+```
+
+### Frontend (.env)
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+## 🧪 Testing
+
+```bash
+# Backend
+cd backend
+npm run test
+
+# Frontend
+cd frontend
+npm run test
+```
+
+## 📝 API Documentation
+
+Once the backend is running, visit:
+- Swagger UI: http://localhost:3001/api/docs
+
+## 🤝 Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Submit a pull request
+
+## 📄 License
 
 Proprietary - All rights reserved
+
+## 🔗 Links
+
+- [Product Roadmap](./product/roadmap.md)
+- [Business Plan](./business/business-plan.md)
+- [Go-to-Market Strategy](./marketing/go-to-market.md)
