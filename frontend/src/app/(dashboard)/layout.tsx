@@ -13,39 +13,52 @@ export default function DashboardLayout({
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Read directly from localStorage on client
+    // Ensure we're fully client-side
+    if (typeof window === 'undefined') return
+    
     console.log('=== DASHBOARD LAYOUT MOUNTED ===')
     
-    // Check all localStorage keys
-    console.log('All localStorage keys:', Object.keys(localStorage))
-    
-    const storedData = localStorage.getItem('auth-storage')
-    console.log('auth-storage raw data:', storedData)
-    
-    const directToken = localStorage.getItem('token')
-    console.log('Direct token key:', directToken)
-    
-    if (storedData) {
+    // Small delay to ensure localStorage is accessible
+    const timer = setTimeout(() => {
       try {
-        const parsed = JSON.parse(storedData)
-        console.log('Parsed auth-storage:', parsed)
-        const tokenValue = parsed?.state?.token
-        console.log('Token from parsed data:', tokenValue ? 'EXISTS' : 'MISSING')
-        setToken(tokenValue)
+        // Check all localStorage keys
+        console.log('All localStorage keys:', Object.keys(localStorage))
+        
+        const storedData = localStorage.getItem('auth-storage')
+        console.log('auth-storage exists:', storedData ? 'YES' : 'NO')
+        
+        if (storedData) {
+          const parsed = JSON.parse(storedData)
+          const tokenValue = parsed?.state?.token
+          console.log('Token from auth-storage:', tokenValue ? 'EXISTS' : 'MISSING')
+          
+          if (tokenValue) {
+            console.log('✅ TOKEN FOUND - Setting state')
+            setToken(tokenValue)
+          } else {
+            console.log('❌ NO TOKEN in auth-storage')
+          }
+        } else {
+          console.log('❌ auth-storage NOT FOUND')
+        }
       } catch (e) {
-        console.error('Failed to parse auth-storage:', e)
+        console.error('Error reading localStorage:', e)
       }
-    } else {
-      console.log('NO auth-storage found in localStorage')
-    }
+      
+      setIsLoading(false)
+    }, 100)
     
-    setIsLoading(false)
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    if (!isLoading && !token) {
-      console.log('No token found, redirecting to login')
-      window.location.href = '/login'
+    if (!isLoading) {
+      if (!token) {
+        console.log('❌ No token in state, redirecting to login')
+        window.location.href = '/login'
+      } else {
+        console.log('✅ Token exists in state, staying on dashboard')
+      }
     }
   }, [isLoading, token])
 
