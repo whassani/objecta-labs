@@ -25,6 +25,11 @@
     <h1>🔍 LocalStorage Debug Tool</h1>
     
     <div class="section">
+        <h2>🔷 Debug Logs (Persisted):</h2>
+        <pre id="debug-logs"></pre>
+    </div>
+    
+    <div class="section">
         <h2>All LocalStorage Keys:</h2>
         <pre id="keys"></pre>
     </div>
@@ -45,6 +50,17 @@
     </div>
     
     <script>
+        // Display debug logs
+        const debugLogs = localStorage.getItem('debug-logs');
+        if (debugLogs) {
+            const logs = JSON.parse(debugLogs);
+            document.getElementById('debug-logs').textContent = logs.map((log, i) => 
+                `${i + 1}. ${log.time.split('T')[1].split('.')[0]} - ${log.message}`
+            ).join('\n');
+        } else {
+            document.getElementById('debug-logs').textContent = 'No logs yet';
+        }
+        
         // Display all keys
         const keys = Object.keys(localStorage);
         document.getElementById('keys').textContent = JSON.stringify(keys, null, 2);

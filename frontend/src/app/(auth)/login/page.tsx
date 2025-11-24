@@ -29,46 +29,42 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
+    clearDebugLogs() // Clear old logs
+    
     try {
+      debugLog('1️⃣ Starting login...')
       const response = await authApi.login(data)
       const { user, token } = response.data
       
-      console.log('=== LOGIN SUCCESS ===')
-      console.log('Received token:', token ? 'YES' : 'NO')
-      console.log('User data:', user)
+      debugLog('2️⃣ Login API success')
+      debugLog(`3️⃣ Received token: ${token ? 'YES' : 'NO'}`)
       
       // Set token first (which also sets localStorage)
       setToken(token)
-      // Then set user
       setUser(user)
+      
+      debugLog('4️⃣ Called setToken and setUser')
       
       // Wait a bit for Zustand to persist
       await new Promise(resolve => setTimeout(resolve, 100))
       
-      // Verify localStorage after setting
-      const authStorage = localStorage.getItem('auth-storage')
-      const directToken = localStorage.getItem('token')
-      console.log('After setting - auth-storage exists:', authStorage ? 'YES' : 'NO')
-      console.log('After setting - direct token exists:', directToken ? 'YES' : 'NO')
+      const tokenInStore = useAuthStore.getState().token
+      debugLog(`5️⃣ Token in Zustand store: ${tokenInStore ? 'EXISTS' : 'MISSING'}`)
       
-      if (authStorage) {
-        const parsed = JSON.parse(authStorage)
-        console.log('Token in auth-storage:', parsed?.state?.token ? 'EXISTS' : 'MISSING')
-      }
+      const authStorage = localStorage.getItem('auth-storage')
+      debugLog(`6️⃣ auth-storage in localStorage: ${authStorage ? 'EXISTS' : 'MISSING'}`)
       
       toast.success('Welcome back!')
       
-      console.log('🔷 Login complete, navigating to dashboard...')
-      console.log('🔷 Token in Zustand store:', useAuthStore.getState().token ? 'EXISTS' : 'MISSING')
-      
       // Small delay to ensure Zustand persists
       setTimeout(() => {
-        console.log('🔷 After delay, token in store:', useAuthStore.getState().token ? 'EXISTS' : 'MISSING')
-        console.log('🔷 Calling router.push("/dashboard")...')
+        const tokenBeforeNav = useAuthStore.getState().token
+        debugLog(`7️⃣ Before navigation - token in store: ${tokenBeforeNav ? 'EXISTS' : 'MISSING'}`)
+        debugLog('8️⃣ Calling router.push("/dashboard")...')
         router.push('/dashboard')
       }, 100)
     } catch (error: any) {
-      console.error('Login error:', error)
+      debugLog('❌ Login error: ' + error.message)
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {
       setIsLoading(false)

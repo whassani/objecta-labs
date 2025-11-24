@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
+import { debugLog } from '@/lib/debug-logger'
 
 export default function DashboardLayout({
   children,
@@ -17,19 +18,19 @@ export default function DashboardLayout({
   const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
-    console.log('🔷 Dashboard layout mounting...')
+    debugLog('9️⃣ Dashboard layout mounting...')
     
     // Simple approach: just read from Zustand store directly
     const tokenFromStore = useAuthStore.getState().token
-    console.log('🔷 Token from Zustand store:', tokenFromStore ? 'EXISTS' : 'MISSING')
+    debugLog(`🔟 Token from Zustand store: ${tokenFromStore ? 'EXISTS' : 'MISSING'}`)
     
     if (tokenFromStore) {
-      console.log('✅ Token found, setting state...')
+      debugLog('✅ Token found, setting state...')
       setToken(tokenFromStore)
       setIsLoading(false)
-      console.log('✅ Dashboard should render')
+      debugLog('✅ Dashboard should render')
     } else {
-      console.log('❌ No token found, will redirect...')
+      debugLog('❌ No token found, will redirect...')
       setShouldRedirect(true)
       setIsLoading(false)
     }
