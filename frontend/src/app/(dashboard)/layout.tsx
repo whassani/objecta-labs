@@ -28,14 +28,11 @@ export default function DashboardLayout({
   }, [])
 
   useEffect(() => {
-    if (isHydrated) {
-      console.log('Dashboard layout - Token:', token ? 'exists' : 'missing')
-      if (!token) {
-        console.log('No token, redirecting to login')
-        router.push('/login')
-      }
+    if (isHydrated && !token) {
+      console.log('Dashboard layout - No token, redirecting to login')
+      window.location.href = '/login'
     }
-  }, [isHydrated, token, router])
+  }, [isHydrated, token])
 
   // Show loading while hydrating
   if (!isHydrated) {
