@@ -33,11 +33,17 @@ export default function LoginPage() {
       const response = await authApi.login(data)
       const { user, token } = response.data
       
-      setUser(user)
+      // Set token first (which also sets localStorage)
       setToken(token)
+      // Then set user
+      setUser(user)
       
       toast.success('Welcome back!')
-      router.push('/dashboard')
+      
+      // Use replace instead of push to prevent back navigation issues
+      setTimeout(() => {
+        router.replace('/dashboard')
+      }, 100)
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
@@ -13,12 +13,22 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const { token } = useAuthStore()
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    if (!token) {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient && !token) {
       router.push('/login')
     }
-  }, [token, router])
+  }, [isClient, token, router])
+
+  // Don't render anything until client-side hydration is complete
+  if (!isClient) {
+    return null
+  }
 
   if (!token) {
     return null
