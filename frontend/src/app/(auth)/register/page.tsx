@@ -43,10 +43,8 @@ export default function RegisterPage() {
       
       toast.success('Account created successfully!')
       
-      // Use replace instead of push to prevent back navigation issues
-      setTimeout(() => {
-        router.replace('/dashboard')
-      }, 100)
+      // Force a hard navigation to dashboard to ensure state is loaded
+      window.location.href = '/dashboard'
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed')
     } finally {

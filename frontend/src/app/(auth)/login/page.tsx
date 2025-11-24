@@ -23,6 +23,14 @@ export default function LoginPage() {
   const { setUser, setToken } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
 
+  // If already logged in, redirect to dashboard
+  useEffect(() => {
+    const token = useAuthStore.getState().token
+    if (token) {
+      router.replace('/dashboard')
+    }
+  }, [])
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   })
@@ -47,11 +55,8 @@ export default function LoginPage() {
       
       toast.success('Welcome back!')
       
-      // Use replace with a longer delay to ensure persistence
-      setTimeout(() => {
-        console.log('Navigating to dashboard...')
-        router.replace('/dashboard')
-      }, 200)
+      // Force a hard navigation to dashboard to ensure state is loaded
+      window.location.href = '/dashboard'
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')

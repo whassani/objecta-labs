@@ -16,17 +16,15 @@ export default function DashboardLayout({
   const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    // Wait for Zustand to hydrate from localStorage
-    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
-      setIsHydrated(true)
-    })
+    // Force Zustand to rehydrate
+    useAuthStore.persist.rehydrate()
     
-    // Check if already hydrated
-    if (useAuthStore.persist.hasHydrated()) {
+    // Set a small timeout to ensure hydration completes
+    const timer = setTimeout(() => {
       setIsHydrated(true)
-    }
+    }, 50)
     
-    return unsubscribe
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
