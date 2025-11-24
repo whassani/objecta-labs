@@ -43,8 +43,8 @@ export default function RegisterPage() {
       
       toast.success('Account created successfully!')
       
-      // Force a hard navigation to dashboard to ensure state is loaded
-      window.location.href = '/dashboard'
+      // Use Next.js router for client-side navigation
+      router.push('/dashboard')
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed')
     } finally {
