@@ -65,7 +65,7 @@ export default function DashboardLayout({
     return null
   }
 
-  console.log('🎉 Rendering dashboard with token:', token?.substring(0, 20))
+  debugLog('🎨 Rendering dashboard with token')
 
   try {
     return (
@@ -82,8 +82,7 @@ export default function DashboardLayout({
       </div>
     )
   } catch (renderError: any) {
-    console.error('❌ RENDER ERROR:', renderError)
-    alert('❌ RENDER ERROR: ' + renderError.message)
+    debugLog('❌ RENDER ERROR: ' + renderError.message)
     return <div>Render Error: {renderError.message}</div>
   }
 }
