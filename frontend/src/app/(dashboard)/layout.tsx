@@ -15,11 +15,13 @@ export default function DashboardLayout({
   const [hasRun, setHasRun] = useState(false)
 
   useEffect(() => {
-    // Prevent double execution
-    if (hasRun) {
-      console.log('⚠️ DASHBOARD LAYOUT MOUNTING AGAIN! (Should not happen)')
-      alert('⚠️ Layout is mounting AGAIN! This might be the problem.')
-      return
+    // Prevent double execution - use a flag outside component
+    if (typeof window !== 'undefined') {
+      if ((window as any).__dashboardMounted) {
+        console.log('⚠️ DASHBOARD LAYOUT MOUNTING AGAIN! Ignoring second mount.')
+        return
+      }
+      (window as any).__dashboardMounted = true
     }
     
     setHasRun(true)
