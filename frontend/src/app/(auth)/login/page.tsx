@@ -58,10 +58,15 @@ export default function LoginPage() {
       
       toast.success('Welcome back!')
       
-      console.log('Navigating with Next.js router (client-side navigation, no page reload)...')
+      console.log('🔷 Login complete, navigating to dashboard...')
+      console.log('🔷 Token in Zustand store:', useAuthStore.getState().token ? 'EXISTS' : 'MISSING')
       
-      // Use Next.js router for client-side navigation (no page reload!)
-      router.push('/dashboard')
+      // Small delay to ensure Zustand persists
+      setTimeout(() => {
+        console.log('🔷 After delay, token in store:', useAuthStore.getState().token ? 'EXISTS' : 'MISSING')
+        console.log('🔷 Calling router.push("/dashboard")...')
+        router.push('/dashboard')
+      }, 100)
     } catch (error: any) {
       console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')

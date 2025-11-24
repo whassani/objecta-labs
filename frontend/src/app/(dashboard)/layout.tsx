@@ -17,34 +17,22 @@ export default function DashboardLayout({
   const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
-    // Just use Zustand directly - it handles hydration
-    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
-      const state = useAuthStore.getState()
-      console.log('Zustand hydrated, token exists:', state.token ? 'YES' : 'NO')
-      
-      if (state.token) {
-        setToken(state.token)
-        setIsLoading(false)
-      } else {
-        setShouldRedirect(true)
-        setIsLoading(false)
-      }
-    })
+    console.log('🔷 Dashboard layout mounting...')
     
-    // Check if already hydrated
-    if (useAuthStore.persist.hasHydrated()) {
-      const state = useAuthStore.getState()
-      console.log('Already hydrated, token exists:', state.token ? 'YES' : 'NO')
-      
-      if (state.token) {
-        setToken(state.token)
-      } else {
-        setShouldRedirect(true)
-      }
+    // Simple approach: just read from Zustand store directly
+    const tokenFromStore = useAuthStore.getState().token
+    console.log('🔷 Token from Zustand store:', tokenFromStore ? 'EXISTS' : 'MISSING')
+    
+    if (tokenFromStore) {
+      console.log('✅ Token found, setting state...')
+      setToken(tokenFromStore)
+      setIsLoading(false)
+      console.log('✅ Dashboard should render')
+    } else {
+      console.log('❌ No token found, will redirect...')
+      setShouldRedirect(true)
       setIsLoading(false)
     }
-    
-    return unsubscribe
   }, [])
 
   useEffect(() => {
