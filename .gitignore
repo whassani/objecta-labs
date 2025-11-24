@@ -38,6 +38,9 @@ tmp_rovodev_*
 *.db
 *.sqlite
 
+# Vector DB Storage
+qdrant_storage/
+
 # Logs
 logs/
 *.log

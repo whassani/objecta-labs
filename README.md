@@ -7,11 +7,17 @@
 ### Prerequisites
 - Node.js 18+ and npm
 - PostgreSQL 14+
+- Qdrant vector database (free, open-source)
 - Redis (optional, for caching)
+- Docker (recommended for easy setup)
 
-### Backend Setup
+### Quick Setup with Docker
 
 ```bash
+# Start all services (PostgreSQL, Qdrant, Redis)
+docker-compose up -d
+
+# Setup and start backend
 cd backend
 npm install
 cp .env.example .env

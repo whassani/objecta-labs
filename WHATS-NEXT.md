@@ -169,37 +169,63 @@ async processDocument(file: Buffer, organizationId: string) {
 
 **Goal**: Agents retrieve relevant info from knowledge base
 
-**Setup Pinecone**:
+**Setup Qdrant (Open Source)**:
 ```bash
-# 1. Create account at https://www.pinecone.io
-# 2. Create index: objecta_labs (dimension: 1536)
-# 3. Add to backend/.env:
-PINECONE_API_KEY=your-key
-PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX=objecta_labs
+# 1. Start Qdrant with Docker (included in docker-compose.yml)
+docker-compose up -d qdrant
+
+# OR download and run locally
+docker run -p 6333:6333 -p 6334:6334 qdrant/qdrant
+
+# 2. Already configured in backend/.env.example:
+QDRANT_URL=http://localhost:6333
+QDRANT_COLLECTION=objecta_labs
+
+# No API keys needed! It's completely free and open-source.
 ```
 
 **Files to Modify**:
 1. Create: `backend/src/modules/knowledge-base/vector-store.service.ts`
 
 ```typescript
-import { PineconeStore } from '@langchain/pinecone';
-import { Pinecone } from '@pinecone-database/pinecone';
+import { QdrantVectorStore } from '@langchain/qdrant';
+import { QdrantClient } from '@qdrant/js-client-rest';
+import { OpenAIEmbeddings } from '@langchain/openai';
 
 export class VectorStoreService {
-  private pinecone: Pinecone;
+  private qdrantClient: QdrantClient;
+  
+  constructor() {
+    this.qdrantClient = new QdrantClient({
+      url: process.env.QDRANT_URL || 'http://localhost:6333',
+    });
+  }
   
   async searchSimilar(query: string, organizationId: string) {
     const embeddings = new OpenAIEmbeddings();
-    const vectorStore = await PineconeStore.fromExistingIndex(
+    
+    const vectorStore = await QdrantVectorStore.fromExistingCollection(
       embeddings,
       {
-        pineconeIndex: this.pineconeIndex,
-        namespace: organizationId, // Multi-tenant isolation
+        client: this.qdrantClient,
+        collectionName: `${process.env.QDRANT_COLLECTION}_${organizationId}`, // Multi-tenant isolation
       }
     );
     
     return await vectorStore.similaritySearch(query, 5);
+  }
+  
+  async addDocuments(docs: Document[], organizationId: string) {
+    const embeddings = new OpenAIEmbeddings();
+    
+    await QdrantVectorStore.fromDocuments(
+      docs,
+      embeddings,
+      {
+        client: this.qdrantClient,
+        collectionName: `${process.env.QDRANT_COLLECTION}_${organizationId}`,
+      }
+    );
   }
 }
 ```

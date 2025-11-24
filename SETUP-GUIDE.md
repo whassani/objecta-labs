@@ -10,6 +10,7 @@ Before you begin, ensure you have:
 - **PostgreSQL 14+** installed and running
 - **Git** installed
 - (Optional) **Redis** for caching
+- (Optional) **Qdrant** for vector storage (free, open-source)
 
 ## Quick Setup
 
@@ -27,6 +28,21 @@ This will:
 
 ### 2. Database Setup
 
+**Option A: Using Docker (Recommended)**
+
+Start all services (PostgreSQL, Qdrant, Redis) with one command:
+
+```bash
+docker-compose up -d
+```
+
+This will start:
+- PostgreSQL on port 5432
+- Qdrant (vector DB) on port 6333
+- Redis on port 6379
+
+**Option B: Manual Setup**
+
 Create a PostgreSQL database:
 
 ```bash
@@ -37,6 +53,17 @@ createdb objecta_labs
 psql -U postgres
 CREATE DATABASE objecta_labs;
 \q
+```
+
+Install Qdrant locally:
+
+```bash
+# Using Docker
+docker run -p 6333:6333 -p 6334:6334 \
+  -v $(pwd)/qdrant_storage:/qdrant/storage:z \
+  qdrant/qdrant
+
+# Or download from https://qdrant.tech/documentation/quick-start/
 ```
 
 ### 3. Configure Environment Variables
@@ -59,10 +86,9 @@ JWT_SECRET=your-super-secret-jwt-key-change-this
 # OpenAI API Key (get from https://platform.openai.com/api-keys)
 OPENAI_API_KEY=sk-your-openai-api-key
 
-# Optional: Pinecone for vector storage
-PINECONE_API_KEY=your-pinecone-api-key
-PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX=objecta_labs
+# Qdrant Vector DB (Open Source - runs locally)
+QDRANT_URL=http://localhost:6333
+QDRANT_COLLECTION=objecta_labs
 
 # Optional: Ollama for local models
 USE_OLLAMA=false
