@@ -49,9 +49,10 @@ export default function DashboardLayout({
         setShouldRedirect(true)
         setIsLoading(false)
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error reading localStorage:', e)
-      alert('❌ ERROR reading localStorage: ' + e.message)
+      const errorMsg = e?.message || String(e)
+      alert(`❌ ERROR!\n\nType: ${e?.name || 'Unknown'}\nMessage: ${errorMsg}\n\nStack:\n${e?.stack?.substring(0, 200) || 'No stack'}`)
       setShouldRedirect(true)
       setIsLoading(false)
     }
