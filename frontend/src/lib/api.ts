@@ -25,6 +25,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      console.error('🚨 API 401 ERROR!', {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        response: error.response?.data
+      })
       // Clear auth store on 401
       useAuthStore.getState().logout()
       window.location.href = '/login'
