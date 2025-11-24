@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 
@@ -9,78 +11,48 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  const router = useRouter()
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [shouldRedirect, setShouldRedirect] = useState(false)
-  const [hasRun, setHasRun] = useState(false)
 
   useEffect(() => {
-    // Prevent double execution - use a flag outside component
-    if (typeof window !== 'undefined') {
-      if ((window as any).__dashboardMounted) {
-        console.log('⚠️ DASHBOARD LAYOUT MOUNTING AGAIN! Ignoring second mount.')
-        return
-      }
-      (window as any).__dashboardMounted = true
-    }
-    
-    setHasRun(true)
-    
-    // Ensure we're fully client-side
-    if (typeof window === 'undefined') return
-    
-    console.log('=== DASHBOARD LAYOUT MOUNTED (FIRST TIME) ===')
-    
-    try {
-      // Read immediately (no delay)
-      const storedData = localStorage.getItem('auth-storage')
-      console.log('auth-storage exists:', storedData ? 'YES' : 'NO')
+    // Just use Zustand directly - it handles hydration
+    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+      const state = useAuthStore.getState()
+      console.log('Zustand hydrated, token exists:', state.token ? 'YES' : 'NO')
       
-      // BLOCKING ALERT
-      alert(`DASHBOARD CHECK!\nauth-storage exists: ${storedData ? 'YES' : 'NO'}\nCheck console now!`)
-      
-      if (storedData) {
-        const parsed = JSON.parse(storedData)
-        const tokenValue = parsed?.state?.token
-        console.log('Token from auth-storage:', tokenValue ? 'EXISTS' : 'MISSING')
-        
-        if (tokenValue) {
-          console.log('✅ TOKEN FOUND - Setting state')
-          alert('✅ TOKEN FOUND! Setting state and loading dashboard...')
-          setToken(tokenValue)
-          setIsLoading(false)
-          console.log('✅ State set - token:', tokenValue.substring(0, 20) + '...')
-          console.log('✅ isLoading set to false')
-        } else {
-          console.log('❌ NO TOKEN in auth-storage')
-          alert('❌ NO TOKEN in auth-storage! Will show redirect message.')
-          setShouldRedirect(true)
-          setIsLoading(false)
-        }
+      if (state.token) {
+        setToken(state.token)
+        setIsLoading(false)
       } else {
-        console.log('❌ auth-storage NOT FOUND')
-        alert('❌ auth-storage NOT FOUND! Will show redirect message.')
         setShouldRedirect(true)
         setIsLoading(false)
       }
-    } catch (e: any) {
-      console.error('Error reading localStorage:', e)
-      const errorMsg = e?.message || String(e)
-      alert(`❌ ERROR!\n\nType: ${e?.name || 'Unknown'}\nMessage: ${errorMsg}\n\nStack:\n${e?.stack?.substring(0, 200) || 'No stack'}`)
-      setShouldRedirect(true)
+    })
+    
+    // Check if already hydrated
+    if (useAuthStore.persist.hasHydrated()) {
+      const state = useAuthStore.getState()
+      console.log('Already hydrated, token exists:', state.token ? 'YES' : 'NO')
+      
+      if (state.token) {
+        setToken(state.token)
+      } else {
+        setShouldRedirect(true)
+      }
       setIsLoading(false)
     }
-  }, [hasRun])
+    
+    return unsubscribe
+  }, [])
 
   useEffect(() => {
     if (shouldRedirect) {
-      console.log('❌ Should redirect to login...')
-      // DISABLED for debugging - show alert instead of redirect
-      alert('Would redirect to login. Staying here for debugging.')
-      // DO NOT REDIRECT - just stay on page
-      // window.location.href = '/login'
+      console.log('❌ No token, redirecting to login...')
+      router.push('/login')
     }
-  }, [shouldRedirect])
+  }, [shouldRedirect, router])
 
   // Show loading while checking auth
   if (isLoading) {
