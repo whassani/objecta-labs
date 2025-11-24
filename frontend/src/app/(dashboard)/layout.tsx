@@ -12,12 +12,22 @@ export default function DashboardLayout({
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [shouldRedirect, setShouldRedirect] = useState(false)
+  const [hasRun, setHasRun] = useState(false)
 
   useEffect(() => {
+    // Prevent double execution
+    if (hasRun) {
+      console.log('⚠️ DASHBOARD LAYOUT MOUNTING AGAIN! (Should not happen)')
+      alert('⚠️ Layout is mounting AGAIN! This might be the problem.')
+      return
+    }
+    
+    setHasRun(true)
+    
     // Ensure we're fully client-side
     if (typeof window === 'undefined') return
     
-    console.log('=== DASHBOARD LAYOUT MOUNTED ===')
+    console.log('=== DASHBOARD LAYOUT MOUNTED (FIRST TIME) ===')
     
     try {
       // Read immediately (no delay)
@@ -34,18 +44,20 @@ export default function DashboardLayout({
         
         if (tokenValue) {
           console.log('✅ TOKEN FOUND - Setting state')
-          alert('✅ TOKEN FOUND! Dashboard should load. Check console for details.')
+          alert('✅ TOKEN FOUND! Setting state and loading dashboard...')
           setToken(tokenValue)
           setIsLoading(false)
+          console.log('✅ State set - token:', tokenValue.substring(0, 20) + '...')
+          console.log('✅ isLoading set to false')
         } else {
           console.log('❌ NO TOKEN in auth-storage')
-          alert('❌ NO TOKEN in auth-storage! Will redirect to login.')
+          alert('❌ NO TOKEN in auth-storage! Will show redirect message.')
           setShouldRedirect(true)
           setIsLoading(false)
         }
       } else {
         console.log('❌ auth-storage NOT FOUND')
-        alert('❌ auth-storage NOT FOUND! Will redirect to login.')
+        alert('❌ auth-storage NOT FOUND! Will show redirect message.')
         setShouldRedirect(true)
         setIsLoading(false)
       }
@@ -56,7 +68,7 @@ export default function DashboardLayout({
       setShouldRedirect(true)
       setIsLoading(false)
     }
-  }, [])
+  }, [hasRun])
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -90,19 +102,25 @@ export default function DashboardLayout({
     return null
   }
 
-  console.log('🎉 Rendering dashboard with token')
+  console.log('🎉 Rendering dashboard with token:', token?.substring(0, 20))
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      <div className="lg:pl-64">
-        <Header />
-        <main className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
-        </main>
+  try {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Sidebar />
+        <div className="lg:pl-64">
+          <Header />
+          <main className="py-6">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
-  )
+    )
+  } catch (renderError: any) {
+    console.error('❌ RENDER ERROR:', renderError)
+    alert('❌ RENDER ERROR: ' + renderError.message)
+    return <div>Render Error: {renderError.message}</div>
+  }
 }
