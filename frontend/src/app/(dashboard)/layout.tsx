@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 
@@ -11,31 +9,36 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const token = useAuthStore((state) => state.token)
-  const [isHydrated, setIsHydrated] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Force Zustand to rehydrate
-    useAuthStore.persist.rehydrate()
+    // Read directly from localStorage on client
+    const storedData = localStorage.getItem('auth-storage')
     
-    // Set a small timeout to ensure hydration completes
-    const timer = setTimeout(() => {
-      setIsHydrated(true)
-    }, 50)
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData)
+        const tokenValue = parsed?.state?.token
+        console.log('Dashboard - Token from localStorage:', tokenValue ? 'exists' : 'missing')
+        setToken(tokenValue)
+      } catch (e) {
+        console.error('Failed to parse auth-storage:', e)
+      }
+    }
     
-    return () => clearTimeout(timer)
+    setIsLoading(false)
   }, [])
 
   useEffect(() => {
-    if (isHydrated && !token) {
-      console.log('Dashboard layout - No token, redirecting to login')
+    if (!isLoading && !token) {
+      console.log('No token found, redirecting to login')
       window.location.href = '/login'
     }
-  }, [isHydrated, token])
+  }, [isLoading, token])
 
-  // Show loading while hydrating
-  if (!isHydrated) {
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
