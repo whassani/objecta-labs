@@ -33,18 +33,27 @@ export default function LoginPage() {
       const response = await authApi.login(data)
       const { user, token } = response.data
       
+      console.log('Login successful, received token:', token ? 'yes' : 'no')
+      console.log('User data:', user)
+      
       // Set token first (which also sets localStorage)
       setToken(token)
       // Then set user
       setUser(user)
       
+      // Verify localStorage
+      const storedToken = localStorage.getItem('token')
+      console.log('Token stored in localStorage:', storedToken ? 'yes' : 'no')
+      
       toast.success('Welcome back!')
       
-      // Use replace instead of push to prevent back navigation issues
+      // Use replace with a longer delay to ensure persistence
       setTimeout(() => {
+        console.log('Navigating to dashboard...')
         router.replace('/dashboard')
-      }, 100)
+      }, 200)
     } catch (error: any) {
+      console.error('Login error:', error)
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {
       setIsLoading(false)

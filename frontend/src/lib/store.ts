@@ -23,8 +23,12 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-      setUser: (user) => set({ user }),
+      setUser: (user) => {
+        console.log('Setting user:', user)
+        set({ user })
+      },
       setToken: (token) => {
+        console.log('Setting token:', token ? 'Token exists' : 'No token')
         if (token) {
           localStorage.setItem('token', token)
         } else {
@@ -39,6 +43,11 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      // Force immediate persistence
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+      }),
     }
   )
 )
