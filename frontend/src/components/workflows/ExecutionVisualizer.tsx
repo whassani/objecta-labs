@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Node, Edge } from 'reactflow';
 import { 
   Play, Pause, RotateCcw, CheckCircle, XCircle, Clock, Loader2,
-  StepForward, Bug, History, Eye, Square, SkipForward
+  StepForward, Bug, History, Eye, Square, SkipForward, GripVertical, Maximize2, Minimize2
 } from 'lucide-react';
 
 export type ExecutionStatus = 'idle' | 'running' | 'paused' | 'completed' | 'failed';
@@ -112,6 +112,16 @@ export default function ExecutionVisualizer({
   const [showHistory, setShowHistory] = useState(false);
   const [showBreakpoints, setShowBreakpoints] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Drag and resize state
+  const [position, setPosition] = useState({ x: 16, y: window.innerHeight - 400 });
+  const [size, setSize] = useState({ width: 800, height: 400 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMaximized, setIsMaximized] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
   const getNodeStatus = (nodeId: string): NodeExecutionState['status'] => {
     return execution?.nodeStates[nodeId]?.status || 'pending';
@@ -182,18 +192,107 @@ export default function ExecutionVisualizer({
   const currentNodeId = execution?.currentNode;
   const currentVariables = currentNodeId ? variables.get(currentNodeId) : null;
 
+  // Handle dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: Math.max(0, Math.min(window.innerWidth - size.width, e.clientX - dragOffset.x)),
+          y: Math.max(0, Math.min(window.innerHeight - 100, e.clientY - dragOffset.y))
+        });
+      }
+      
+      if (isResizing) {
+        const rect = panelRef.current?.getBoundingClientRect();
+        if (rect) {
+          setSize({
+            width: Math.max(400, Math.min(window.innerWidth - position.x - 20, e.clientX - rect.left)),
+            height: Math.max(300, Math.min(window.innerHeight - position.y - 20, e.clientY - rect.top))
+          });
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, isResizing, dragOffset, size, position]);
+
+  // Handle maximize/restore
+  const toggleMaximize = () => {
+    if (isMaximized) {
+      // Restore to previous size and position
+      setPosition({ x: 16, y: window.innerHeight - 400 });
+      setSize({ width: 800, height: 400 });
+    } else {
+      // Maximize (leave some margin)
+      const leftMargin = 272; // Node palette width
+      const rightMargin = isNodeEditorOpen ? 336 : 16;
+      const topMargin = 80; // Header height
+      const bottomMargin = 16;
+      
+      setPosition({ x: leftMargin, y: topMargin });
+      setSize({ 
+        width: window.innerWidth - leftMargin - rightMargin,
+        height: window.innerHeight - topMargin - bottomMargin
+      });
+    }
+    setIsMaximized(!isMaximized);
+  };
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.drag-handle')) {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDragOffset({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+        setIsDragging(true);
+      }
+    }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+  };
+
   if (!execution || execution.status === 'idle') {
     return null;
   }
-
-  // Calculate right margin based on whether node editor is open
-  const rightMargin = isNodeEditorOpen ? 'md:right-[336px]' : 'right-4';
   
   return (
-    <div className={`absolute bottom-4 left-4 ${rightMargin} md:left-[272px] bg-white rounded-lg shadow-xl border-2 border-gray-300 z-10 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out animate-slideUp min-w-[600px]`}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center gap-3">
+    <div 
+      ref={panelRef}
+      className="fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 z-50 flex flex-col animate-slideUp"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      {/* Header with drag handle */}
+      <div 
+        className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 cursor-grab active:cursor-grabbing drag-handle rounded-t-lg"
+        onMouseDown={handleDragStart}
+      >
+        <div className="flex items-center gap-3 drag-handle pointer-events-none">
           <div className={`flex items-center gap-2 ${
             isExecuting ? 'text-blue-600' : 
             isCompleted ? 'text-green-600' : 
@@ -221,7 +320,18 @@ export default function ExecutionVisualizer({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Maximize/Restore Button */}
+          <button
+            onClick={toggleMaximize}
+            className="p-2 hover:bg-white/50 rounded transition"
+            title={isMaximized ? "Restore" : "Maximize"}
+          >
+            {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+
+          <div className="w-px h-6 bg-gray-300" />
+
           {/* Control Buttons */}
           {!isExecuting && !isPaused && !isCompleted && !isFailed && (
             <button
@@ -337,7 +447,7 @@ export default function ExecutionVisualizer({
       </div>
 
       {/* Node Execution Status */}
-      <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden" style={{ maxHeight: '250px' }}>
+      <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden flex-shrink-0" style={{ maxHeight: isMaximized ? '30vh' : '250px' }}>
         <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {nodes.map((node) => {
@@ -530,6 +640,16 @@ export default function ExecutionVisualizer({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Resize Handle */}
+      <div
+        ref={resizeRef}
+        className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize group"
+        onMouseDown={handleResizeStart}
+        title="Drag to resize"
+      >
+        <div className="absolute bottom-1 right-1 w-4 h-4 border-r-2 border-b-2 border-gray-400 group-hover:border-blue-500 transition" />
       </div>
     </div>
   );
