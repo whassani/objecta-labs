@@ -446,9 +446,40 @@ export default function ExecutionVisualizer({
         </div>
       </div>
 
+      {/* Workflow Input/Output Summary */}
+      {(isCompleted || isFailed) && execution.result && (
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+          <h3 className="font-semibold text-base mb-3 text-gray-800 flex items-center gap-2">
+            <CheckCircle size={18} className="text-green-600" />
+            Workflow Result
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Workflow Input */}
+            <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+              <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                📥 Input
+              </div>
+              <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
+                {JSON.stringify(execution.result.input || {}, null, 2)}
+              </pre>
+            </div>
+            
+            {/* Workflow Output */}
+            <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+              <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                📤 Output
+              </div>
+              <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
+                {JSON.stringify(execution.result.output || {}, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Node Execution Status */}
       <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden flex-shrink-0" style={{ maxHeight: isMaximized ? '30vh' : '250px' }}>
-        <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status</h3>
+        <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status (Click to see I/O)</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {nodes.map((node) => {
             const status = getNodeStatus(node.id);
@@ -534,12 +565,43 @@ export default function ExecutionVisualizer({
           </div>
         )}
 
-        {/* Variables Panel */}
+        {/* Selected Node I/O Panel */}
+        {selectedNode && variables.get(selectedNode) && (
+          <div className="border-b border-gray-200 px-6 py-4 bg-blue-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '400px' }}>
+            <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
+              <Eye size={18} className="text-blue-600" />
+              {nodes.find(n => n.id === selectedNode)?.data.label || selectedNode} - Input/Output
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Node Input */}
+              {variables.get(selectedNode)?.inputData && (
+                <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+                  <div className="text-sm font-semibold text-blue-700 mb-2">📥 Input:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
+                    {JSON.stringify(variables.get(selectedNode)?.inputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {/* Node Output */}
+              {variables.get(selectedNode)?.outputData && (
+                <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+                  <div className="text-sm font-semibold text-blue-700 mb-2">📤 Output:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
+                    {JSON.stringify(variables.get(selectedNode)?.outputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Variables Panel (Context Variables) */}
         {showVariables && currentVariables && (
           <div className="border-b border-gray-200 px-6 py-4 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '350px' }}>
             <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
               <Eye size={18} className="text-purple-600" />
-              Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
+              Context Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
             </h3>
             <div className="space-y-3">
               {/* Input Data */}
