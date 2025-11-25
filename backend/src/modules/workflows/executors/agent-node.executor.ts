@@ -27,26 +27,36 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
       // Get prompt - check previous step outputs first, then trigger data
       let finalPrompt: string;
       
-      // Debug logging
-      console.log('Agent Executor Context:');
-      console.log('  triggerData:', JSON.stringify(context.triggerData));
-      console.log('  stepOutputs:', JSON.stringify(context.stepOutputs));
+      // Debug logging - SUPER DETAILED
+      console.log('=== AGENT EXECUTOR DEBUG ===');
+      console.log('context.triggerData:', JSON.stringify(context.triggerData, null, 2));
+      console.log('context.stepOutputs:', JSON.stringify(context.stepOutputs, null, 2));
+      console.log('node.data.prompt:', prompt);
       
       // Look for prompt/message in previous step outputs (trigger node output)
       let testPrompt: string | null = null;
       
       // Check trigger node output (usually first step)
-      const triggerStep = Object.values(context.stepOutputs)[0];
-      if (triggerStep && typeof triggerStep === 'object' && 'data' in triggerStep) {
-        const stepData = (triggerStep as any).data;
-        testPrompt = stepData.message || stepData.prompt;
-        console.log('  Found in trigger step output:', testPrompt);
+      const stepOutputKeys = Object.keys(context.stepOutputs);
+      console.log('Step output keys:', stepOutputKeys);
+      
+      if (stepOutputKeys.length > 0) {
+        const firstStepKey = stepOutputKeys[0];
+        const triggerStep = context.stepOutputs[firstStepKey];
+        console.log(`Trigger step [${firstStepKey}]:`, JSON.stringify(triggerStep, null, 2));
+        
+        if (triggerStep && typeof triggerStep === 'object' && 'data' in triggerStep) {
+          const stepData = (triggerStep as any).data;
+          console.log('Step data:', JSON.stringify(stepData, null, 2));
+          testPrompt = stepData.message || stepData.prompt;
+          console.log('testPrompt from step:', testPrompt);
+        }
       }
       
       // Fallback to checking context.triggerData directly
       if (!testPrompt) {
         testPrompt = context.triggerData.message || context.triggerData.prompt;
-        console.log('  Found in context.triggerData:', testPrompt);
+        console.log('testPrompt from triggerData:', testPrompt);
       }
       
       // Decide which prompt to use
