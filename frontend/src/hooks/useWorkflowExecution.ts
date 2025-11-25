@@ -408,12 +408,15 @@ export function useWorkflowExecution(
     setVariables(new Map());
 
     addLog('Starting workflow execution');
+    if (testData) {
+      addLog(`Test data: ${JSON.stringify(testData)}`);
+    }
 
     // Backend mode: delegate to backend
     if (mode === 'backend' && workflowId) {
       try {
         const response = await api.post(`/workflows/${workflowId}/execute`, {
-          triggerData: {},
+          triggerData: testData || {},
           context: {},
         });
         

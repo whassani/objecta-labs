@@ -27,20 +27,34 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
       // Get prompt - prioritize trigger data, then node config, then default
       let finalPrompt: string;
       
+      // Debug: Log context to see what's available
+      console.log('Agent Executor Context:');
+      console.log('  triggerData:', JSON.stringify(context.triggerData));
+      console.log('  variables:', JSON.stringify(context.variables));
+      console.log('  stepOutputs:', Object.keys(context.stepOutputs));
+      
       // First check if there's a prompt or message in trigger data (from test UI)
       const triggerPrompt = this.getInputValue('prompt', context) || 
                            this.getInputValue('message', context);
       
+      console.log('  triggerPrompt found:', triggerPrompt);
+      console.log('  node.data.prompt:', prompt);
+      
       if (triggerPrompt) {
         // Use prompt from test data
         finalPrompt = triggerPrompt;
+        console.log('  Using trigger prompt!');
       } else if (prompt) {
         // Use prompt from node configuration (with variable interpolation)
         finalPrompt = this.interpolateTemplate(prompt, context);
+        console.log('  Using node config prompt');
       } else {
         // Fallback default
         finalPrompt = 'Execute agent task';
+        console.log('  Using default prompt');
       }
+      
+      console.log('  FINAL PROMPT:', finalPrompt);
 
       // Get organizationId from context (passed through trigger data or variables)
       const organizationId = context.variables?.organizationId || 
