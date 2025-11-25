@@ -96,11 +96,18 @@ export class ConversationsService {
     try {
       const response = await llm.invoke(messages);
       
+      // Extract content from response (handle different response types)
+      const content = typeof response.content === 'string' 
+        ? response.content 
+        : Array.isArray(response.content)
+          ? response.content.map(c => typeof c === 'string' ? c : c.text).join('')
+          : String(response.content);
+      
       // Save AI response
       const aiMessage = this.messagesRepository.create({
         conversationId: conversation.id,
         role: 'assistant',
-        content: response.content as string,
+        content: content,
       });
       await this.messagesRepository.save(aiMessage);
 
