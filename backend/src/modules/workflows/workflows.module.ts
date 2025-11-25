@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkflowsController } from './workflows.controller';
+import { WebhooksController } from './webhooks.controller';
+import { TemplatesController } from './templates.controller';
 import { WorkflowsService } from './workflows.service';
 import { WorkflowExecutorService } from './workflow-executor.service';
 import { Workflow } from './entities/workflow.entity';
@@ -15,8 +17,13 @@ import { ConditionNodeExecutor } from './executors/condition-node.executor';
 import { DelayNodeExecutor } from './executors/delay-node.executor';
 import { AgentNodeExecutor } from './executors/agent-node.executor';
 import { ToolNodeExecutor } from './executors/tool-node.executor';
+import { EmailNodeExecutor } from './executors/email-node.executor';
+import { LoopNodeExecutor } from './executors/loop-node.executor';
+import { MergeNodeExecutor } from './executors/merge-node.executor';
 import { AgentsModule } from '../agents/agents.module';
 import { ToolsModule } from '../tools/tools.module';
+import { ScheduleService } from './services/schedule.service';
+import { WebhookService } from './services/webhook.service';
 
 @Module({
   imports: [
@@ -31,7 +38,7 @@ import { ToolsModule } from '../tools/tools.module';
     AgentsModule,
     ToolsModule,
   ],
-  controllers: [WorkflowsController],
+  controllers: [WorkflowsController, WebhooksController, TemplatesController],
   providers: [
     WorkflowsService,
     WorkflowExecutorService,
@@ -41,6 +48,11 @@ import { ToolsModule } from '../tools/tools.module';
     DelayNodeExecutor,
     AgentNodeExecutor,
     ToolNodeExecutor,
+    EmailNodeExecutor,
+    LoopNodeExecutor,
+    MergeNodeExecutor,
+    ScheduleService,
+    WebhookService,
   ],
   exports: [WorkflowsService, WorkflowExecutorService],
 })

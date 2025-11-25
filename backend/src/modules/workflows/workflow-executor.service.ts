@@ -18,6 +18,9 @@ import { ConditionNodeExecutor } from './executors/condition-node.executor';
 import { DelayNodeExecutor } from './executors/delay-node.executor';
 import { AgentNodeExecutor } from './executors/agent-node.executor';
 import { ToolNodeExecutor } from './executors/tool-node.executor';
+import { EmailNodeExecutor } from './executors/email-node.executor';
+import { LoopNodeExecutor } from './executors/loop-node.executor';
+import { MergeNodeExecutor } from './executors/merge-node.executor';
 
 export interface ExecutionContext {
   variables: Record<string, any>;
@@ -41,6 +44,9 @@ export class WorkflowExecutorService {
     private delayNodeExecutor: DelayNodeExecutor,
     private agentNodeExecutor: AgentNodeExecutor,
     private toolNodeExecutor: ToolNodeExecutor,
+    private emailNodeExecutor: EmailNodeExecutor,
+    private loopNodeExecutor: LoopNodeExecutor,
+    private mergeNodeExecutor: MergeNodeExecutor,
   ) {}
 
   async executeWorkflow(
@@ -228,8 +234,7 @@ export class WorkflowExecutorService {
           result = await this.httpNodeExecutor.execute(node, context);
           break;
         case 'email':
-          // TODO: Implement email executor
-          result = { success: true, data: { message: 'Email node not yet implemented' } };
+          result = await this.emailNodeExecutor.execute(node, context);
           break;
         default:
           result = { success: false, error: `Unknown action type: ${actionType}` };
@@ -245,12 +250,10 @@ export class WorkflowExecutorService {
           result = await this.delayNodeExecutor.execute(node, context);
           break;
         case 'loop':
-          // TODO: Implement loop executor
-          result = { success: true, data: { message: 'Loop node not yet implemented' } };
+          result = await this.loopNodeExecutor.execute(node, context);
           break;
         case 'merge':
-          // TODO: Implement merge executor
-          result = { success: true, data: { message: 'Merge node not yet implemented' } };
+          result = await this.mergeNodeExecutor.execute(node, context);
           break;
         default:
           result = { success: false, error: `Unknown control type: ${controlType}` };
