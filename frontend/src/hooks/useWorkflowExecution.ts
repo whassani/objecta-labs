@@ -416,7 +416,7 @@ export function useWorkflowExecution(
           context: {},
         });
         
-        const executionId = response.data.executionId;
+        const executionId = response.data.id; // Backend returns { id, status, ... }
         executionRef.current.backendExecutionId = executionId;
         
         addLog(`Backend execution started: ${executionId}`);
