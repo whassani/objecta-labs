@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BaseNodeExecutor, NodeExecutionResult } from './base-node.executor';
 import { ExecutionContext } from '../workflow-executor.service';
 import { AgentsService } from '../../agents/agents.service';
+import { LLMService } from '../../agents/llm.service';
 
 @Injectable()
 export class AgentNodeExecutor extends BaseNodeExecutor {
-  constructor(private agentsService: AgentsService) {
+  constructor(
+    private agentsService: AgentsService,
+    private llmService: LLMService,
+  ) {
     super();
   }
 
@@ -36,25 +40,45 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
       // Fetch agent from database
       const agent = await this.agentsService.findOne(agentId, organizationId);
 
-      // TODO: In a future phase, integrate with actual LLM to get real AI responses
-      // For now, return agent configuration and prompt
-      // This would be replaced with:
-      // const llmResponse = await this.llmService.chat(agent.model, finalPrompt, agent.systemPrompt);
-
-      return {
-        success: true,
-        data: {
-          agentId: agent.id,
-          agentName: agent.name,
-          prompt: finalPrompt,
-          response: `Agent "${agent.name}" received prompt: ${finalPrompt}. [Note: LLM integration pending]`,
+      // Make actual LLM call
+      try {
+        const llmResponse = await this.llmService.chat({
           model: agent.model,
-          systemPrompt: agent.systemPrompt,
-          temperature: agent.temperature,
-          timestamp: new Date().toISOString(),
-          // Future: tokens, actualResponse, etc.
-        },
-      };
+          messages: [
+            { role: 'system', content: agent.systemPrompt || 'You are a helpful AI assistant.' },
+            { role: 'user', content: finalPrompt },
+          ],
+          temperature: agent.temperature || 0.7,
+        });
+
+        return {
+          success: true,
+          data: {
+            agentId: agent.id,
+            agentName: agent.name,
+            prompt: finalPrompt,
+            response: llmResponse.text,
+            model: agent.model,
+            systemPrompt: agent.systemPrompt,
+            temperature: agent.temperature,
+            timestamp: new Date().toISOString(),
+            usage: llmResponse.usage,
+            finishReason: llmResponse.finishReason,
+          },
+        };
+      } catch (llmError) {
+        // If LLM call fails, return error with details
+        return {
+          success: false,
+          error: `LLM execution failed: ${llmError.message}`,
+          data: {
+            agentId: agent.id,
+            agentName: agent.name,
+            prompt: finalPrompt,
+            model: agent.model,
+          },
+        };
+      }
     } catch (error) {
       return {
         success: false,

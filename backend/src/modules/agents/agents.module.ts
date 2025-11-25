@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AgentsController } from './agents.controller';
 import { AgentsService } from './agents.service';
 import { Agent } from './entities/agent.entity';
+import { LLMService } from './llm.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Agent])],
   controllers: [AgentsController],
-  providers: [AgentsService],
-  exports: [AgentsService],
+  providers: [AgentsService, LLMService],
+  exports: [AgentsService, LLMService],
 })
 export class AgentsModule {}
