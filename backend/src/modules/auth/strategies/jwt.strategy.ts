@@ -6,7 +6,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
     const secret = process.env.JWT_SECRET || 'your-secret-key';
-    console.log('🔑 JWT Strategy initialized with secret:', secret.substring(0, 10) + '...');
+    console.log('🔑 JWT Strategy initialized with secret (FULL):', secret);
     
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
