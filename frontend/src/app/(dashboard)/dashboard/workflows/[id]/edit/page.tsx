@@ -2,17 +2,16 @@
 
 import { useState, useCallback, useRef, DragEvent, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Play, Eye, Settings, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Play, Eye, Settings, Loader2, Undo, Redo } from 'lucide-react';
 import { ReactFlowProvider } from 'reactflow';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workflowsApi } from '@/lib/api';
 import WorkflowCanvas from '@/components/workflows/WorkflowCanvas';
 import NodePalette from '@/components/workflows/NodePalette';
 import NodeEditor from '@/components/workflows/NodeEditor';
+import ExecutionVisualizer from '@/components/workflows/ExecutionVisualizer';
+import { useWorkflowExecution } from '@/hooks/useWorkflowExecution';
 import { WorkflowDefinition, Workflow } from '@/types/workflow';
-
-let nodeId = 0;
-const getNodeId = () => `node_${nodeId++}`;
 
 export default function EditWorkflowPage() {
   const router = useRouter();
@@ -54,6 +53,47 @@ export default function EditWorkflowPage() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  // Execution mode state
+  const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('normal');
+
+  // Workflow execution with all advanced features
+  const { 
+    execution, 
+    breakpoints,
+    variables,
+    history,
+    currentHistoryIndex,
+    start, 
+    pause, 
+    resume, 
+    stop, 
+    reset,
+    executeStep,
+    toggleStepMode,
+    toggleBreakpoint,
+    setBreakpointCondition,
+    clearAllBreakpoints,
+    loadHistoryEntry,
+  } = useWorkflowExecution(
+    definition.nodes,
+    definition.edges,
+    workflowId,
+    executionMode
+  );
+
+  // Generate unique node IDs based on existing nodes
+  const getNodeId = useCallback(() => {
+    // Find the highest existing node ID number
+    const existingIds = definition.nodes.map(n => {
+      const match = n.id.match(/^node_(\d+)$/);
+      return match ? parseInt(match[1], 10) : -1;
+    });
+    const maxId = existingIds.length > 0 ? Math.max(...existingIds) : -1;
+    return `node_${maxId + 1}`;
+  }, [definition.nodes]);
 
   // Update definition when workflow loads
   useEffect(() => {
@@ -119,30 +159,20 @@ export default function EditWorkflowPage() {
     (event: DragEvent) => {
       event.preventDefault();
 
-      console.log('Drop event triggered');
-      console.log('reactFlowWrapper:', reactFlowWrapper.current);
-      console.log('reactFlowInstance:', reactFlowInstance);
-
       if (!reactFlowWrapper.current || !reactFlowInstance) {
-        console.warn('Missing reactFlowWrapper or reactFlowInstance');
         return;
       }
 
       const type = event.dataTransfer.getData('application/reactflow');
-      console.log('Dropped node type:', type);
       
       if (!type) {
-        console.warn('No type data in dataTransfer');
         return;
       }
 
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
       });
-      
-      console.log('Drop position:', position);
 
       // Determine node category and data based on type
       const [category, subtype] = type.split('-');
@@ -163,11 +193,40 @@ export default function EditWorkflowPage() {
           actionType: subtype,
         };
       } else if (category === 'control') {
-        nodeType = 'condition';
-        nodeData = {
-          label: `${subtype.charAt(0).toUpperCase() + subtype.slice(1)}`,
-          controlType: subtype,
-        };
+        // Handle different control node types
+        if (subtype === 'condition') {
+          nodeType = 'condition';
+          nodeData = {
+            label: 'If/Else',
+            condition: '',
+          };
+        } else if (subtype === 'delay') {
+          nodeType = 'control-delay';
+          nodeData = {
+            label: 'Delay',
+            duration: 5,
+            unit: 'seconds',
+          };
+        } else if (subtype === 'loop') {
+          nodeType = 'control-loop';
+          nodeData = {
+            label: 'Loop',
+            items: 'items',
+          };
+        } else if (subtype === 'merge') {
+          nodeType = 'control-merge';
+          nodeData = {
+            label: 'Merge Branches',
+            mode: 'all', // 'all' or 'any'
+          };
+        } else {
+          // Default condition node for other control types
+          nodeType = 'condition';
+          nodeData = {
+            label: `${subtype.charAt(0).toUpperCase() + subtype.slice(1)}`,
+            controlType: subtype,
+          };
+        }
       }
 
       const newNode = {
@@ -177,18 +236,12 @@ export default function EditWorkflowPage() {
         data: nodeData,
       };
 
-      console.log('Creating new node:', newNode);
-
-      setDefinition((prev) => {
-        const newDef = {
-          ...prev,
-          nodes: [...prev.nodes, newNode],
-        };
-        console.log('New definition:', newDef);
-        return newDef;
-      });
+      setDefinition((prev) => ({
+        ...prev,
+        nodes: [...prev.nodes, newNode],
+      }));
     },
-    [reactFlowInstance]
+    [reactFlowInstance, getNodeId]
   );
 
   const handleDefinitionChange = useCallback((newDefinition: WorkflowDefinition) => {
@@ -198,6 +251,11 @@ export default function EditWorkflowPage() {
   const handleNodeClick = useCallback((node: any) => {
     setSelectedNode(node);
     setShowNodeEditor(true);
+  }, []);
+
+  const handleUndoRedoChange = useCallback((canUndoValue: boolean, canRedoValue: boolean) => {
+    setCanUndo(canUndoValue);
+    setCanRedo(canRedoValue);
   }, []);
 
   const handleSave = async () => {
@@ -213,11 +271,8 @@ export default function EditWorkflowPage() {
   };
 
   const handleExecute = async () => {
-    if (isNewWorkflow) {
-      alert('Please save the workflow before executing');
-      return;
-    }
-    executeMutation.mutate();
+    // Use visualized execution instead of backend call
+    start();
   };
 
   const handleBack = () => {
@@ -272,6 +327,30 @@ export default function EditWorkflowPage() {
           </div>
           
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 border-r border-gray-300 pr-3 mr-3">
+              <button
+                onClick={() => {
+                  // Trigger undo via custom event
+                  window.dispatchEvent(new CustomEvent('workflowUndo'));
+                }}
+                disabled={!canUndo}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                title="Undo (Ctrl+Z)"
+              >
+                <Undo size={18} />
+              </button>
+              <button
+                onClick={() => {
+                  // Trigger redo via custom event
+                  window.dispatchEvent(new CustomEvent('workflowRedo'));
+                }}
+                disabled={!canRedo}
+                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+                title="Redo (Ctrl+Y)"
+              >
+                <Redo size={18} />
+              </button>
+            </div>
             <button
               onClick={() => setShowNodeEditor(!showNodeEditor)}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
@@ -339,6 +418,35 @@ export default function EditWorkflowPage() {
               onChange={handleDefinitionChange}
               onInit={setReactFlowInstance}
               onNodeClick={handleNodeClick}
+              onUndoRedo={handleUndoRedoChange}
+              executionState={execution.status !== 'idle' ? {
+                nodeStates: execution.nodeStates,
+                edgeStates: execution.edgeStates,
+              } : undefined}
+            />
+            
+            {/* Execution Visualizer */}
+            <ExecutionVisualizer
+              nodes={definition.nodes}
+              edges={definition.edges}
+              execution={execution}
+              breakpoints={breakpoints}
+              variables={variables}
+              history={history}
+              currentHistoryIndex={currentHistoryIndex}
+              stepMode={executionMode === 'step-by-step'}
+              isNodeEditorOpen={showNodeEditor}
+              onStart={start}
+              onPause={pause}
+              onResume={resume}
+              onStop={stop}
+              onReset={reset}
+              onStep={executeStep}
+              onToggleStepMode={toggleStepMode}
+              onToggleBreakpoint={toggleBreakpoint}
+              onSetBreakpointCondition={setBreakpointCondition}
+              onClearAllBreakpoints={clearAllBreakpoints}
+              onLoadHistory={loadHistoryEntry}
             />
           </div>
 
@@ -348,17 +456,12 @@ export default function EditWorkflowPage() {
               node={selectedNode}
               onClose={() => setShowNodeEditor(false)}
               onChange={(updatedNode) => {
-                console.log('Updating node:', updatedNode);
-                setDefinition((prev) => {
-                  const newDefinition = {
-                    ...prev,
-                    nodes: prev.nodes.map((n) =>
-                      n.id === updatedNode.id ? updatedNode : n
-                    ),
-                  };
-                  console.log('New definition:', newDefinition);
-                  return newDefinition;
-                });
+                setDefinition((prev) => ({
+                  ...prev,
+                  nodes: prev.nodes.map((n) =>
+                    n.id === updatedNode.id ? updatedNode : n
+                  ),
+                }));
                 // Also update selectedNode so editor shows latest data
                 setSelectedNode(updatedNode);
               }}

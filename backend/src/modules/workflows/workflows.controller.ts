@@ -127,4 +127,17 @@ export class WorkflowsController {
     await this.executorService.cancelExecution(executionId, req.user.organizationId);
     return { message: 'Execution cancelled successfully' };
   }
+
+  @Post('executions/:executionId/stop')
+  async stopExecution(@Param('executionId') executionId: string, @Request() req) {
+    await this.executorService.cancelExecution(executionId, req.user.organizationId);
+    return { message: 'Execution stopped successfully' };
+  }
+
+  @Get('executions/:executionId/stream')
+  async streamExecution(@Param('executionId') executionId: string, @Request() req) {
+    // WebSocket endpoint for streaming execution updates
+    // This will be handled by a WebSocket gateway
+    return { message: 'WebSocket streaming endpoint' };
+  }
 }

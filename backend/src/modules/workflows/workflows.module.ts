@@ -24,6 +24,7 @@ import { AgentsModule } from '../agents/agents.module';
 import { ToolsModule } from '../tools/tools.module';
 import { ScheduleService } from './services/schedule.service';
 import { WebhookService } from './services/webhook.service';
+import { WorkflowExecutionGateway } from './workflow-execution.gateway';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { WebhookService } from './services/webhook.service';
   providers: [
     WorkflowsService,
     WorkflowExecutorService,
+    WorkflowExecutionGateway,
     TriggerNodeExecutor,
     HttpNodeExecutor,
     ConditionNodeExecutor,
@@ -54,6 +56,6 @@ import { WebhookService } from './services/webhook.service';
     ScheduleService,
     WebhookService,
   ],
-  exports: [WorkflowsService, WorkflowExecutorService],
+  exports: [WorkflowsService, WorkflowExecutorService, WorkflowExecutionGateway],
 })
 export class WorkflowsModule {}

@@ -2,12 +2,11 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Play, Clock, Webhook, Zap, X } from 'lucide-react';
+import { Play, Clock, Webhook, Zap, Trash2 } from 'lucide-react';
 
 const TriggerNode = ({ data, selected, id }: NodeProps) => {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Trigger node deletion via ReactFlow
     const event = new CustomEvent('deleteNode', { detail: { nodeId: id } });
     window.dispatchEvent(event);
   };
@@ -51,10 +50,10 @@ const TriggerNode = ({ data, selected, id }: NodeProps) => {
       {selected && (
         <button
           onClick={handleDelete}
-          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg z-10"
+          className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg z-10"
           title="Delete node"
         >
-          <X size={14} />
+          <Trash2 size={14} />
         </button>
       )}
 

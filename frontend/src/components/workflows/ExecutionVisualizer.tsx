@@ -1,0 +1,535 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Node, Edge } from 'reactflow';
+import { 
+  Play, Pause, RotateCcw, CheckCircle, XCircle, Clock, Loader2,
+  StepForward, Bug, History, Eye, Square, SkipForward
+} from 'lucide-react';
+
+export type ExecutionStatus = 'idle' | 'running' | 'paused' | 'completed' | 'failed';
+
+export type NodeExecutionState = {
+  nodeId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+  startTime?: number;
+  endTime?: number;
+  duration?: number;
+  error?: string;
+  output?: any;
+  iteration?: number; // For loop nodes
+};
+
+export type EdgeExecutionState = {
+  edgeId: string;
+  active: boolean;
+  data?: any;
+};
+
+export type ExecutionState = {
+  status: ExecutionStatus;
+  currentNode?: string;
+  nodeStates: Record<string, NodeExecutionState>;
+  edgeStates: Record<string, EdgeExecutionState>;
+  startTime?: number;
+  endTime?: number;
+  logs: ExecutionLog[];
+};
+
+export type ExecutionLog = {
+  timestamp: number;
+  nodeId?: string;
+  level: 'info' | 'warning' | 'error';
+  message: string;
+};
+
+export type WorkflowExecutionHistory = {
+  id: string;
+  workflowId: string;
+  startTime: number;
+  endTime?: number;
+  status: ExecutionStatus;
+  nodeStates: Record<string, NodeExecutionState>;
+  logs: ExecutionLog[];
+  variables?: Record<string, any>;
+};
+
+interface ExecutionVisualizerProps {
+  nodes: Node[];
+  edges: Edge[];
+  execution?: ExecutionState;
+  breakpoints?: Map<string, any>;
+  variables?: Map<string, any>;
+  history?: WorkflowExecutionHistory[];
+  currentHistoryIndex?: number;
+  stepMode?: boolean;
+  isNodeEditorOpen?: boolean; // NEW: Track if node editor is open
+  
+  // Execution controls
+  onStart?: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  onStop?: () => void;
+  onReset?: () => void;
+  
+  // Step debugging
+  onStep?: () => void;
+  onToggleStepMode?: () => void;
+  
+  // Breakpoints
+  onToggleBreakpoint?: (nodeId: string) => void;
+  onSetBreakpointCondition?: (nodeId: string, condition?: string) => void;
+  onClearAllBreakpoints?: () => void;
+  
+  // History
+  onLoadHistory?: (index: number) => void;
+}
+
+export default function ExecutionVisualizer({
+  nodes,
+  edges,
+  execution,
+  breakpoints = new Map(),
+  variables = new Map(),
+  history = [],
+  currentHistoryIndex = -1,
+  stepMode = false,
+  isNodeEditorOpen = false,
+  onStart,
+  onPause,
+  onResume,
+  onStop,
+  onReset,
+  onStep,
+  onToggleStepMode,
+  onToggleBreakpoint,
+  onSetBreakpointCondition,
+  onClearAllBreakpoints,
+  onLoadHistory,
+}: ExecutionVisualizerProps) {
+  const [showLogs, setShowLogs] = useState(false);
+  const [showVariables, setShowVariables] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showBreakpoints, setShowBreakpoints] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+
+  const getNodeStatus = (nodeId: string): NodeExecutionState['status'] => {
+    return execution?.nodeStates[nodeId]?.status || 'pending';
+  };
+
+  const getNodeDuration = (nodeId: string): string => {
+    const state = execution?.nodeStates[nodeId];
+    if (!state?.duration) return '';
+    if (state.duration < 1000) return `${state.duration}ms`;
+    return `${(state.duration / 1000).toFixed(2)}s`;
+  };
+
+  const getStatusIcon = (status: NodeExecutionState['status']) => {
+    switch (status) {
+      case 'running':
+        return <Loader2 size={16} className="animate-spin text-blue-500" />;
+      case 'completed':
+        return <CheckCircle size={16} className="text-green-500" />;
+      case 'failed':
+        return <XCircle size={16} className="text-red-500" />;
+      case 'pending':
+        return <Clock size={16} className="text-gray-400" />;
+      case 'skipped':
+        return <div className="w-4 h-4 rounded-full bg-gray-300" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusColor = (status: NodeExecutionState['status']) => {
+    switch (status) {
+      case 'running':
+        return 'bg-blue-100 border-blue-500';
+      case 'completed':
+        return 'bg-green-100 border-green-500';
+      case 'failed':
+        return 'bg-red-100 border-red-500';
+      case 'pending':
+        return 'bg-gray-50 border-gray-300';
+      case 'skipped':
+        return 'bg-gray-100 border-gray-400';
+      default:
+        return 'bg-white border-gray-300';
+    }
+  };
+
+  const isExecuting = execution?.status === 'running';
+  const isPaused = execution?.status === 'paused';
+  const isCompleted = execution?.status === 'completed';
+  const isFailed = execution?.status === 'failed';
+
+  const getTotalDuration = () => {
+    if (!execution?.startTime) return '';
+    const endTime = execution.endTime || Date.now();
+    const duration = endTime - execution.startTime;
+    if (duration < 1000) return `${duration}ms`;
+    return `${(duration / 1000).toFixed(2)}s`;
+  };
+
+  const completedNodes = Object.values(execution?.nodeStates || {}).filter(
+    (s) => s.status === 'completed'
+  ).length;
+  const failedNodes = Object.values(execution?.nodeStates || {}).filter(
+    (s) => s.status === 'failed'
+  ).length;
+
+  const isWaitingForStep = execution?.status === 'running' && stepMode;
+  const currentNodeId = execution?.currentNode;
+  const currentVariables = currentNodeId ? variables.get(currentNodeId) : null;
+
+  if (!execution || execution.status === 'idle') {
+    return null;
+  }
+
+  // Calculate right margin based on whether node editor is open
+  const rightMargin = isNodeEditorOpen ? 'md:right-[336px]' : 'right-4';
+  
+  return (
+    <div className={`absolute bottom-4 left-4 ${rightMargin} md:left-[272px] bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-[70vh] flex flex-col transition-all duration-300 ease-in-out animate-slideUp`}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-2 ${
+            isExecuting ? 'text-blue-600' : 
+            isCompleted ? 'text-green-600' : 
+            isFailed ? 'text-red-600' : 
+            'text-gray-600'
+          }`}>
+            {isExecuting && <Loader2 size={20} className="animate-spin" />}
+            {isCompleted && <CheckCircle size={20} />}
+            {isFailed && <XCircle size={20} />}
+            {isPaused && <Pause size={20} />}
+            <span className="font-semibold">
+              {isExecuting ? 'Executing...' : 
+               isCompleted ? 'Completed' : 
+               isFailed ? 'Failed' : 
+               'Paused'}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <span>{completedNodes} / {nodes.length} nodes</span>
+            {failedNodes > 0 && (
+              <span className="text-red-600">{failedNodes} failed</span>
+            )}
+            <span>{getTotalDuration()}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Control Buttons */}
+          {!isExecuting && !isPaused && !isCompleted && !isFailed && (
+            <button
+              onClick={onStart}
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+            >
+              <Play size={16} />
+              Start
+            </button>
+          )}
+
+          {isExecuting && (
+            <button
+              onClick={onPause}
+              className="flex items-center gap-2 px-3 py-1.5 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-sm"
+            >
+              <Pause size={16} />
+              Pause
+            </button>
+          )}
+
+          {isPaused && (
+            <button
+              onClick={onResume}
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+            >
+              <Play size={16} />
+              Resume
+            </button>
+          )}
+
+          {(isExecuting || isPaused) && (
+            <button
+              onClick={onStop}
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+            >
+              <XCircle size={16} />
+              Stop
+            </button>
+          )}
+
+          {(isCompleted || isFailed) && (
+            <button
+              onClick={onReset}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm"
+            >
+              <RotateCcw size={16} />
+              Reset
+            </button>
+          )}
+
+          {/* Step Mode Controls */}
+          {stepMode && isWaitingForStep && (
+            <button
+              onClick={onStep}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+            >
+              <StepForward size={16} />
+              Step
+            </button>
+          )}
+
+          {/* View Toggles */}
+          <button
+            onClick={onToggleStepMode}
+            className={`px-3 py-1.5 border rounded-lg transition text-sm ${
+              stepMode ? 'bg-blue-100 border-blue-500 text-blue-700' : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title="Toggle step-by-step mode"
+          >
+            <StepForward size={16} className="inline" />
+          </button>
+
+          <button
+            onClick={() => setShowBreakpoints(!showBreakpoints)}
+            className={`px-3 py-1.5 border rounded-lg transition text-sm ${
+              showBreakpoints ? 'bg-red-100 border-red-500' : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title="Breakpoints"
+          >
+            <Bug size={16} className="inline" />
+          </button>
+
+          <button
+            onClick={() => setShowVariables(!showVariables)}
+            className={`px-3 py-1.5 border rounded-lg transition text-sm ${
+              showVariables ? 'bg-purple-100 border-purple-500' : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title="Variables"
+          >
+            <Eye size={16} className="inline" />
+          </button>
+
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`px-3 py-1.5 border rounded-lg transition text-sm ${
+              showHistory ? 'bg-indigo-100 border-indigo-500' : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title="Execution history"
+          >
+            <History size={16} className="inline" />
+          </button>
+
+          <button
+            onClick={() => setShowLogs(!showLogs)}
+            className={`px-3 py-1.5 border rounded-lg transition text-sm ${
+              showLogs ? 'bg-gray-200 border-gray-500' : 'border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Logs
+          </button>
+        </div>
+      </div>
+
+      {/* Node Execution Status */}
+      <div className="px-4 py-3 border-b border-gray-200 overflow-y-auto overflow-x-hidden" style={{ maxHeight: '150px' }}>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+          {nodes.map((node) => {
+            const status = getNodeStatus(node.id);
+            const state = execution.nodeStates[node.id];
+            const hasBreakpoint = breakpoints.get(node.id)?.enabled;
+            const isCurrent = currentNodeId === node.id;
+            
+            return (
+              <div
+                key={node.id}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg border cursor-pointer transition-all duration-200 ease-in-out hover:shadow-md ${getStatusColor(status)} ${
+                  isCurrent ? 'ring-2 ring-blue-500 animate-pulse' : ''
+                }`}
+                onClick={() => setSelectedNode(node.id)}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {hasBreakpoint && (
+                    <div className="w-2 h-2 bg-red-500 rounded-full" title="Breakpoint" />
+                  )}
+                  {getStatusIcon(status)}
+                  <span className="text-sm font-medium truncate">
+                    {node.data.label || node.id}
+                  </span>
+                </div>
+                {state?.duration && (
+                  <span className="text-xs text-gray-500 ml-2">
+                    {getNodeDuration(node.id)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Panels Container */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {/* Breakpoints Panel */}
+        {showBreakpoints && (
+          <div className="border-b border-gray-200 px-4 py-3 bg-red-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <Bug size={16} className="text-red-600" />
+                Breakpoints ({Array.from(breakpoints.values()).filter(b => b.enabled).length})
+              </h3>
+              <button
+                onClick={onClearAllBreakpoints}
+                className="text-xs text-red-600 hover:text-red-800"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="space-y-2">
+              {Array.from(breakpoints.entries()).map(([nodeId, bp]) => {
+                const node = nodes.find(n => n.id === nodeId);
+                if (!node || !bp.enabled) return null;
+                
+                return (
+                  <div key={nodeId} className="bg-white rounded p-2 border border-red-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{node.data.label || nodeId}</span>
+                      <button
+                        onClick={() => onToggleBreakpoint?.(nodeId)}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    {bp.condition && (
+                      <div className="text-xs text-gray-600 mt-1 font-mono">
+                        Condition: {bp.condition}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {Array.from(breakpoints.values()).filter(b => b.enabled).length === 0 && (
+                <div className="text-sm text-gray-500 text-center py-2">
+                  No breakpoints set. Click on nodes to add breakpoints.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Variables Panel */}
+        {showVariables && currentVariables && (
+          <div className="border-b border-gray-200 px-4 py-3 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
+              <Eye size={16} className="text-purple-600" />
+              Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
+            </h3>
+            <div className="space-y-2">
+              {/* Input Data */}
+              {currentVariables.inputData && (
+                <div className="bg-white rounded p-2 border border-purple-200">
+                  <div className="text-xs font-semibold text-purple-700 mb-1">Input:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                    {JSON.stringify(currentVariables.inputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {/* Output Data */}
+              {currentVariables.outputData && (
+                <div className="bg-white rounded p-2 border border-purple-200">
+                  <div className="text-xs font-semibold text-purple-700 mb-1">Output:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                    {JSON.stringify(currentVariables.outputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {/* Context Variables */}
+              {Object.keys(currentVariables.variables).length > 0 && (
+                <div className="bg-white rounded p-2 border border-purple-200">
+                  <div className="text-xs font-semibold text-purple-700 mb-1">Context:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                    {JSON.stringify(currentVariables.variables, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* History Panel */}
+        {showHistory && history.length > 0 && (
+          <div className="border-b border-gray-200 px-4 py-3 bg-indigo-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
+              <History size={16} className="text-indigo-600" />
+              Execution History ({history.length})
+            </h3>
+            <div className="space-y-1">
+              {history.map((entry, index) => {
+                const duration = entry.endTime ? entry.endTime - entry.startTime : 0;
+                const isActive = index === currentHistoryIndex;
+                
+                return (
+                  <div
+                    key={entry.id}
+                    className={`bg-white rounded p-2 border cursor-pointer hover:bg-indigo-50 ${
+                      isActive ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-indigo-200'
+                    }`}
+                    onClick={() => onLoadHistory?.(index)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {entry.status === 'completed' && <CheckCircle size={14} className="text-green-500" />}
+                        {entry.status === 'failed' && <XCircle size={14} className="text-red-500" />}
+                        <span className="text-xs font-medium">
+                          {new Date(entry.startTime).toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {duration < 1000 ? `${duration}ms` : `${(duration / 1000).toFixed(2)}s`}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Execution Logs */}
+        {showLogs && execution.logs && execution.logs.length > 0 && (
+          <div className="px-4 py-3 bg-gray-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+            <h3 className="font-semibold text-sm mb-2">Execution Logs</h3>
+            <div className="space-y-1">
+              {execution.logs.map((log, index) => (
+                <div
+                  key={index}
+                  className={`text-xs font-mono ${
+                    log.level === 'error' ? 'text-red-600' :
+                    log.level === 'warning' ? 'text-yellow-600' :
+                    'text-gray-600'
+                  }`}
+                >
+                  <span className="text-gray-400">
+                    [{new Date(log.timestamp).toLocaleTimeString()}]
+                  </span>
+                  {log.nodeId && (
+                    <span className="text-blue-600 ml-2">[{log.nodeId}]</span>
+                  )}
+                  <span className="ml-2">{log.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
