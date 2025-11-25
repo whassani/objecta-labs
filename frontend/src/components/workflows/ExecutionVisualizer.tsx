@@ -190,9 +190,9 @@ export default function ExecutionVisualizer({
   const rightMargin = isNodeEditorOpen ? 'md:right-[336px]' : 'right-4';
   
   return (
-    <div className={`absolute bottom-4 left-4 ${rightMargin} md:left-[272px] bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-[70vh] flex flex-col transition-all duration-300 ease-in-out animate-slideUp`}>
+    <div className={`absolute bottom-4 left-4 ${rightMargin} md:left-[272px] bg-white rounded-lg shadow-xl border-2 border-gray-300 z-10 max-h-[80vh] flex flex-col transition-all duration-300 ease-in-out animate-slideUp min-w-[600px]`}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-2 ${
             isExecuting ? 'text-blue-600' : 
@@ -337,8 +337,9 @@ export default function ExecutionVisualizer({
       </div>
 
       {/* Node Execution Status */}
-      <div className="px-4 py-3 border-b border-gray-200 overflow-y-auto overflow-x-hidden" style={{ maxHeight: '150px' }}>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
+      <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden" style={{ maxHeight: '250px' }}>
+        <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
           {nodes.map((node) => {
             const status = getNodeStatus(node.id);
             const state = execution.nodeStates[node.id];
@@ -377,7 +378,7 @@ export default function ExecutionVisualizer({
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Breakpoints Panel */}
         {showBreakpoints && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-red-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+          <div className="border-b border-gray-200 px-6 py-4 bg-red-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '300px' }}>
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <Bug size={16} className="text-red-600" />
@@ -425,17 +426,17 @@ export default function ExecutionVisualizer({
 
         {/* Variables Panel */}
         {showVariables && currentVariables && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
-            <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <Eye size={16} className="text-purple-600" />
+          <div className="border-b border-gray-200 px-6 py-4 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '350px' }}>
+            <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
+              <Eye size={18} className="text-purple-600" />
               Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Input Data */}
               {currentVariables.inputData && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Input:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Input Data:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.inputData, null, 2)}
                   </pre>
                 </div>
@@ -443,9 +444,9 @@ export default function ExecutionVisualizer({
               
               {/* Output Data */}
               {currentVariables.outputData && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Output:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Output Data:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.outputData, null, 2)}
                   </pre>
                 </div>
@@ -453,9 +454,9 @@ export default function ExecutionVisualizer({
               
               {/* Context Variables */}
               {Object.keys(currentVariables.variables).length > 0 && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Context:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Context Variables:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.variables, null, 2)}
                   </pre>
                 </div>
@@ -466,7 +467,7 @@ export default function ExecutionVisualizer({
 
         {/* History Panel */}
         {showHistory && history.length > 0 && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-indigo-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+          <div className="border-b border-gray-200 px-6 py-4 bg-indigo-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '300px' }}>
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
               <History size={16} className="text-indigo-600" />
               Execution History ({history.length})
@@ -505,23 +506,23 @@ export default function ExecutionVisualizer({
 
         {/* Execution Logs */}
         {showLogs && execution.logs && execution.logs.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
-            <h3 className="font-semibold text-sm mb-2">Execution Logs</h3>
-            <div className="space-y-1">
+          <div className="px-6 py-4 bg-gray-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '350px' }}>
+            <h3 className="font-semibold text-base mb-3 text-gray-700">Execution Logs</h3>
+            <div className="space-y-2">
               {execution.logs.map((log, index) => (
                 <div
                   key={index}
-                  className={`text-xs font-mono ${
-                    log.level === 'error' ? 'text-red-600' :
-                    log.level === 'warning' ? 'text-yellow-600' :
-                    'text-gray-600'
+                  className={`text-sm font-mono p-2 rounded border ${
+                    log.level === 'error' ? 'text-red-700 bg-red-50 border-red-200' :
+                    log.level === 'warning' ? 'text-yellow-700 bg-yellow-50 border-yellow-200' :
+                    'text-gray-700 bg-white border-gray-200'
                   }`}
                 >
-                  <span className="text-gray-400">
+                  <span className="text-gray-500 font-semibold">
                     [{new Date(log.timestamp).toLocaleTimeString()}]
                   </span>
                   {log.nodeId && (
-                    <span className="text-blue-600 ml-2">[{log.nodeId}]</span>
+                    <span className="text-blue-600 ml-2 font-semibold">[{log.nodeId}]</span>
                   )}
                   <span className="ml-2">{log.message}</span>
                 </div>
