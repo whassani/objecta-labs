@@ -412,7 +412,8 @@ export function useWorkflowExecution(
     if (mode === 'backend' && workflowId) {
       try {
         const response = await api.post(`/workflows/${workflowId}/execute`, {
-          mode: 'async',
+          triggerData: {},
+          context: {},
         });
         
         const executionId = response.data.executionId;
