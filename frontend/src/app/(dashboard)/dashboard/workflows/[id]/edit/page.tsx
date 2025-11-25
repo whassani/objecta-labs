@@ -119,12 +119,20 @@ export default function EditWorkflowPage() {
     (event: DragEvent) => {
       event.preventDefault();
 
+      console.log('Drop event triggered');
+      console.log('reactFlowWrapper:', reactFlowWrapper.current);
+      console.log('reactFlowInstance:', reactFlowInstance);
+
       if (!reactFlowWrapper.current || !reactFlowInstance) {
+        console.warn('Missing reactFlowWrapper or reactFlowInstance');
         return;
       }
 
       const type = event.dataTransfer.getData('application/reactflow');
+      console.log('Dropped node type:', type);
+      
       if (!type) {
+        console.warn('No type data in dataTransfer');
         return;
       }
 
@@ -133,6 +141,8 @@ export default function EditWorkflowPage() {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       });
+      
+      console.log('Drop position:', position);
 
       // Determine node category and data based on type
       const [category, subtype] = type.split('-');
@@ -167,10 +177,16 @@ export default function EditWorkflowPage() {
         data: nodeData,
       };
 
-      setDefinition((prev) => ({
-        ...prev,
-        nodes: [...prev.nodes, newNode],
-      }));
+      console.log('Creating new node:', newNode);
+
+      setDefinition((prev) => {
+        const newDef = {
+          ...prev,
+          nodes: [...prev.nodes, newNode],
+        };
+        console.log('New definition:', newDef);
+        return newDef;
+      });
     },
     [reactFlowInstance]
   );
