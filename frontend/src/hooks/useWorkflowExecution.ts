@@ -451,21 +451,30 @@ export function useWorkflowExecution(
               // Update node statuses from execution steps
               if (executionData.steps && Array.isArray(executionData.steps)) {
                 console.log(`Processing ${executionData.steps.length} steps...`);
+                
+                const nodeStates: Record<string, NodeExecutionState> = {};
+                
                 executionData.steps.forEach((step: any) => {
-                  updateNodeStatus(step.nodeId, step.status as any);
+                  // Update node state
+                  nodeStates[step.nodeId] = {
+                    status: step.status === 'completed' ? 'completed' : 
+                            step.status === 'failed' ? 'error' : 
+                            'running',
+                    startTime: step.startTime ? new Date(step.startTime).getTime() : undefined,
+                    endTime: step.endTime ? new Date(step.endTime).getTime() : undefined,
+                    output: step.outputData,
+                  };
                   
                   // Store step output in variables
-                  if (step.output) {
-                    setVariables((prev) => {
-                      const newVars = new Map(prev);
-                      newVars.set(step.nodeId, {
-                        inputData: step.input || {},
-                        outputData: step.output,
-                        variables: {},
-                      });
-                      return newVars;
+                  setVariables((prev) => {
+                    const newVars = new Map(prev);
+                    newVars.set(step.nodeId, {
+                      inputData: step.inputData || {},
+                      outputData: step.outputData,
+                      variables: {},
                     });
-                  }
+                    return newVars;
+                  });
                   
                   addLog(
                     `Node ${step.nodeId}: ${step.status}`,
@@ -473,6 +482,12 @@ export function useWorkflowExecution(
                     step.status === 'completed' ? 'info' : step.status === 'failed' ? 'error' : 'info'
                   );
                 });
+                
+                // Update all node states at once
+                setExecution((prev) => ({
+                  ...prev,
+                  nodeStates: { ...prev.nodeStates, ...nodeStates },
+                }));
               }
               
               addLog(`Workflow ${executionData.status}`, undefined, executionData.status === 'completed' ? 'info' : 'error');
