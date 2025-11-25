@@ -24,32 +24,39 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
         };
       }
 
-      // Get prompt - prioritize trigger data, then node config, then default
+      // Get prompt - check previous step outputs first, then trigger data
       let finalPrompt: string;
       
-      // Debug: Log context to see what's available
+      // Debug logging
       console.log('Agent Executor Context:');
       console.log('  triggerData:', JSON.stringify(context.triggerData));
-      console.log('  variables:', JSON.stringify(context.variables));
-      console.log('  stepOutputs:', Object.keys(context.stepOutputs));
+      console.log('  stepOutputs:', JSON.stringify(context.stepOutputs));
       
-      // First check if there's a prompt or message in trigger data (from test UI)
-      const triggerPrompt = this.getInputValue('prompt', context) || 
-                           this.getInputValue('message', context);
+      // Look for prompt/message in previous step outputs (trigger node output)
+      let testPrompt: string | null = null;
       
-      console.log('  triggerPrompt found:', triggerPrompt);
-      console.log('  node.data.prompt:', prompt);
+      // Check trigger node output (usually first step)
+      const triggerStep = Object.values(context.stepOutputs)[0];
+      if (triggerStep && typeof triggerStep === 'object' && 'data' in triggerStep) {
+        const stepData = (triggerStep as any).data;
+        testPrompt = stepData.message || stepData.prompt;
+        console.log('  Found in trigger step output:', testPrompt);
+      }
       
-      if (triggerPrompt) {
-        // Use prompt from test data
-        finalPrompt = triggerPrompt;
-        console.log('  Using trigger prompt!');
+      // Fallback to checking context.triggerData directly
+      if (!testPrompt) {
+        testPrompt = context.triggerData.message || context.triggerData.prompt;
+        console.log('  Found in context.triggerData:', testPrompt);
+      }
+      
+      // Decide which prompt to use
+      if (testPrompt) {
+        finalPrompt = testPrompt;
+        console.log('  Using test prompt!');
       } else if (prompt) {
-        // Use prompt from node configuration (with variable interpolation)
         finalPrompt = this.interpolateTemplate(prompt, context);
         console.log('  Using node config prompt');
       } else {
-        // Fallback default
         finalPrompt = 'Execute agent task';
         console.log('  Using default prompt');
       }
