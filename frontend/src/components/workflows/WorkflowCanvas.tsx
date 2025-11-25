@@ -52,6 +52,33 @@ export default function WorkflowCanvas({
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Listen for custom delete events from nodes
+  useEffect(() => {
+    const handleCustomDelete = (event: any) => {
+      const nodeId = event.detail?.nodeId;
+      if (nodeId && !readOnly) {
+        console.log('Custom delete event for node:', nodeId);
+        const remainingNodes = nodes.filter((n) => n.id !== nodeId);
+        const remainingEdges = edges.filter(
+          (e) => e.source !== nodeId && e.target !== nodeId
+        );
+        
+        setNodes(remainingNodes);
+        setEdges(remainingEdges);
+        
+        if (onChange) {
+          onChange({
+            nodes: remainingNodes as any,
+            edges: remainingEdges as any,
+          });
+        }
+      }
+    };
+
+    window.addEventListener('deleteNode', handleCustomDelete);
+    return () => window.removeEventListener('deleteNode', handleCustomDelete);
+  }, [nodes, edges, onChange, readOnly, setNodes, setEdges]);
+
   // Update nodes and edges when initialDefinition changes
   useEffect(() => {
     if (!initialDefinition) return;

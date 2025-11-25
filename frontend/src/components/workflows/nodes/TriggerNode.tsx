@@ -2,9 +2,15 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Play, Clock, Webhook, Zap } from 'lucide-react';
+import { Play, Clock, Webhook, Zap, X } from 'lucide-react';
 
-const TriggerNode = ({ data, selected }: NodeProps) => {
+const TriggerNode = ({ data, selected, id }: NodeProps) => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Trigger node deletion via ReactFlow
+    const event = new CustomEvent('deleteNode', { detail: { nodeId: id } });
+    window.dispatchEvent(event);
+  };
   const getTriggerIcon = () => {
     switch (data.triggerType) {
       case 'manual':
@@ -37,10 +43,21 @@ const TriggerNode = ({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md ${
+      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md relative ${
         selected ? 'border-green-500 ring-2 ring-green-200' : 'border-green-300'
       }`}
     >
+      {/* Delete button */}
+      {selected && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg z-10"
+          title="Delete node"
+        >
+          <X size={14} />
+        </button>
+      )}
+
       <div className="flex items-center gap-2 mb-2">
         <div className="flex items-center justify-center w-6 h-6 rounded bg-green-100 text-green-600">
           {getTriggerIcon()}

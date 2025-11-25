@@ -2,9 +2,14 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Bot, Wrench, Send, Mail, Database, Code } from 'lucide-react';
+import { Bot, Wrench, Send, Mail, Database, Code, X } from 'lucide-react';
 
-const ActionNode = ({ data, selected }: NodeProps) => {
+const ActionNode = ({ data, selected, id }: NodeProps) => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const event = new CustomEvent('deleteNode', { detail: { nodeId: id } });
+    window.dispatchEvent(event);
+  };
   const getActionIcon = () => {
     switch (data.actionType) {
       case 'agent':
@@ -79,10 +84,21 @@ const ActionNode = ({ data, selected }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md ${
+      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md relative ${
         selected ? 'border-indigo-500 ring-2 ring-indigo-200' : 'border-indigo-300'
       }`}
     >
+      {/* Delete button */}
+      {selected && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg z-10"
+          title="Delete node"
+        >
+          <X size={14} />
+        </button>
+      )}
+
       {/* Input handle */}
       <Handle
         type="target"

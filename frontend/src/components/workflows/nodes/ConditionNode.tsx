@@ -2,15 +2,31 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { GitBranch } from 'lucide-react';
+import { GitBranch, X } from 'lucide-react';
 
-const ConditionNode = ({ data, selected }: NodeProps) => {
+const ConditionNode = ({ data, selected, id }: NodeProps) => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const event = new CustomEvent('deleteNode', { detail: { nodeId: id } });
+    window.dispatchEvent(event);
+  };
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md ${
+      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md relative ${
         selected ? 'border-amber-500 ring-2 ring-amber-200' : 'border-amber-300'
       }`}
     >
+      {/* Delete button */}
+      {selected && (
+        <button
+          onClick={handleDelete}
+          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg z-10"
+          title="Delete node"
+        >
+          <X size={14} />
+        </button>
+      )}
+
       {/* Input handle */}
       <Handle
         type="target"
