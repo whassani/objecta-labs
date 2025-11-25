@@ -2,22 +2,53 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Play } from 'lucide-react';
+import { ArrowLeft, Save, Play, Loader2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { workflowsApi } from '@/lib/api';
 
 export default function NewWorkflowPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [triggerType, setTriggerType] = useState('manual');
+  const [scheduleConfig, setScheduleConfig] = useState('');
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await workflowsApi.create(data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Redirect to the workflow builder with the new ID
+      router.push(`/dashboard/workflows/${data.id}/edit`);
+    },
+    onError: (error) => {
+      console.error('Error creating workflow:', error);
+      alert('Failed to create workflow. Please try again.');
+    },
+  });
 
   const handleSave = () => {
     if (!name) {
       alert('Please enter a workflow name');
       return;
     }
-    // TODO: Create workflow via API and get ID
-    // For now, redirect to builder with mock ID
-    router.push('/dashboard/workflows/new-workflow/edit');
+
+    const triggerConfig: any = {};
+    if (triggerType === 'schedule' && scheduleConfig) {
+      triggerConfig.cron = scheduleConfig;
+    }
+
+    createMutation.mutate({
+      name,
+      description,
+      triggerType,
+      triggerConfig: Object.keys(triggerConfig).length > 0 ? triggerConfig : undefined,
+      definition: {
+        nodes: [],
+        edges: [],
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -51,10 +82,20 @@ export default function NewWorkflowPage() {
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            disabled={createMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={18} />
-            Save Workflow
+            {createMutation.isPending ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Continue to Builder
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -121,11 +162,13 @@ export default function NewWorkflowPage() {
                   </label>
                   <input
                     type="text"
+                    value={scheduleConfig}
+                    onChange={(e) => setScheduleConfig(e.target.value)}
                     placeholder="0 9 * * *"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Every day at 9:00 AM
+                    Example: 0 9 * * * (Every day at 9:00 AM)
                   </p>
                 </div>
               )}

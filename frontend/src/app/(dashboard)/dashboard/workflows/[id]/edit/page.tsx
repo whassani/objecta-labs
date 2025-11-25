@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useCallback, useRef, DragEvent } from 'react';
+import { useState, useCallback, useRef, DragEvent, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Save, Play, Eye, Settings } from 'lucide-react';
+import { ArrowLeft, Save, Play, Eye, Settings, Loader2 } from 'lucide-react';
 import { ReactFlowProvider } from 'reactflow';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { workflowsApi } from '@/lib/api';
 import WorkflowCanvas from '@/components/workflows/WorkflowCanvas';
 import NodePalette from '@/components/workflows/NodePalette';
 import NodeEditor from '@/components/workflows/NodeEditor';
-import { WorkflowDefinition } from '@/types/workflow';
+import { WorkflowDefinition, Workflow } from '@/types/workflow';
 
 let nodeId = 0;
 const getNodeId = () => `node_${nodeId++}`;
@@ -15,22 +17,96 @@ const getNodeId = () => `node_${nodeId++}`;
 export default function EditWorkflowPage() {
   const router = useRouter();
   const params = useParams();
+  const queryClient = useQueryClient();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   
-  const [workflow, setWorkflow] = useState({
-    name: 'Customer Support Automation',
-    description: 'Automatically respond to common customer queries',
-    triggerType: 'manual',
+  const workflowId = params.id as string;
+  const isNewWorkflow = workflowId === 'new-workflow';
+
+  // Fetch workflow from backend
+  const { data: workflow, isLoading, error } = useQuery({
+    queryKey: ['workflow', workflowId],
+    queryFn: async () => {
+      if (isNewWorkflow) {
+        return {
+          id: workflowId,
+          name: 'New Workflow',
+          description: '',
+          triggerType: 'manual' as const,
+          status: 'draft' as const,
+          definition: { nodes: [], edges: [] },
+          version: 1,
+          tags: [],
+          executionCount: 0,
+        };
+      }
+      const response = await workflowsApi.getOne(workflowId);
+      return response.data;
+    },
+    enabled: !!workflowId,
   });
 
-  const [definition, setDefinition] = useState<WorkflowDefinition>({
-    nodes: [],
-    edges: [],
-  });
+  const [definition, setDefinition] = useState<WorkflowDefinition>(
+    workflow?.definition || { nodes: [], edges: [] }
+  );
 
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [showNodeEditor, setShowNodeEditor] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Update definition when workflow loads
+  useEffect(() => {
+    if (workflow?.definition) {
+      setDefinition(workflow.definition);
+    }
+  }, [workflow]);
+
+  // Save workflow mutation
+  const saveMutation = useMutation({
+    mutationFn: async (data: Partial<Workflow>) => {
+      if (isNewWorkflow) {
+        const response = await workflowsApi.create(data);
+        return response.data;
+      } else {
+        const response = await workflowsApi.update(workflowId, data);
+        return response.data;
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['workflow', workflowId] });
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+      
+      // If it was a new workflow, redirect to the actual ID
+      if (isNewWorkflow && data.id) {
+        router.push(`/dashboard/workflows/${data.id}/edit`);
+      }
+    },
+    onError: (error) => {
+      console.error('Error saving workflow:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    },
+  });
+
+  // Execute workflow mutation
+  const executeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await workflowsApi.execute(workflowId, {
+        triggerData: {},
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      alert(`Workflow execution started! Execution ID: ${data.id}`);
+    },
+    onError: (error) => {
+      console.error('Error executing workflow:', error);
+      alert('Failed to execute workflow');
+    },
+  });
 
   // Handle drag over for drop zone
   const onDragOver = useCallback((event: DragEvent) => {
@@ -104,23 +180,57 @@ export default function EditWorkflowPage() {
   }, []);
 
   const handleSave = async () => {
-    // TODO: Implement save to backend
-    console.log('Saving workflow:', {
-      ...workflow,
+    if (!workflow) return;
+    
+    setSaveStatus('saving');
+    saveMutation.mutate({
+      name: workflow.name,
+      description: workflow.description,
+      triggerType: workflow.triggerType,
       definition,
     });
-    alert('Workflow saved! (Backend integration pending)');
   };
 
   const handleExecute = async () => {
-    // TODO: Implement execution
-    console.log('Executing workflow:', workflow);
-    alert('Workflow execution started! (Backend integration pending)');
+    if (isNewWorkflow) {
+      alert('Please save the workflow before executing');
+      return;
+    }
+    executeMutation.mutate();
   };
 
   const handleBack = () => {
     router.push('/dashboard/workflows');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading workflow...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error loading workflow</p>
+          <button
+            onClick={() => router.push('/dashboard/workflows')}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          >
+            Back to Workflows
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workflow) return null;
 
   return (
     <ReactFlowProvider>
@@ -163,10 +273,30 @@ export default function EditWorkflowPage() {
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              disabled={saveStatus === 'saving'}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save size={18} />
-              Save
+              {saveStatus === 'saving' ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Saving...
+                </>
+              ) : saveStatus === 'saved' ? (
+                <>
+                  <Save size={18} />
+                  Saved!
+                </>
+              ) : saveStatus === 'error' ? (
+                <>
+                  <Save size={18} />
+                  Error
+                </>
+              ) : (
+                <>
+                  <Save size={18} />
+                  Save
+                </>
+              )}
             </button>
           </div>
         </div>
