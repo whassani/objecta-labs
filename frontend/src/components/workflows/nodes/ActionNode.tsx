@@ -25,14 +25,48 @@ const ActionNode = ({ data, selected }: NodeProps) => {
   };
 
   const getActionLabel = () => {
+    // If there's a custom label, use it
+    if (data.label && data.label !== 'Agent Action' && data.label !== 'Execute Tool' && data.label !== 'Action') {
+      return data.label;
+    }
+
+    // Otherwise, generate label based on action type and data
     switch (data.actionType) {
       case 'agent':
+        if (data.agentId) {
+          // Map agent IDs to names (in real app, fetch from API)
+          const agentNames: Record<string, string> = {
+            'agent-1': 'Customer Support Agent',
+            'agent-2': 'Sales Assistant',
+          };
+          return agentNames[data.agentId] || data.agentName || 'AI Agent';
+        }
         return data.agentName || 'AI Agent';
       case 'tool':
+        if (data.toolId) {
+          // Map tool IDs to names (in real app, fetch from API)
+          const toolNames: Record<string, string> = {
+            'tool-1': 'Calculator',
+            'tool-2': 'HTTP API',
+          };
+          return toolNames[data.toolId] || data.toolName || 'Execute Tool';
+        }
         return data.toolName || 'Execute Tool';
       case 'http':
+        if (data.url) {
+          // Show URL domain if available
+          try {
+            const urlObj = new URL(data.url);
+            return `${data.method || 'GET'} ${urlObj.hostname}`;
+          } catch {
+            return `${data.method || 'GET'} Request`;
+          }
+        }
         return `${data.method || 'GET'} Request`;
       case 'email':
+        if (data.to) {
+          return `Email to ${data.to}`;
+        }
         return 'Send Email';
       case 'database':
         return 'Database Query';
