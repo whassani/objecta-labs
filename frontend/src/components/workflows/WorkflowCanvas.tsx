@@ -52,28 +52,44 @@ export default function WorkflowCanvas({
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Only update nodes and edges on initial mount or when adding/removing nodes
+  // Update nodes and edges when initialDefinition changes
   useEffect(() => {
-    if (!isInitialized && initialDefinition) {
-      setIsInitialized(true);
+    if (!initialDefinition) return;
+
+    const currentNodeCount = nodes.length;
+    const newNodeCount = initialDefinition.nodes?.length || 0;
+    const currentEdgeCount = edges.length;
+    const newEdgeCount = initialDefinition.edges?.length || 0;
+
+    // If count changed (add/remove), update everything
+    if (currentNodeCount !== newNodeCount || currentEdgeCount !== newEdgeCount) {
+      if (initialDefinition.nodes) {
+        setNodes(initialDefinition.nodes as any);
+      }
+      if (initialDefinition.edges) {
+        setEdges(initialDefinition.edges as any);
+      }
       return;
     }
 
-    // Only update if the number of nodes/edges changed (not position)
-    const currentNodeCount = nodes.length;
-    const newNodeCount = initialDefinition?.nodes?.length || 0;
-    const currentEdgeCount = edges.length;
-    const newEdgeCount = initialDefinition?.edges?.length || 0;
-
-    if (currentNodeCount !== newNodeCount || currentEdgeCount !== newEdgeCount) {
-      if (initialDefinition?.nodes) {
-        setNodes(initialDefinition.nodes as any);
-      }
-      if (initialDefinition?.edges) {
-        setEdges(initialDefinition.edges as any);
-      }
+    // If count is the same, only update node data (not positions)
+    // This allows property changes to be reflected without fighting drag operations
+    if (initialDefinition.nodes && nodes.length === newNodeCount) {
+      setNodes((currentNodes) =>
+        currentNodes.map((currentNode) => {
+          const updatedNode = initialDefinition.nodes.find((n) => n.id === currentNode.id);
+          if (updatedNode) {
+            // Keep current position, only update data
+            return {
+              ...currentNode,
+              data: updatedNode.data,
+            };
+          }
+          return currentNode;
+        })
+      );
     }
-  }, [initialDefinition?.nodes?.length, initialDefinition?.edges?.length]);
+  }, [initialDefinition]);
 
   // Handle connection between nodes
   const onConnect = useCallback(
