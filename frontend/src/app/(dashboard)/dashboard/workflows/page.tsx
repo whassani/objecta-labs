@@ -26,11 +26,11 @@ export default function WorkflowsPage() {
     },
   });
 
-  const workflows = workflowsData?.data || [];
+  const workflows: Workflow[] = workflowsData?.data || [];
   const stats = {
     total: workflows.length,
-    active: workflows.filter((w: Workflow) => w.status === 'active').length,
-    totalExecutions: workflows.reduce((sum: number, w: Workflow) => sum + w.executionCount, 0),
+    active: workflows.filter((w) => w.status === 'active').length,
+    totalExecutions: workflows.reduce((sum, w) => sum + w.executionCount, 0),
     successRate: workflows.length > 0 ? 95 : 0, // TODO: Calculate from actual execution data
   };
 

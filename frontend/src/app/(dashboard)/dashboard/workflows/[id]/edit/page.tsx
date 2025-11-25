@@ -316,6 +316,7 @@ export default function EditWorkflowPage() {
             <WorkflowCanvas
               initialDefinition={definition}
               onChange={handleDefinitionChange}
+              onInit={setReactFlowInstance}
             />
           </div>
 

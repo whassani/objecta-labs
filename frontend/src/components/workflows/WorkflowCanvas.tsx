@@ -31,12 +31,14 @@ const nodeTypes: NodeTypes = {
 interface WorkflowCanvasProps {
   initialDefinition?: WorkflowDefinition;
   onChange?: (definition: WorkflowDefinition) => void;
+  onInit?: (instance: any) => void;
   readOnly?: boolean;
 }
 
 export default function WorkflowCanvas({
   initialDefinition,
   onChange,
+  onInit,
   readOnly = false,
 }: WorkflowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -145,6 +147,7 @@ export default function WorkflowCanvas({
         onNodeClick={onNodeClick}
         onNodesDelete={onNodesDelete}
         onEdgesDelete={onEdgesDelete}
+        onInit={onInit}
         nodeTypes={nodeTypes}
         fitView
         attributionPosition="bottom-left"
