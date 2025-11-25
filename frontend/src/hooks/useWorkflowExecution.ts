@@ -647,8 +647,8 @@ export function useWorkflowExecution(
     }
   };
 
-  const start = useCallback(() => {
-    executeWorkflow();
+  const start = useCallback((testData?: any) => {
+    executeWorkflow(testData);
   }, [nodes, edges]);
 
   const pause = useCallback(() => {
