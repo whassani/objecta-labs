@@ -146,12 +146,26 @@ export default function NewAgentPage() {
                   id="model"
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                 >
-                  <option value="gpt-4">GPT-4</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  <option value="claude-3-opus">Claude 3 Opus</option>
-                  <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                  <optgroup label="OpenAI">
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  </optgroup>
+                  <optgroup label="Ollama (Local, Free)">
+                    <option value="mistral">Mistral (7B)</option>
+                    <option value="llama2">Llama 2 (7B)</option>
+                    <option value="codellama">CodeLlama (7B)</option>
+                    <option value="phi">Phi (2.7B - Fast)</option>
+                    <option value="neural-chat">Neural Chat (7B)</option>
+                  </optgroup>
+                  <optgroup label="Anthropic">
+                    <option value="claude-3-opus">Claude 3 Opus</option>
+                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                  </optgroup>
                 </select>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  OpenAI requires API key. Ollama models run locally for free.
+                </p>
               </div>
 
               <div>
