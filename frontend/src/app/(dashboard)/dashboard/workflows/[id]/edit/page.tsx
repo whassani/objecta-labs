@@ -59,8 +59,8 @@ export default function EditWorkflowPage() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  // Execution mode state
-  const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('normal');
+  // Execution mode state - Use backend mode for real LLM execution
+  const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('backend');
 
   // Workflow execution with all advanced features
   const { 
