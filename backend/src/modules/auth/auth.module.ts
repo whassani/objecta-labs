@@ -9,12 +9,15 @@ import { Organization } from '../organizations/entities/organization.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
+const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+console.log('🔐 AuthModule JWT Secret:', jwtSecret.substring(0, 10) + '...');
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Organization]),
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
+      secret: jwtSecret,
       signOptions: { expiresIn: process.env.JWT_EXPIRATION || '7d' },
     }),
   ],
