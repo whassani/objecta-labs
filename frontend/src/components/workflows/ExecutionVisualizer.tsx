@@ -447,7 +447,7 @@ export default function ExecutionVisualizer({
       </div>
 
       {/* Workflow Input/Output Summary */}
-      {(isCompleted || isFailed) && execution.result && (
+      {(isCompleted || isFailed) && (
         <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <h3 className="font-semibold text-base mb-3 text-gray-800 flex items-center gap-2">
             <CheckCircle size={18} className="text-green-600" />
@@ -460,17 +460,29 @@ export default function ExecutionVisualizer({
                 📥 Input
               </div>
               <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
-                {JSON.stringify(execution.result.input || {}, null, 2)}
+                {JSON.stringify(execution.logs?.[0] || {}, null, 2)}
               </pre>
             </div>
             
-            {/* Workflow Output */}
+            {/* Workflow Output - Get from last completed node */}
             <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
               <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
                 📤 Output
               </div>
               <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
-                {JSON.stringify(execution.result.output || {}, null, 2)}
+                {(() => {
+                  // Find the last completed node's output
+                  const completedNodes = Object.entries(execution.nodeStates || {})
+                    .filter(([_, state]) => state.status === 'completed')
+                    .map(([nodeId, state]) => ({ nodeId, state }));
+                  
+                  if (completedNodes.length > 0) {
+                    const lastNode = completedNodes[completedNodes.length - 1];
+                    const output = variables.get(lastNode.nodeId)?.outputData;
+                    return JSON.stringify(output || {}, null, 2);
+                  }
+                  return '{}';
+                })()}
               </pre>
             </div>
           </div>
