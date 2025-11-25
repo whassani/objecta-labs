@@ -8,8 +8,11 @@ import {
   WrenchScrewdriverIcon,
   TrashIcon,
   PencilIcon,
+  BeakerIcon,
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import CreateToolModal from '@/components/tools/CreateToolModal'
+import TestToolModal from '@/components/tools/TestToolModal'
 
 const actionTypeColors: any = {
   read: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
@@ -20,6 +23,8 @@ const actionTypeColors: any = {
 
 export default function ToolsPage() {
   const queryClient = useQueryClient()
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [testingTool, setTestingTool] = useState<any>(null)
 
   const { data: tools, isLoading } = useQuery({
     queryKey: ['tools'],
@@ -48,6 +53,7 @@ export default function ToolsPage() {
           </p>
         </div>
         <button
+          onClick={() => setIsCreateModalOpen(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition"
         >
           <PlusIcon className="h-5 w-5 mr-2" />
@@ -107,6 +113,13 @@ export default function ToolsPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
+                    onClick={() => setTestingTool(tool)}
+                    className="p-1 text-gray-400 hover:text-green-600"
+                    title="Test Tool"
+                  >
+                    <BeakerIcon className="h-5 w-5" />
+                  </button>
+                  <button
                     className="p-1 text-gray-400 hover:text-primary-600"
                     title="Edit"
                   >
@@ -136,7 +149,10 @@ export default function ToolsPage() {
             Get started by creating your first tool.
           </p>
           <div className="mt-6">
-            <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+            >
               <PlusIcon className="h-5 w-5 mr-2" />
               Create Tool
             </button>
@@ -156,14 +172,27 @@ export default function ToolsPage() {
             </h3>
             <div className="mt-2 text-sm text-blue-700 dark:text-blue-400">
               <p>
-                Tools enable your agents to perform actions like reading/writing to databases, 
-                making API calls, and manipulating files. Configure permissions and approval 
-                workflows for security.
+                Tools enable your agents to perform actions like making API calls, performing calculations,
+                and executing custom logic. Test tools before assigning them to agents.
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <CreateToolModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      {testingTool && (
+        <TestToolModal
+          isOpen={!!testingTool}
+          onClose={() => setTestingTool(null)}
+          tool={testingTool}
+        />
+      )}
     </div>
   )
 }

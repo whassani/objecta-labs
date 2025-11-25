@@ -121,11 +121,13 @@ export const knowledgeBaseApi = {
 
 // Tools API
 export const toolsApi = {
-  getAll: () => api.get('/tools'),
+  getAll: (agentId?: string) => api.get('/tools', { params: { agentId } }),
   getOne: (id: string) => api.get(`/tools/${id}`),
   create: (data: any) => api.post('/tools', data),
   update: (id: string, data: any) => api.put(`/tools/${id}`, data),
   delete: (id: string) => api.delete(`/tools/${id}`),
+  execute: (id: string, input: any) => api.post(`/tools/${id}/execute`, { input }),
+  test: (id: string, input: any) => api.post(`/tools/${id}/test`, { input }),
 }
 
 // Conversations API
