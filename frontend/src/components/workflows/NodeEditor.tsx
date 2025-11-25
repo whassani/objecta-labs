@@ -212,6 +212,35 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
               </div>
             </>
           )}
+          {data.actionType === 'delay' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Delay Duration
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={data.delay || 1}
+                  onChange={(e) => handleFieldChange('delay', parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="3600"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <select
+                  value={data.delayUnit || 'seconds'}
+                  onChange={(e) => handleFieldChange('delayUnit', e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="seconds">Seconds</option>
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                </select>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                💡 Use 1-5 seconds for testing, longer delays for production
+              </p>
+            </div>
+          )}
           {data.actionType === 'email' && (
             <>
               <div>
