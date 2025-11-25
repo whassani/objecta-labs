@@ -1,19 +1,28 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ToolsService } from './tools.service';
+import { ToolExecutorService } from './tool-executor.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateToolDto, UpdateToolDto } from './dto/tool.dto';
+import { ExecuteToolDto } from './dto/execute-tool.dto';
 
 @ApiTags('tools')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('tools')
 export class ToolsController {
-  constructor(private toolsService: ToolsService) {}
+  constructor(
+    private toolsService: ToolsService,
+    private toolExecutorService: ToolExecutorService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all tools' })
-  async findAll(@Request() req) {
+  @ApiQuery({ name: 'agentId', required: false, description: 'Filter by agent ID' })
+  async findAll(@Request() req, @Query('agentId') agentId?: string) {
+    if (agentId) {
+      return this.toolExecutorService.getAgentTools(agentId, req.user.organizationId);
+    }
     return this.toolsService.findAll(req.user.organizationId);
   }
 
@@ -39,5 +48,33 @@ export class ToolsController {
   @ApiOperation({ summary: 'Delete tool' })
   async remove(@Param('id') id: string, @Request() req) {
     return this.toolsService.remove(id, req.user.organizationId);
+  }
+
+  @Post(':id/execute')
+  @ApiOperation({ summary: 'Execute a tool' })
+  async executeTool(
+    @Param('id') id: string,
+    @Body() executeDto: ExecuteToolDto,
+    @Request() req,
+  ) {
+    return this.toolExecutorService.executeTool(
+      id,
+      executeDto.input,
+      req.user.organizationId,
+    );
+  }
+
+  @Post(':id/test')
+  @ApiOperation({ summary: 'Test a tool without saving execution' })
+  async testTool(
+    @Param('id') id: string,
+    @Body() executeDto: ExecuteToolDto,
+    @Request() req,
+  ) {
+    return this.toolExecutorService.testTool(
+      id,
+      executeDto.input,
+      req.user.organizationId,
+    );
   }
 }
