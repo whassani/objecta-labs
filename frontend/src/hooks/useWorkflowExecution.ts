@@ -625,6 +625,12 @@ export function useWorkflowExecution(
       executionRef.current.websocket.close();
       executionRef.current.websocket = undefined;
     }
+    
+    // Clear polling interval
+    if (executionRef.current.pollInterval) {
+      clearInterval(executionRef.current.pollInterval);
+      executionRef.current.pollInterval = undefined;
+    }
 
     // Stop backend execution if running
     if (mode === 'backend' && executionRef.current.backendExecutionId) {
