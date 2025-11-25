@@ -37,8 +37,14 @@ const edgeStyles = `
   }
   .react-flow__edge.executing .react-flow__edge-path {
     stroke: #3b82f6 !important;
-    stroke-width: 3;
+    stroke-width: 3 !important;
+    stroke-dasharray: 10 !important;
     animation: flow 1s linear infinite;
+  }
+  
+  .react-flow__edge.completed .react-flow__edge-path {
+    stroke: #10b981 !important;
+    stroke-width: 2.5 !important;
   }
   @keyframes dash {
     to {
@@ -56,15 +62,29 @@ const edgeStyles = `
   }
   
   /* Node execution states */
-  .react-flow__node.executing {
+  .react-flow__node.running {
     animation: pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 0 3px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5) !important;
+    border: 2px solid #3b82f6 !important;
   }
+  
   .react-flow__node.completed {
-    opacity: 0.9;
+    box-shadow: 0 0 0 2px #10b981 !important;
+    border: 2px solid #10b981 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #d1fae5 100%) !important;
   }
+  
+  .react-flow__node.error,
   .react-flow__node.failed {
-    animation: shake 0.5s;
+    box-shadow: 0 0 0 2px #ef4444 !important;
+    border: 2px solid #ef4444 !important;
+    background: linear-gradient(135deg, #ffffff 0%, #fee2e2 100%) !important;
   }
+  
+  .react-flow__node.pending {
+    opacity: 0.5;
+  }
+  
   @keyframes pulse {
     0%, 100% {
       box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
