@@ -40,11 +40,14 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
   }, [node]);
 
   const handleSave = () => {
+    console.log('NodeEditor saving:', editedNode);
+    console.log('Agent ID being saved:', editedNode.data?.agentId);
     onChange(editedNode);
     onClose();
   };
 
   const handleFieldChange = (field: string, value: any) => {
+    console.log(`Field changed: ${field} = ${value}`);
     setEditedNode({
       ...editedNode,
       data: {
