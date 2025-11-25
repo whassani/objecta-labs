@@ -11,8 +11,13 @@ export default function NewWorkflowPage() {
   const [triggerType, setTriggerType] = useState('manual');
 
   const handleSave = () => {
-    // TODO: Implement save workflow
-    console.log('Save workflow:', { name, description, triggerType });
+    if (!name) {
+      alert('Please enter a workflow name');
+      return;
+    }
+    // TODO: Create workflow via API and get ID
+    // For now, redirect to builder with mock ID
+    router.push('/dashboard/workflows/new-workflow/edit');
   };
 
   const handleCancel = () => {
@@ -141,21 +146,28 @@ export default function NewWorkflowPage() {
                   <Play size={32} className="text-indigo-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Visual Builder Coming Soon
+                  Ready to Build!
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  The drag-and-drop workflow builder will be available in Phase 1.
-                  For now, save your workflow configuration.
+                  Configure your workflow settings on the left, then click "Continue to Builder" 
+                  to start designing your automation with our visual workflow builder.
                 </p>
                 <div className="text-sm text-gray-500">
-                  <p>Phase 1 will include:</p>
+                  <p className="font-semibold text-indigo-600 mb-2">✨ Visual Builder Features:</p>
                   <ul className="mt-2 space-y-1">
-                    <li>✓ ReactFlow canvas integration</li>
-                    <li>✓ Drag-and-drop nodes</li>
-                    <li>✓ Node connection system</li>
-                    <li>✓ Real-time validation</li>
+                    <li>✓ Drag-and-drop node placement</li>
+                    <li>✓ 12 node types (triggers, actions, controls)</li>
+                    <li>✓ Visual connections between nodes</li>
+                    <li>✓ Node property editor</li>
+                    <li>✓ Real-time canvas updates</li>
                   </ul>
                 </div>
+                <button
+                  onClick={handleSave}
+                  className="mt-6 w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+                >
+                  Continue to Visual Builder →
+                </button>
               </div>
             </div>
           </div>
