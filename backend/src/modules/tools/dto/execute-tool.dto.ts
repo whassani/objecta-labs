@@ -2,10 +2,6 @@ import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ExecuteToolDto {
-  @ApiProperty({ description: 'Tool ID to execute' })
-  @IsString()
-  toolId: string;
-
   @ApiProperty({ description: 'Tool input parameters', required: false })
   @IsOptional()
   input?: any;

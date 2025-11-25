@@ -1,9 +1,9 @@
 'use client'
 
 import { Fragment, useState } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import { XMarkIcon, PlayIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { useMutation } from '@tanstack/react-query'
+import { Dialog, Transition, Tab } from '@headlessui/react'
+import { XMarkIcon, PlayIcon, CheckCircleIcon, XCircleIcon, ClockIcon, CodeBracketIcon } from '@heroicons/react/24/outline'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { toolsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 
@@ -16,6 +16,14 @@ interface TestToolModalProps {
 export default function TestToolModal({ isOpen, onClose, tool }: TestToolModalProps) {
   const [input, setInput] = useState('')
   const [result, setResult] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState(0)
+
+  // Fetch test history
+  const { data: testHistory, refetch: refetchHistory } = useQuery({
+    queryKey: ['test-history', tool?.id],
+    queryFn: () => toolsApi.getTestHistory(tool.id).then(res => res.data),
+    enabled: isOpen && !!tool?.id,
+  })
 
   const testMutation = useMutation({
     mutationFn: (data: any) => toolsApi.test(tool.id, data),
@@ -26,6 +34,8 @@ export default function TestToolModal({ isOpen, onClose, tool }: TestToolModalPr
       } else {
         toast.error('Tool execution failed')
       }
+      // Refresh history
+      refetchHistory()
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to test tool')
@@ -93,7 +103,7 @@ export default function TestToolModal({ isOpen, onClose, tool }: TestToolModalPr
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
+              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl sm:p-6">
                 <div className="absolute right-0 top-0 pr-4 pt-4">
                   <button
                     type="button"
@@ -114,20 +124,57 @@ export default function TestToolModal({ isOpen, onClose, tool }: TestToolModalPr
                       {tool?.description}
                     </p>
 
-                    <div className="space-y-4">
-                      {/* Input Section */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Input {tool.toolType === 'calculator' ? '(expression or JSON)' : '(JSON)'}
-                        </label>
-                        <textarea
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          rows={6}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm font-mono"
-                          placeholder={getPlaceholder()}
-                        />
-                      </div>
+                    <Tab.Group selectedIndex={activeTab} onChange={setActiveTab}>
+                      <Tab.List className="flex space-x-1 rounded-xl bg-gray-100 dark:bg-gray-700 p-1 mb-4">
+                        <Tab className={({ selected }) =>
+                          `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition
+                          ${selected
+                            ? 'bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-400 shadow'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                          }`
+                        }>
+                          <PlayIcon className="inline h-4 w-4 mr-2" />
+                          Test
+                        </Tab>
+                        <Tab className={({ selected }) =>
+                          `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition
+                          ${selected
+                            ? 'bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-400 shadow'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                          }`
+                        }>
+                          <CodeBracketIcon className="inline h-4 w-4 mr-2" />
+                          Request/Response
+                        </Tab>
+                        <Tab className={({ selected }) =>
+                          `w-full rounded-lg py-2.5 text-sm font-medium leading-5 transition
+                          ${selected
+                            ? 'bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-400 shadow'
+                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-800/50'
+                          }`
+                        }>
+                          <ClockIcon className="inline h-4 w-4 mr-2" />
+                          History ({testHistory?.length || 0})
+                        </Tab>
+                      </Tab.List>
+
+                      <Tab.Panels>
+                        {/* Test Tab */}
+                        <Tab.Panel>
+                          <div className="space-y-4">
+                            {/* Input Section */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Input {tool.toolType === 'calculator' ? '(expression or JSON)' : '(JSON)'}
+                              </label>
+                              <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                rows={6}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm font-mono"
+                                placeholder={getPlaceholder()}
+                              />
+                            </div>
 
                       {/* Test Button */}
                       <button
@@ -195,49 +242,90 @@ export default function TestToolModal({ isOpen, onClose, tool }: TestToolModalPr
                           </div>
                         </div>
                       )}
-                    </div>
 
-                    {/* Quick Examples */}
-                    {tool.toolType === 'calculator' && (
-                      <div className="mt-6 rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
-                        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
-                          Quick Examples:
-                        </h4>
-                        <div className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
-                          <button
-                            onClick={() => setInput('2 + 2')}
-                            className="block hover:underline"
-                          >
-                            → 2 + 2
-                          </button>
-                          <button
-                            onClick={() => setInput('(15 * 23) + 100')}
-                            className="block hover:underline"
-                          >
-                            → (15 * 23) + 100
-                          </button>
-                          <button
-                            onClick={() => setInput('100 / 4 - 10')}
-                            className="block hover:underline"
-                          >
-                            → 100 / 4 - 10
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                            {/* Quick Examples */}
+                            {tool.toolType === 'calculator' && (
+                              <div className="mt-6 rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
+                                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
+                                  Quick Examples:
+                                </h4>
+                                <div className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
+                                  <button onClick={() => setInput('2 + 2')} className="block hover:underline">→ 2 + 2</button>
+                                  <button onClick={() => setInput('(15 * 23) + 100')} className="block hover:underline">→ (15 * 23) + 100</button>
+                                  <button onClick={() => setInput('100 / 4 - 10')} className="block hover:underline">→ 100 / 4 - 10</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </Tab.Panel>
 
-                    {tool.toolType === 'http-api' && (
-                      <div className="mt-6 rounded-md bg-blue-50 dark:bg-blue-900/20 p-4">
-                        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
-                          API Configuration:
-                        </h4>
-                        <div className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
-                          <div><strong>URL:</strong> {tool.config?.url || 'Not configured'}</div>
-                          <div><strong>Method:</strong> {tool.config?.method || 'GET'}</div>
-                          <div><strong>Auth:</strong> {tool.config?.auth?.type || 'none'}</div>
-                        </div>
-                      </div>
-                    )}
+                        {/* Request/Response Tab */}
+                        <Tab.Panel>
+                          {result?.request || result?.response ? (
+                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                              {result?.request && (
+                                <div>
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Request</h4>
+                                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2 text-xs">
+                                    <div className="flex gap-2"><span className="font-semibold">Method:</span>{result.request.method}</div>
+                                    <div className="flex gap-2"><span className="font-semibold">URL:</span><code>{result.request.url}</code></div>
+                                    <div><span className="font-semibold">Headers:</span>
+                                      <pre className="mt-1 p-2 bg-white dark:bg-gray-800 rounded overflow-x-auto">{JSON.stringify(result.request.headers, null, 2)}</pre>
+                                    </div>
+                                    {result.request.body && <div><span className="font-semibold">Body:</span>
+                                      <pre className="mt-1 p-2 bg-white dark:bg-gray-800 rounded overflow-x-auto">{JSON.stringify(result.request.body, null, 2)}</pre>
+                                    </div>}
+                                  </div>
+                                </div>
+                              )}
+                              {result?.response && (
+                                <div>
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Response</h4>
+                                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-2 text-xs">
+                                    <div className="flex gap-2"><span className="font-semibold">Status:</span>{result.response.status} {result.response.statusText}</div>
+                                    <div><span className="font-semibold">Headers:</span>
+                                      <pre className="mt-1 p-2 bg-white dark:bg-gray-800 rounded overflow-x-auto max-h-40">{JSON.stringify(result.response.headers, null, 2)}</pre>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <CodeBracketIcon className="mx-auto h-12 w-12 text-gray-400" />
+                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Run a test to see request/response details</p>
+                            </div>
+                          )}
+                        </Tab.Panel>
+
+                        {/* History Tab */}
+                        <Tab.Panel>
+                          {testHistory && testHistory.length > 0 ? (
+                            <div className="space-y-3 max-h-96 overflow-y-auto">
+                              {testHistory.map((execution: any) => (
+                                <div key={execution.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-primary-500 transition cursor-pointer"
+                                  onClick={() => { setInput(JSON.stringify(execution.input, null, 2)); setResult({ success: execution.success, result: execution.output, error: execution.error, executionTime: execution.executionTime, request: execution.request, response: execution.response }); setActiveTab(0); }}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      {execution.success ? <CheckCircleIcon className="h-5 w-5 text-green-500" /> : <XCircleIcon className="h-5 w-5 text-red-500" />}
+                                      <div>
+                                        <p className="text-sm text-gray-900 dark:text-white">{new Date(execution.createdAt).toLocaleString()}</p>
+                                        <p className="text-xs text-gray-500">{execution.executionTime}ms</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <ClockIcon className="mx-auto h-12 w-12 text-gray-400" />
+                              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">No test history yet</p>
+                            </div>
+                          )}
+                        </Tab.Panel>
+                      </Tab.Panels>
+                    </Tab.Group>
                   </div>
                 </div>
               </Dialog.Panel>

@@ -21,10 +21,22 @@ export class HttpApiTool {
     try {
       this.logger.log(`Executing HTTP API tool: ${config.method} ${config.url}`);
 
+      // Set default headers with a more acceptable User-Agent
+      const defaultHeaders = {
+        'User-Agent': 'Mozilla/5.0 (compatible; AIAgent/1.0; +https://ai-agent-platform.com)',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      };
+
+      const finalHeaders = { ...defaultHeaders, ...(config.headers || {}) };
+
       const axiosConfig: AxiosRequestConfig = {
         method: config.method,
         url: config.url,
-        headers: config.headers || {},
+        headers: finalHeaders,
         timeout: config.timeout || 30000,
       };
 
@@ -65,6 +77,22 @@ export class HttpApiTool {
         statusText: response.statusText,
         data: response.data,
         headers: response.headers,
+        // Phase 2: Include request details for debugging
+        _debug: {
+          request: {
+            method: axiosConfig.method,
+            url: axiosConfig.url,
+            headers: axiosConfig.headers,
+            body: axiosConfig.data,
+            params: axiosConfig.params,
+          },
+          response: {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers,
+          },
+          executionTime,
+        },
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;

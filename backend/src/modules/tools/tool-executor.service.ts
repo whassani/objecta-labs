@@ -4,6 +4,9 @@ import { Repository } from 'typeorm';
 import { Tool } from './entities/tool.entity';
 import { HttpApiTool } from './built-in/http-api.tool';
 import { CalculatorTool } from './built-in/calculator.tool';
+import { TestHistoryService } from './test-history.service';
+import { RetryService } from './retry.service';
+import { ResponseTransformService } from './response-transform.service';
 
 export interface ToolExecutionResult {
   success: boolean;
@@ -13,6 +16,20 @@ export interface ToolExecutionResult {
   toolId: string;
   toolName: string;
   timestamp: Date;
+  // Phase 2: Enhanced debugging info
+  request?: {
+    method: string;
+    url: string;
+    headers: any;
+    body?: any;
+  };
+  response?: {
+    status: number;
+    statusText: string;
+    headers: any;
+    body: any;
+  };
+  retryCount?: number;
 }
 
 @Injectable()
@@ -24,6 +41,9 @@ export class ToolExecutorService {
   constructor(
     @InjectRepository(Tool)
     private toolsRepository: Repository<Tool>,
+    private testHistoryService: TestHistoryService,
+    private retryService: RetryService,
+    private responseTransformService: ResponseTransformService,
   ) {
     this.httpApiTool = new HttpApiTool();
     this.calculatorTool = new CalculatorTool();
@@ -55,38 +75,71 @@ export class ToolExecutorService {
 
       this.logger.log(`Executing tool: ${tool.name} (${tool.toolType})`);
 
-      // Execute based on tool type
+      // Execute based on tool type with retry logic
       let result: any;
+      let retryCount = 0;
       
-      switch (tool.toolType) {
-        case 'http-api':
-        case 'api':
-          result = await this.executeHttpApiTool(tool, input);
-          break;
-        
-        case 'calculator':
-          result = await this.executeCalculatorTool(tool, input);
-          break;
-        
-        case 'custom':
-          result = await this.executeCustomTool(tool, input);
-          break;
-        
-        default:
-          throw new BadRequestException(`Unsupported tool type: ${tool.toolType}`);
+      const executeFn = async () => {
+        switch (tool.toolType) {
+          case 'http-api':
+          case 'api':
+            return await this.executeHttpApiTool(tool, input);
+          
+          case 'calculator':
+            return await this.executeCalculatorTool(tool, input);
+          
+          case 'custom':
+            return await this.executeCustomTool(tool, input);
+          
+          default:
+            throw new BadRequestException(`Unsupported tool type: ${tool.toolType}`);
+        }
+      };
+
+      // Apply retry logic if configured
+      if (tool.retryConfig?.enabled) {
+        const retryResult = await this.retryService.executeWithRetry(
+          executeFn,
+          tool.retryConfig,
+          `Tool: ${tool.name}`,
+        );
+        result = retryResult.result;
+        retryCount = retryResult.retryCount;
+      } else {
+        result = await executeFn();
+      }
+
+      // Apply response transformation if configured
+      if (tool.responseTransform?.enabled && result) {
+        try {
+          const transformedData = this.responseTransformService.transform(
+            result.data || result,
+            tool.responseTransform,
+          );
+          result = { ...result, data: transformedData, _transformed: true };
+        } catch (error) {
+          this.logger.warn(`Response transformation failed: ${error.message}`);
+          // Continue with untransformed result
+        }
       }
 
       const executionTime = Date.now() - startTime;
       
       this.logger.log(`Tool ${tool.name} executed successfully in ${executionTime}ms`);
 
+      // Extract debug info if available
+      const debugInfo = result?._debug;
+      
       return {
         success: true,
-        result,
+        result: result?.data || result, // Use data field if available, otherwise full result
         executionTime,
         toolId: tool.id,
         toolName: tool.name,
         timestamp: new Date(),
+        request: debugInfo?.request,
+        response: debugInfo?.response,
+        retryCount,
       };
 
     } catch (error) {
@@ -159,14 +212,32 @@ export class ToolExecutorService {
   }
 
   /**
-   * Test a tool without saving execution
+   * Test a tool and save to history
    */
   async testTool(
     toolId: string,
     input: any,
     organizationId: string,
+    userId?: string,
+    saveHistory: boolean = true,
   ): Promise<ToolExecutionResult> {
     this.logger.log(`Testing tool ${toolId}`);
-    return await this.executeTool(toolId, input, organizationId);
+    const result = await this.executeTool(toolId, input, organizationId);
+    
+    // Save to test history
+    if (saveHistory && userId) {
+      await this.testHistoryService.saveTestExecution(
+        toolId,
+        organizationId,
+        userId,
+        input,
+        result,
+        result.executionTime,
+        result.success,
+        result.error,
+      );
+    }
+    
+    return result;
   }
 }

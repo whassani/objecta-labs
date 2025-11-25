@@ -128,6 +128,44 @@ export const toolsApi = {
   delete: (id: string) => api.delete(`/tools/${id}`),
   execute: (id: string, input: any) => api.post(`/tools/${id}/execute`, { input }),
   test: (id: string, input: any) => api.post(`/tools/${id}/test`, { input }),
+  
+  // Phase 1: Tool Management Features
+  duplicate: (id: string, name?: string) => api.post(`/tools/${id}/duplicate`, { name }),
+  bulkEnable: (ids: string[]) => api.post('/tools/bulk/enable', { ids }),
+  bulkDisable: (ids: string[]) => api.post('/tools/bulk/disable', { ids }),
+  bulkDelete: (ids: string[]) => api.post('/tools/bulk/delete', { ids }),
+  export: (ids?: string[]) => api.post('/tools/export', { ids }),
+  import: (tools: any[]) => api.post('/tools/import', { tools }),
+  getTemplates: () => api.get('/tools/templates/list'),
+  
+  // Phase 2: Testing & Debugging Features
+  getTestHistory: (toolId: string, limit?: number) => api.get(`/tools/${toolId}/test-history`, { params: { limit } }),
+  getRecentTests: (limit?: number) => api.get('/tools/test-history/recent', { params: { limit } }),
+  getTestExecution: (executionId: string) => api.get(`/tools/test-history/${executionId}`),
+  getTestStats: (toolId: string) => api.get(`/tools/${toolId}/test-stats`),
+  
+  // Phase 3: Advanced Configuration
+  // Environments
+  getEnvironments: (toolId: string) => api.get(`/tools/${toolId}/environments`),
+  createEnvironment: (toolId: string, data: any) => api.post(`/tools/${toolId}/environments`, data),
+  updateEnvironment: (toolId: string, envId: string, data: any) => api.put(`/tools/${toolId}/environments/${envId}`, data),
+  activateEnvironment: (toolId: string, envId: string) => api.post(`/tools/${toolId}/environments/${envId}/activate`),
+  deleteEnvironment: (toolId: string, envId: string) => api.delete(`/tools/${toolId}/environments/${envId}`),
+  
+  // Versioning
+  getVersions: (toolId: string, limit?: number) => api.get(`/tools/${toolId}/versions`, { params: { limit } }),
+  getVersionHistory: (toolId: string) => api.get(`/tools/${toolId}/versions/history`),
+  getVersion: (toolId: string, version: number) => api.get(`/tools/${toolId}/versions/${version}`),
+  restoreVersion: (toolId: string, version: number) => api.post(`/tools/${toolId}/versions/${version}/restore`),
+  compareVersions: (toolId: string, v1: number, v2: number) => api.get(`/tools/${toolId}/versions/${v1}/compare/${v2}`),
+  
+  // Phase 4: Analytics & Monitoring
+  getOrganizationStats: (startDate?: string, endDate?: string) => api.get('/tools/analytics/organization-stats', { params: { startDate, endDate } }),
+  getToolsMetrics: (limit?: number) => api.get('/tools/analytics/tools-metrics', { params: { limit } }),
+  getTimeSeriesData: (toolId?: string, days?: number) => api.get('/tools/analytics/time-series', { params: { toolId, days } }),
+  getErrorBreakdown: (toolId?: string, days?: number) => api.get('/tools/analytics/error-breakdown', { params: { toolId, days } }),
+  getPerformancePercentiles: (toolId: string) => api.get(`/tools/${toolId}/analytics/performance`),
+  getRateLimitStats: (toolId: string) => api.get(`/tools/${toolId}/analytics/rate-limit`),
 }
 
 // Conversations API
