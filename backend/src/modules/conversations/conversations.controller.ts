@@ -20,6 +20,11 @@ export class ConversationsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get conversation by ID' })
   async findOne(@Param('id') id: string, @Request() req) {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new Error('Invalid conversation ID format');
+    }
     return this.conversationsService.findOne(id, req.user.organizationId);
   }
 
@@ -32,12 +37,22 @@ export class ConversationsController {
   @Post(':id/messages')
   @ApiOperation({ summary: 'Send message in conversation' })
   async sendMessage(@Param('id') id: string, @Body() messageDto: SendMessageDto, @Request() req) {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new Error('Invalid conversation ID format');
+    }
     return this.conversationsService.sendMessage(id, messageDto, req.user.organizationId);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete conversation' })
   async remove(@Param('id') id: string, @Request() req) {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new Error('Invalid conversation ID format');
+    }
     return this.conversationsService.remove(id, req.user.organizationId);
   }
 }
