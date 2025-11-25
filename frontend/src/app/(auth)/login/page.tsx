@@ -10,7 +10,6 @@ import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
 import toast from 'react-hot-toast'
 import { SparklesIcon } from '@heroicons/react/24/outline'
-import { clearDebugLogs, debugLog } from '@/lib/debug-logger'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

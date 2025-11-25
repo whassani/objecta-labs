@@ -18,6 +18,9 @@ const agentSchema = z.object({
   model: z.string().default('gpt-4'),
   temperature: z.number().min(0).max(2).default(0.7),
   maxTokens: z.number().min(100).max(4000).default(2000),
+  useKnowledgeBase: z.boolean().optional().default(false),
+  knowledgeBaseMaxResults: z.number().min(1).max(10).optional().default(3),
+  knowledgeBaseThreshold: z.number().min(0).max(1).optional().default(0.7),
 })
 
 type AgentForm = z.infer<typeof agentSchema>
@@ -30,6 +33,9 @@ export default function NewAgentPage() {
       model: 'gpt-4',
       temperature: 0.7,
       maxTokens: 2000,
+      useKnowledgeBase: false,
+      knowledgeBaseMaxResults: 3,
+      knowledgeBaseThreshold: 0.7,
     },
   })
 
@@ -199,6 +205,63 @@ export default function NewAgentPage() {
                   step="100"
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                 />
+              </div>
+            </div>
+
+            {/* RAG Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  {...register('useKnowledgeBase')}
+                  type="checkbox"
+                  id="useKnowledgeBase"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label htmlFor="useKnowledgeBase" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Enable Knowledge Base (RAG)
+                </label>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
+                Allow agent to search and use information from your uploaded documents
+              </p>
+
+              <div className="ml-7 grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="knowledgeBaseMaxResults" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Max Results
+                  </label>
+                  <input
+                    {...register('knowledgeBaseMaxResults', { valueAsNumber: true })}
+                    type="number"
+                    id="knowledgeBaseMaxResults"
+                    min="1"
+                    max="10"
+                    defaultValue={3}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Number of document chunks to retrieve (1-10)
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="knowledgeBaseThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Similarity Threshold
+                  </label>
+                  <input
+                    {...register('knowledgeBaseThreshold', { valueAsNumber: true })}
+                    type="number"
+                    id="knowledgeBaseThreshold"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    defaultValue={0.7}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Minimum relevance score (0.0-1.0)
+                  </p>
+                </div>
               </div>
             </div>
           </div>

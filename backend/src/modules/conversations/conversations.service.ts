@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatOpenAI } from '@langchain/openai';
@@ -7,15 +7,21 @@ import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
 import { CreateConversationDto, SendMessageDto } from './dto/conversation.dto';
 import { AgentsService } from '../agents/agents.service';
+import { VectorStoreService } from '../knowledge-base/vector-store.service';
+import { AnalyticsService } from '../knowledge-base/analytics.service';
 
 @Injectable()
 export class ConversationsService {
+  private readonly logger = new Logger(ConversationsService.name);
+
   constructor(
     @InjectRepository(Conversation)
     private conversationsRepository: Repository<Conversation>,
     @InjectRepository(Message)
     private messagesRepository: Repository<Message>,
     private agentsService: AgentsService,
+    private vectorStoreService: VectorStoreService,
+    private analyticsService: AnalyticsService,
   ) {}
 
   async findAll(organizationId: string, userId: string, agentId?: string): Promise<Conversation[]> {
@@ -75,9 +81,71 @@ export class ConversationsService {
     });
     historyMessages.reverse(); // Oldest first
 
+    // RAG: Search for relevant document chunks if agent has knowledge base enabled
+    let contextFromDocs = '';
+    let sources: any[] = [];
+    
+    if (agent.useKnowledgeBase) {
+      try {
+        this.logger.log(`Searching knowledge base for: "${messageDto.content}"`);
+        
+        // Build conversation context for better search
+        const recentHistory = historyMessages
+          .slice(-3)
+          .map(msg => `${msg.role}: ${msg.content}`)
+          .join('\n');
+        
+        const searchQuery = recentHistory 
+          ? `${recentHistory}\nuser: ${messageDto.content}`
+          : messageDto.content;
+        
+        const searchResults = await this.vectorStoreService.searchSimilar(
+          searchQuery,
+          organizationId,
+          agent.knowledgeBaseMaxResults || 3,
+          agent.knowledgeBaseThreshold || 0.7,
+        );
+
+        if (searchResults.length > 0) {
+          this.logger.log(`Found ${searchResults.length} relevant chunks`);
+          
+          // Build context from search results
+          contextFromDocs = searchResults
+            .map((result, index) => 
+              `[Source ${index + 1}: ${result.metadata.documentTitle}]\n${result.content}`
+            )
+            .join('\n\n');
+
+          // Store sources for metadata
+          sources = searchResults.map(result => ({
+            documentId: result.documentId,
+            documentTitle: result.metadata.documentTitle,
+            chunkId: result.chunkId,
+            score: result.score,
+          }));
+
+          // Track document usage for analytics
+          this.analyticsService.trackDocumentUsage(sources);
+        } else {
+          this.logger.log('No relevant chunks found in knowledge base');
+        }
+      } catch (error) {
+        this.logger.error(`Error searching knowledge base: ${error.message}`, error.stack);
+        // Continue without RAG if search fails
+      }
+    }
+
+    // Build system prompt with context
+    let systemPrompt = agent.systemPrompt;
+    if (contextFromDocs) {
+      systemPrompt += `\n\n### Relevant Information from Knowledge Base:\n${contextFromDocs}\n\n` +
+        `Use the above information to answer the user's question. If the information is relevant, cite the sources. ` +
+        `If the information doesn't answer the question, you can say so and provide a general response.`;
+    }
+
     // Build message history for LangChain
     const messages: any[] = [
-      new SystemMessage(agent.systemPrompt),
+      new SystemMessage(systemPrompt),
     ];
 
     // Add conversation history
@@ -113,11 +181,12 @@ export class ConversationsService {
         content = String(response);
       }
       
-      // Save AI response
+      // Save AI response with sources metadata
       const aiMessage = this.messagesRepository.create({
         conversationId: conversation.id,
         role: 'assistant',
         content: content,
+        metadata: sources.length > 0 ? { sources } : {},
       });
       await this.messagesRepository.save(aiMessage);
 

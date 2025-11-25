@@ -292,7 +292,7 @@ export class VectorStoreService {
 
     try {
       // Scroll through all vectors for this organization
-      let offset: string | number | null = null;
+      let offset: string | number | Record<string, unknown> | null = null;
       const limit = 100;
 
       do {
@@ -370,7 +370,7 @@ export class VectorStoreService {
    */
   async getVectorStoreDocumentIds(organizationId: string): Promise<string[]> {
     const documentIds = new Set<string>();
-    let offset: string | number | null = null;
+    let offset: string | number | Record<string, unknown> | null = null;
     const limit = 100;
 
     try {

@@ -47,6 +47,16 @@ export class Agent {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  // RAG (Retrieval Augmented Generation) settings
+  @Column({ name: 'use_knowledge_base', default: false })
+  useKnowledgeBase: boolean;
+
+  @Column({ name: 'knowledge_base_max_results', default: 3 })
+  knowledgeBaseMaxResults: number;
+
+  @Column({ name: 'knowledge_base_threshold', type: 'float', default: 0.7 })
+  knowledgeBaseThreshold: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

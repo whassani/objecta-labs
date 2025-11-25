@@ -72,6 +72,51 @@ export const knowledgeBaseApi = {
   updateDataSource: (id: string, data: any) => api.put(`/knowledge-base/data-sources/${id}`, data),
   deleteDataSource: (id: string) => api.delete(`/knowledge-base/data-sources/${id}`),
   syncDataSource: (id: string) => api.post(`/knowledge-base/data-sources/${id}/sync`),
+  
+  // Documents API
+  getDocuments: (dataSourceId?: string) => api.get('/knowledge-base/documents', { params: { dataSourceId } }),
+  getDocument: (id: string) => api.get(`/knowledge-base/documents/${id}`),
+  uploadDocument: (file: File, title?: string, dataSourceId?: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (title) formData.append('title', title)
+    if (dataSourceId) formData.append('dataSourceId', dataSourceId)
+    
+    return api.post('/knowledge-base/documents/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+  deleteDocument: (id: string) => api.delete(`/knowledge-base/documents/${id}`),
+  getDocumentChunks: (id: string) => api.get(`/knowledge-base/documents/${id}/chunks`),
+  indexDocument: (id: string) => api.post(`/knowledge-base/documents/${id}/index`),
+  
+  // Semantic Search API
+  searchDocuments: (query: string, limit?: number, threshold?: number) => 
+    api.post('/knowledge-base/search', { query }, { params: { limit, threshold } }),
+  hybridSearch: (query: string, limit?: number, semanticWeight?: number, threshold?: number) =>
+    api.post('/knowledge-base/search/hybrid', { query }, { params: { limit, semanticWeight, threshold } }),
+  getVectorStoreInfo: () => api.get('/knowledge-base/vector-store/info'),
+  
+  // Analytics API
+  getDocumentStats: (limit?: number) => api.get('/knowledge-base/analytics/document-stats', { params: { limit } }),
+  
+  // Search History API
+  getPopularQueries: (limit?: number) => api.get('/knowledge-base/search/popular', { params: { limit } }),
+  getRecentSearches: (limit?: number) => api.get('/knowledge-base/search/recent', { params: { limit } }),
+  getSearchStats: () => api.get('/knowledge-base/search/stats'),
+  
+  // Bulk Operations API
+  reindexAllDocuments: () => api.post('/knowledge-base/documents/reindex-all'),
+  
+  // Chunk API
+  getChunkContent: (documentId: string, chunkId: string) => 
+    api.get(`/knowledge-base/documents/${documentId}/chunk/${chunkId}`),
+  
+  // Document Management API
+  updateDocumentTags: (documentId: string, tags: string[]) =>
+    api.put(`/knowledge-base/documents/${documentId}/tags`, { tags }),
 }
 
 // Tools API

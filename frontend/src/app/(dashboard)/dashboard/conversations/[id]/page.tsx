@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { conversationsApi } from '@/lib/api'
-import { ArrowLeftIcon, PaperAirplaneIcon, UserCircleIcon, SparklesIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, PaperAirplaneIcon, UserCircleIcon, SparklesIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import ReactMarkdown from 'react-markdown'
+import SourcePreviewModal from '@/components/knowledge-base/SourcePreviewModal'
 
 export default function ConversationPage() {
   const params = useParams()
@@ -15,6 +16,12 @@ export default function ConversationPage() {
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [previewSource, setPreviewSource] = useState<{
+    documentId: string
+    chunkId: string
+    documentTitle: string
+    score: number
+  } | null>(null)
 
   const { data: conversation, isLoading } = useQuery({
     queryKey: ['conversation', params.id],
@@ -86,16 +93,51 @@ export default function ConversationPage() {
                     <SparklesIcon className="h-5 w-5 text-primary-600" />
                   </div>
                 )}
-                <div
-                  className={`max-w-3xl rounded-lg p-4 ${
-                    msg.role === 'user'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  }`}
-                >
-                  <ReactMarkdown className="prose dark:prose-invert max-w-none">
-                    {msg.content}
-                  </ReactMarkdown>
+                <div className="max-w-3xl space-y-2">
+                  <div
+                    className={`rounded-lg p-4 ${
+                      msg.role === 'user'
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    <ReactMarkdown className="prose dark:prose-invert max-w-none">
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                  
+                  {/* Sources Citation */}
+                  {msg.metadata?.sources && msg.metadata.sources.length > 0 && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DocumentTextIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-medium text-blue-900 dark:text-blue-200">
+                          Sources Used ({msg.metadata.sources.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {msg.metadata.sources.map((source: any, idx: number) => (
+                          <button
+                            key={idx}
+                            onClick={() => setPreviewSource({
+                              documentId: source.documentId,
+                              chunkId: source.chunkId,
+                              documentTitle: source.documentTitle,
+                              score: source.score,
+                            })}
+                            className="w-full flex items-center justify-between text-xs hover:bg-blue-100 dark:hover:bg-blue-800/30 p-1 rounded transition"
+                          >
+                            <span className="text-blue-700 dark:text-blue-300 truncate">
+                              {source.documentTitle}
+                            </span>
+                            <span className="text-blue-600 dark:text-blue-400 ml-2 flex-shrink-0">
+                              {(source.score * 100).toFixed(0)}% match
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {msg.role === 'user' && (
                   <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -133,6 +175,18 @@ export default function ConversationPage() {
           <PaperAirplaneIcon className="h-5 w-5" />
         </button>
       </form>
+
+      {/* Source Preview Modal */}
+      {previewSource && (
+        <SourcePreviewModal
+          isOpen={!!previewSource}
+          onClose={() => setPreviewSource(null)}
+          documentId={previewSource.documentId}
+          chunkId={previewSource.chunkId}
+          documentTitle={previewSource.documentTitle}
+          score={previewSource.score}
+        />
+      )}
     </div>
   )
 }
