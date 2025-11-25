@@ -120,11 +120,22 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
                 value={data.agentId || ''}
                 onChange={(e) => handleFieldChange('agentId', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                disabled={loadingAgents}
               >
-                <option value="">Select agent</option>
-                <option value="agent-1">Customer Support Agent</option>
-                <option value="agent-2">Sales Assistant</option>
+                <option value="">
+                  {loadingAgents ? 'Loading agents...' : 'Select agent'}
+                </option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name} ({agent.model})
+                  </option>
+                ))}
               </select>
+              {agents.length === 0 && !loadingAgents && (
+                <p className="mt-2 text-sm text-gray-500">
+                  No agents found. Create an agent first.
+                </p>
+              )}
             </div>
           )}
           {data.actionType === 'tool' && (
