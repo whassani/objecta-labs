@@ -59,8 +59,8 @@ export default function WorkflowCanvas({
       
       if (onChange) {
         onChange({
-          nodes,
-          edges: newEdges,
+          nodes: nodes as any,
+          edges: newEdges as any,
         });
       }
     },
@@ -79,8 +79,8 @@ export default function WorkflowCanvas({
       
       if (onChange) {
         onChange({
-          nodes: nodes.filter((n) => !deleted.find((d) => d.id === n.id)),
-          edges,
+          nodes: nodes.filter((n) => !deleted.find((d) => d.id === n.id)) as any,
+          edges: edges as any,
         });
       }
     },
@@ -94,8 +94,8 @@ export default function WorkflowCanvas({
       
       if (onChange) {
         onChange({
-          nodes,
-          edges: edges.filter((e) => !deleted.find((d) => d.id === e.id)),
+          nodes: nodes as any,
+          edges: edges.filter((e) => !deleted.find((d) => d.id === e.id)) as any,
         });
       }
     },
@@ -111,8 +111,8 @@ export default function WorkflowCanvas({
         // Debounce or call after state update
         setTimeout(() => {
           onChange({
-            nodes,
-            edges,
+            nodes: nodes as any,
+            edges: edges as any,
           });
         }, 0);
       }
@@ -127,8 +127,8 @@ export default function WorkflowCanvas({
       if (onChange && !readOnly) {
         setTimeout(() => {
           onChange({
-            nodes,
-            edges,
+            nodes: nodes as any,
+            edges: edges as any,
           });
         }, 0);
       }
