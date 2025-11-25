@@ -124,33 +124,47 @@ export default function WorkflowCanvas({
   }, [onNodeClick]);
 
   // Handle node deletion
-  const onNodesDelete = useCallback(
+  const handleNodesDelete = useCallback(
     (deleted: Node[]) => {
       if (readOnly) return;
       
+      const deletedIds = deleted.map((n) => n.id);
+      const remainingNodes = nodes.filter((n) => !deletedIds.includes(n.id));
+      const remainingEdges = edges.filter(
+        (e) => !deletedIds.includes(e.source) && !deletedIds.includes(e.target)
+      );
+      
+      setNodes(remainingNodes);
+      setEdges(remainingEdges);
+      
       if (onChange) {
         onChange({
-          nodes: nodes.filter((n) => !deleted.find((d) => d.id === n.id)) as any,
-          edges: edges as any,
+          nodes: remainingNodes as any,
+          edges: remainingEdges as any,
         });
       }
     },
-    [nodes, edges, onChange, readOnly]
+    [nodes, edges, onChange, readOnly, setNodes, setEdges]
   );
 
   // Handle edge deletion
-  const onEdgesDelete = useCallback(
+  const handleEdgesDelete = useCallback(
     (deleted: Edge[]) => {
       if (readOnly) return;
+      
+      const deletedIds = deleted.map((e) => e.id);
+      const remainingEdges = edges.filter((e) => !deletedIds.includes(e.id));
+      
+      setEdges(remainingEdges);
       
       if (onChange) {
         onChange({
           nodes: nodes as any,
-          edges: edges.filter((e) => !deleted.find((d) => d.id === e.id)) as any,
+          edges: remainingEdges as any,
         });
       }
     },
-    [nodes, edges, onChange, readOnly]
+    [nodes, edges, onChange, readOnly, setEdges]
   );
 
   // Update definition when nodes/edges change
@@ -196,14 +210,14 @@ export default function WorkflowCanvas({
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
         onNodeClick={handleNodeClick}
-        onNodesDelete={onNodesDelete}
-        onEdgesDelete={onEdgesDelete}
+        onNodesDelete={handleNodesDelete}
+        onEdgesDelete={handleEdgesDelete}
         onInit={onInit}
         nodeTypes={nodeTypes}
         fitView
         attributionPosition="bottom-left"
         proOptions={{ hideAttribution: true }}
-        deleteKeyCode={readOnly ? null : 'Delete'}
+        deleteKeyCode="Delete"
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}
         elementsSelectable={!readOnly}
