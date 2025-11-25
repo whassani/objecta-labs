@@ -44,6 +44,7 @@ export function useWorkflowExecution(
     waitingForStep: boolean;
     backendExecutionId?: string;
     websocket?: WebSocket;
+    pollInterval?: NodeJS.Timeout;
   }>({ 
     isPaused: false, 
     isStopped: false,
@@ -424,6 +425,33 @@ export function useWorkflowExecution(
         // Connect WebSocket for real-time updates
         connectWebSocket(executionId);
         
+        // Fallback: Poll for execution status since WebSocket might not be fully implemented
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusResponse = await api.get(`/workflows/executions/${executionId}`);
+            const executionData = statusResponse.data;
+            
+            addLog(`Execution status: ${executionData.status}`);
+            
+            if (executionData.status === 'completed' || executionData.status === 'failed') {
+              clearInterval(pollInterval);
+              
+              setExecution((prev) => ({
+                ...prev,
+                status: executionData.status,
+                endTime: Date.now(),
+              }));
+              
+              addLog(`Workflow ${executionData.status}`, undefined, executionData.status === 'completed' ? 'info' : 'error');
+            }
+          } catch (error) {
+            console.error('Failed to poll execution status:', error);
+          }
+        }, 2000); // Poll every 2 seconds
+        
+        // Store interval ID for cleanup
+        executionRef.current.pollInterval = pollInterval;
+        
         return;
       } catch (error) {
         addLog(`Backend execution failed: ${error}`, undefined, 'error');
@@ -624,6 +652,12 @@ export function useWorkflowExecution(
     if (executionRef.current.websocket) {
       executionRef.current.websocket.close();
       executionRef.current.websocket = undefined;
+    }
+    
+    // Clear polling interval
+    if (executionRef.current.pollInterval) {
+      clearInterval(executionRef.current.pollInterval);
+      executionRef.current.pollInterval = undefined;
     }
 
     setExecution({
