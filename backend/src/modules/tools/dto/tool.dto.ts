@@ -23,11 +23,13 @@ export class CreateToolDto {
   @IsString()
   actionType: string;
 
-  @ApiProperty()
-  config: any;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  config?: any;
 
-  @ApiProperty()
-  schema: any;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  schema?: any;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -43,6 +45,11 @@ export class CreateToolDto {
   @IsOptional()
   @IsNumber()
   rateLimit?: number;
+
+  @ApiProperty({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isEnabled?: boolean;
 }
 
 export class UpdateToolDto {
@@ -83,4 +90,28 @@ export class UpdateToolDto {
   @IsOptional()
   @IsBoolean()
   isEnabled?: boolean;
+
+  // Phase 3: Advanced Configuration
+  @ApiProperty({ required: false })
+  @IsOptional()
+  retryConfig?: {
+    enabled: boolean;
+    maxRetries: number;
+    retryDelay: number;
+    retryOn: string[];
+    backoffMultiplier?: number;
+  };
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  responseTransform?: {
+    enabled: boolean;
+    type: 'jsonpath' | 'javascript';
+    expression: string;
+  };
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  currentEnvironment?: string;
 }

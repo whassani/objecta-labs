@@ -9,6 +9,8 @@ import { CreateConversationDto, SendMessageDto } from './dto/conversation.dto';
 import { AgentsService } from '../agents/agents.service';
 import { VectorStoreService } from '../knowledge-base/vector-store.service';
 import { AnalyticsService } from '../knowledge-base/analytics.service';
+import { ToolExecutorService } from '../tools/tool-executor.service';
+import { LangChainToolAdapter } from '../tools/langchain-tool.adapter';
 
 @Injectable()
 export class ConversationsService {
@@ -22,6 +24,7 @@ export class ConversationsService {
     private agentsService: AgentsService,
     private vectorStoreService: VectorStoreService,
     private analyticsService: AnalyticsService,
+    private toolExecutorService: ToolExecutorService,
   ) {}
 
   async findAll(organizationId: string, userId: string, agentId?: string): Promise<Conversation[]> {
@@ -157,12 +160,34 @@ export class ConversationsService {
       }
     }
 
+    // Load agent's tools if any
+    const agentTools = await this.toolExecutorService.getAgentTools(agent.id, organizationId);
+    let toolsUsed: any[] = [];
+    
     // Initialize LLM based on agent configuration
     const llm = await this.createLLM(agent);
 
+    // If agent has tools, bind them to the LLM
+    let llmToUse: any = llm;
+    if (agentTools.length > 0) {
+      try {
+        this.logger.log(`Agent has ${agentTools.length} tools available`);
+        const toolAdapter = new LangChainToolAdapter(this.toolExecutorService);
+        const langchainTools = await toolAdapter.convertMultipleTools(agentTools, organizationId);
+        
+        if (langchainTools.length > 0) {
+          llmToUse = llm.bind({ tools: langchainTools });
+          this.logger.log(`Bound ${langchainTools.length} tools to LLM`);
+        }
+      } catch (error) {
+        this.logger.error(`Error binding tools to LLM: ${error.message}`, error.stack);
+        // Continue without tools if binding fails
+      }
+    }
+
     // Generate AI response
     try {
-      const response = await llm.invoke(messages);
+      const response = await llmToUse.invoke(messages);
       
       // Extract content from response
       let content: string;
@@ -181,12 +206,20 @@ export class ConversationsService {
         content = String(response);
       }
       
-      // Save AI response with sources metadata
+      // Save AI response with sources and tools metadata
+      const metadata: any = {};
+      if (sources.length > 0) {
+        metadata.sources = sources;
+      }
+      if (toolsUsed.length > 0) {
+        metadata.toolsUsed = toolsUsed;
+      }
+      
       const aiMessage = this.messagesRepository.create({
         conversationId: conversation.id,
         role: 'assistant',
         content: content,
-        metadata: sources.length > 0 ? { sources } : {},
+        metadata: Object.keys(metadata).length > 0 ? metadata : {},
       });
       await this.messagesRepository.save(aiMessage);
 

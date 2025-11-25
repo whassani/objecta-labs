@@ -47,6 +47,29 @@ export class Tool {
   @Column({ name: 'is_enabled', default: true })
   isEnabled: boolean;
 
+  // Phase 3: Advanced Configuration
+  @Column({ type: 'jsonb', nullable: true, name: 'retry_config' })
+  retryConfig: {
+    enabled: boolean;
+    maxRetries: number;
+    retryDelay: number; // milliseconds
+    retryOn: string[]; // HTTP status codes or error types
+    backoffMultiplier?: number;
+  };
+
+  @Column({ type: 'jsonb', nullable: true, name: 'response_transform' })
+  responseTransform: {
+    enabled: boolean;
+    type: 'jsonpath' | 'javascript';
+    expression: string;
+  };
+
+  @Column({ name: 'current_environment', nullable: true })
+  currentEnvironment: string; // 'development', 'staging', 'production'
+
+  @Column({ type: 'integer', default: 1, name: 'version' })
+  version: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
