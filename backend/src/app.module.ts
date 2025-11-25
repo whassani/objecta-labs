@@ -8,6 +8,7 @@ import { AgentsModule } from './modules/agents/agents.module';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 import { ToolsModule } from './modules/tools/tools.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
+import { WorkflowsModule } from './modules/workflows/workflows.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
     KnowledgeBaseModule,
     ToolsModule,
     ConversationsModule,
+    WorkflowsModule,
   ],
 })
 export class AppModule {}

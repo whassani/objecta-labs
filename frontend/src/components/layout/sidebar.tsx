@@ -10,6 +10,7 @@ import {
   ChatBubbleLeftRightIcon,
   FolderIcon,
   Cog6ToothIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: 'Agents', href: '/dashboard/agents', icon: SparklesIcon },
   { name: 'Knowledge Base', href: '/dashboard/knowledge-base', icon: BookOpenIcon },
   { name: 'Tools & Actions', href: '/dashboard/tools', icon: WrenchScrewdriverIcon },
+  { name: 'Workflows', href: '/dashboard/workflows', icon: BoltIcon },
   { name: 'Conversations', href: '/dashboard/conversations', icon: ChatBubbleLeftRightIcon },
   { name: 'Workspaces', href: '/dashboard/workspaces', icon: FolderIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },

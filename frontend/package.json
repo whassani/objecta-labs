@@ -14,6 +14,9 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.1.1",
     "@hookform/resolvers": "^3.3.2",
+    "@reactflow/controls": "^11.2.14",
+    "@reactflow/minimap": "^11.7.14",
+    "@reactflow/node-resizer": "^2.2.14",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.14.2",
@@ -32,10 +35,11 @@
     "react-hot-toast": "^2.4.1",
     "react-markdown": "^9.0.1",
     "react-syntax-highlighter": "^15.5.0",
+    "reactflow": "^11.11.4",
     "recharts": "^2.10.3",
     "tailwindcss": "^3.3.0",
     "zod": "^3.22.4",
-    "zustand": "^4.4.7"
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",

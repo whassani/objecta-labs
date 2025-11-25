@@ -1,0 +1,283 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { X, Save } from 'lucide-react';
+
+interface NodeEditorProps {
+  node: any;
+  onClose: () => void;
+  onChange: (node: any) => void;
+}
+
+export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps) {
+  const [editedNode, setEditedNode] = useState(node);
+
+  useEffect(() => {
+    setEditedNode(node);
+  }, [node]);
+
+  const handleSave = () => {
+    onChange(editedNode);
+    onClose();
+  };
+
+  const handleFieldChange = (field: string, value: any) => {
+    setEditedNode({
+      ...editedNode,
+      data: {
+        ...editedNode.data,
+        [field]: value,
+      },
+    });
+  };
+
+  const renderFields = () => {
+    const { type, data } = editedNode;
+
+    // Common fields
+    const commonFields = (
+      <>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Label
+          </label>
+          <input
+            type="text"
+            value={data.label || ''}
+            onChange={(e) => handleFieldChange('label', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Description
+          </label>
+          <textarea
+            value={data.description || ''}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          />
+        </div>
+      </>
+    );
+
+    // Type-specific fields
+    if (type === 'trigger') {
+      return (
+        <>
+          {commonFields}
+          {data.triggerType === 'schedule' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cron Schedule
+              </label>
+              <input
+                type="text"
+                value={data.schedule || ''}
+                onChange={(e) => handleFieldChange('schedule', e.target.value)}
+                placeholder="0 9 * * *"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Example: 0 9 * * * (Every day at 9:00 AM)
+              </p>
+            </div>
+          )}
+          {data.triggerType === 'event' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Event Type
+              </label>
+              <select
+                value={data.eventType || ''}
+                onChange={(e) => handleFieldChange('eventType', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Select event type</option>
+                <option value="document.created">Document Created</option>
+                <option value="document.updated">Document Updated</option>
+                <option value="message.received">Message Received</option>
+                <option value="user.registered">User Registered</option>
+              </select>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (type === 'action') {
+      return (
+        <>
+          {commonFields}
+          {data.actionType === 'agent' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Agent
+              </label>
+              <select
+                value={data.agentId || ''}
+                onChange={(e) => handleFieldChange('agentId', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Select agent</option>
+                <option value="agent-1">Customer Support Agent</option>
+                <option value="agent-2">Sales Assistant</option>
+              </select>
+            </div>
+          )}
+          {data.actionType === 'tool' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tool
+              </label>
+              <select
+                value={data.toolId || ''}
+                onChange={(e) => handleFieldChange('toolId', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="">Select tool</option>
+                <option value="tool-1">Calculator</option>
+                <option value="tool-2">HTTP API</option>
+              </select>
+            </div>
+          )}
+          {data.actionType === 'http' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  HTTP Method
+                </label>
+                <select
+                  value={data.method || 'GET'}
+                  onChange={(e) => handleFieldChange('method', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                >
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  URL
+                </label>
+                <input
+                  type="url"
+                  value={data.url || ''}
+                  onChange={(e) => handleFieldChange('url', e.target.value)}
+                  placeholder="https://api.example.com/endpoint"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
+          {data.actionType === 'email' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  To
+                </label>
+                <input
+                  type="email"
+                  value={data.to || ''}
+                  onChange={(e) => handleFieldChange('to', e.target.value)}
+                  placeholder="recipient@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  value={data.subject || ''}
+                  onChange={(e) => handleFieldChange('subject', e.target.value)}
+                  placeholder="Email subject"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
+        </>
+      );
+    }
+
+    if (type === 'condition') {
+      return (
+        <>
+          {commonFields}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Condition
+            </label>
+            <input
+              type="text"
+              value={data.condition || ''}
+              onChange={(e) => handleFieldChange('condition', e.target.value)}
+              placeholder="e.g., confidence > 0.8"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Use JavaScript-like expressions
+            </p>
+          </div>
+        </>
+      );
+    }
+
+    return commonFields;
+  };
+
+  return (
+    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">Node Settings</h3>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-gray-100 rounded transition"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {renderFields()}
+
+        <div className="pt-4 border-t border-gray-200">
+          <button
+            onClick={handleSave}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          >
+            <Save size={18} />
+            Save Changes
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 bg-gray-50 border-t border-gray-200">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2">Node Info</h4>
+        <dl className="space-y-1 text-xs text-gray-600">
+          <div className="flex justify-between">
+            <dt>Node ID:</dt>
+            <dd className="font-mono">{node.id}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt>Type:</dt>
+            <dd className="font-mono">{node.type}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt>Position:</dt>
+            <dd className="font-mono">
+              ({Math.round(node.position.x)}, {Math.round(node.position.y)})
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  );
+}

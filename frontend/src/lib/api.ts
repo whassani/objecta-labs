@@ -176,3 +176,26 @@ export const conversationsApi = {
   sendMessage: (id: string, content: string) => api.post(`/conversations/${id}/messages`, { content }),
   delete: (id: string) => api.delete(`/conversations/${id}`),
 }
+
+// Workflows API
+export const workflowsApi = {
+  getAll: (params?: any) => api.get('/workflows', { params }),
+  getOne: (id: string) => api.get(`/workflows/${id}`),
+  create: (data: any) => api.post('/workflows', data),
+  update: (id: string, data: any) => api.put(`/workflows/${id}`, data),
+  delete: (id: string) => api.delete(`/workflows/${id}`),
+  duplicate: (id: string, data?: any) => api.post(`/workflows/${id}/duplicate`, data),
+  activate: (id: string) => api.put(`/workflows/${id}/activate`),
+  deactivate: (id: string) => api.put(`/workflows/${id}/deactivate`),
+  execute: (id: string, data?: any) => api.post(`/workflows/${id}/execute`, data),
+  
+  // Executions
+  getExecutions: (workflowId: string, params?: any) => api.get(`/workflows/${workflowId}/executions`, { params }),
+  getExecution: (executionId: string) => api.get(`/workflows/executions/${executionId}`),
+  cancelExecution: (executionId: string) => api.post(`/workflows/executions/${executionId}/cancel`),
+  
+  // Templates
+  getTemplates: (params?: any) => api.get('/workflow-templates', { params }),
+  getTemplate: (id: string) => api.get(`/workflow-templates/${id}`),
+  deployTemplate: (id: string, data?: any) => api.post(`/workflow-templates/${id}/deploy`, data),
+}
