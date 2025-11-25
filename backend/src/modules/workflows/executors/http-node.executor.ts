@@ -10,7 +10,10 @@ export class HttpNodeExecutor extends BaseNodeExecutor {
       const { url, method = 'GET', headers = {}, body } = node.data;
 
       if (!url) {
-        throw new Error('URL is required for HTTP node');
+        return {
+          success: false,
+          error: 'URL not configured. Please add a URL in the node editor.',
+        };
       }
 
       // Interpolate URL with context variables

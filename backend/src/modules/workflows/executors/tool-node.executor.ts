@@ -16,7 +16,11 @@ export class ToolNodeExecutor extends BaseNodeExecutor {
       const { toolId, toolName, input } = node.data;
 
       if (!toolId && !toolName) {
-        throw new Error('Tool ID or name is required');
+        this.logger.warn(`Tool node ${node.id} executed without toolId or toolName configured`);
+        return {
+          success: false,
+          error: 'Tool not configured. Please select a tool in the node editor.',
+        };
       }
 
       // Prepare input for tool execution

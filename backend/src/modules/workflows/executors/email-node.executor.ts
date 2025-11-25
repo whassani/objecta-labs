@@ -11,15 +11,24 @@ export class EmailNodeExecutor extends BaseNodeExecutor {
       const { to, subject, body, cc, bcc, attachments } = node.data;
 
       if (!to) {
-        throw new Error('Recipient email address (to) is required');
+        return {
+          success: false,
+          error: 'Email recipient not configured. Please add recipient in the node editor.',
+        };
       }
 
       if (!subject) {
-        throw new Error('Email subject is required');
+        return {
+          success: false,
+          error: 'Email subject not configured. Please add subject in the node editor.',
+        };
       }
 
       if (!body) {
-        throw new Error('Email body is required');
+        return {
+          success: false,
+          error: 'Email body not configured. Please add body in the node editor.',
+        };
       }
 
       // Interpolate email fields with context variables

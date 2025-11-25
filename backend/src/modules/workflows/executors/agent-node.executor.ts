@@ -14,7 +14,10 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
       const { agentId, prompt, agentName } = node.data;
 
       if (!agentId && !agentName) {
-        throw new Error('Agent ID or name is required');
+        return {
+          success: false,
+          error: 'Agent not configured. Please select an agent in the node editor.',
+        };
       }
 
       // Get prompt from node data or interpolate from context
