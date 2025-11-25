@@ -386,7 +386,7 @@ export function useWorkflowExecution(
     return nextNodes;
   }, [nodes, edges, activateEdge]);
 
-  const executeWorkflow = async () => {
+  const executeWorkflow = async (testData?: any) => {
     executionRef.current = { 
       isPaused: false, 
       isStopped: false,
