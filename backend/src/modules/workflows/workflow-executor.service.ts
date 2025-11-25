@@ -12,6 +12,12 @@ import {
 } from './entities/workflow-execution-step.entity';
 import { WorkflowsService } from './workflows.service';
 import { ExecuteWorkflowDto } from './dto/workflow.dto';
+import { TriggerNodeExecutor } from './executors/trigger-node.executor';
+import { HttpNodeExecutor } from './executors/http-node.executor';
+import { ConditionNodeExecutor } from './executors/condition-node.executor';
+import { DelayNodeExecutor } from './executors/delay-node.executor';
+import { AgentNodeExecutor } from './executors/agent-node.executor';
+import { ToolNodeExecutor } from './executors/tool-node.executor';
 
 export interface ExecutionContext {
   variables: Record<string, any>;
@@ -29,6 +35,12 @@ export class WorkflowExecutorService {
     @InjectRepository(WorkflowExecutionStep)
     private stepRepository: Repository<WorkflowExecutionStep>,
     private workflowsService: WorkflowsService,
+    private triggerNodeExecutor: TriggerNodeExecutor,
+    private httpNodeExecutor: HttpNodeExecutor,
+    private conditionNodeExecutor: ConditionNodeExecutor,
+    private delayNodeExecutor: DelayNodeExecutor,
+    private agentNodeExecutor: AgentNodeExecutor,
+    private toolNodeExecutor: ToolNodeExecutor,
   ) {}
 
   async executeWorkflow(
@@ -158,7 +170,13 @@ export class WorkflowExecutorService {
       context.stepOutputs[node.id] = output;
 
       // Find and execute next nodes
-      const nextEdges = edges.filter((edge) => edge.source === node.id);
+      // For condition nodes, filter by the result (true/false handle)
+      let nextEdges = edges.filter((edge) => edge.source === node.id);
+      
+      // If node has a nextNodeId (from condition), filter edges by sourceHandle
+      if (output.nextNodeId) {
+        nextEdges = nextEdges.filter((edge) => edge.sourceHandle === output.nextNodeId);
+      }
       
       for (const edge of nextEdges) {
         const nextNode = allNodes.find((n) => n.id === edge.target);
@@ -184,35 +202,64 @@ export class WorkflowExecutorService {
   private async executeNodeLogic(node: any, context: ExecutionContext): Promise<any> {
     this.logger.debug(`Executing node ${node.id} of type ${node.type}`);
 
-    // Node execution logic will be implemented in Phase 2
-    // For now, return mock data based on node type
-    switch (node.type) {
-      case 'trigger-manual':
-      case 'manual':
-        return { triggered: true, data: context.triggerData };
+    let result;
 
-      case 'action-agent':
-        return { response: 'Agent response placeholder', success: true };
-
-      case 'action-tool':
-        return { result: 'Tool execution placeholder', success: true };
-
-      case 'action-http':
-        return { statusCode: 200, data: 'HTTP response placeholder' };
-
-      case 'control-condition':
-        // Evaluate condition
-        const condition = node.data.condition || true;
-        return { result: condition, branch: condition ? 'true' : 'false' };
-
-      case 'control-delay':
-        const delayMs = node.data.delay || 1000;
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-        return { delayed: delayMs };
-
-      default:
-        return { message: 'Node executed', type: node.type };
+    // Route to appropriate executor based on node type
+    if (node.type.startsWith('trigger') || node.type === 'manual') {
+      result = await this.triggerNodeExecutor.execute(node, context);
+    } else if (node.type === 'action' || node.type.startsWith('action-')) {
+      const actionType = node.data.actionType || node.type.replace('action-', '');
+      
+      switch (actionType) {
+        case 'agent':
+          result = await this.agentNodeExecutor.execute(node, context);
+          break;
+        case 'tool':
+          result = await this.toolNodeExecutor.execute(node, context);
+          break;
+        case 'http':
+          result = await this.httpNodeExecutor.execute(node, context);
+          break;
+        case 'email':
+          // TODO: Implement email executor
+          result = { success: true, data: { message: 'Email node not yet implemented' } };
+          break;
+        default:
+          result = { success: false, error: `Unknown action type: ${actionType}` };
+      }
+    } else if (node.type === 'condition' || node.type.startsWith('control-')) {
+      const controlType = node.data.controlType || node.type.replace('control-', '');
+      
+      switch (controlType) {
+        case 'condition':
+          result = await this.conditionNodeExecutor.execute(node, context);
+          break;
+        case 'delay':
+          result = await this.delayNodeExecutor.execute(node, context);
+          break;
+        case 'loop':
+          // TODO: Implement loop executor
+          result = { success: true, data: { message: 'Loop node not yet implemented' } };
+          break;
+        case 'merge':
+          // TODO: Implement merge executor
+          result = { success: true, data: { message: 'Merge node not yet implemented' } };
+          break;
+        default:
+          result = { success: false, error: `Unknown control type: ${controlType}` };
+      }
+    } else {
+      result = { success: false, error: `Unknown node type: ${node.type}` };
     }
+
+    // Log execution result
+    if (result.success) {
+      this.logger.debug(`Node ${node.id} executed successfully`);
+    } else {
+      this.logger.warn(`Node ${node.id} execution failed: ${result.error}`);
+    }
+
+    return result;
   }
 
   async getExecution(id: string, organizationId: string): Promise<WorkflowExecution> {
