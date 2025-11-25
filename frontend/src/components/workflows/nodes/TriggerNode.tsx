@@ -64,6 +64,7 @@ const TriggerNode = ({ data, selected }: NodeProps) => {
       <Handle
         type="source"
         position={Position.Bottom}
+        id="output"
         className="!bg-green-500 !w-3 !h-3 !border-2 !border-white"
       />
     </div>

@@ -15,6 +15,7 @@ const ConditionNode = ({ data, selected }: NodeProps) => {
       <Handle
         type="target"
         position={Position.Top}
+        id="input"
         className="!bg-amber-500 !w-3 !h-3 !border-2 !border-white"
       />
 

@@ -79,15 +79,21 @@ export default function WorkflowCanvas({
         currentNodes.map((currentNode) => {
           const updatedNode = initialDefinition.nodes.find((n) => n.id === currentNode.id);
           if (updatedNode) {
-            // Keep current position, only update data
+            // Keep current position and other ReactFlow properties, only update data
             return {
               ...currentNode,
               data: updatedNode.data,
+              type: updatedNode.type, // Ensure type is preserved
             };
           }
           return currentNode;
         })
       );
+    }
+
+    // Also update edges if they changed
+    if (initialDefinition.edges && edges.length === newEdgeCount) {
+      setEdges(initialDefinition.edges as any);
     }
   }, [initialDefinition]);
 

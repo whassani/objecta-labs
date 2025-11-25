@@ -87,6 +87,7 @@ const ActionNode = ({ data, selected }: NodeProps) => {
       <Handle
         type="target"
         position={Position.Top}
+        id="input"
         className="!bg-indigo-500 !w-3 !h-3 !border-2 !border-white"
       />
 
@@ -113,6 +114,7 @@ const ActionNode = ({ data, selected }: NodeProps) => {
       <Handle
         type="source"
         position={Position.Bottom}
+        id="output"
         className="!bg-indigo-500 !w-3 !h-3 !border-2 !border-white"
       />
     </div>
