@@ -43,6 +43,11 @@ export class CreateToolDto {
   @IsOptional()
   @IsNumber()
   rateLimit?: number;
+
+  @ApiProperty({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isEnabled?: boolean;
 }
 
 export class UpdateToolDto {
