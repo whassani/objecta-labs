@@ -101,7 +101,7 @@ export class WorkflowExecutorService {
         status: WorkflowExecutionStatus.COMPLETED,
         endTime: new Date(),
         durationMs,
-        context,
+        context: context as any,
       });
 
       this.logger.log(`Workflow execution ${executionId} completed in ${durationMs}ms`);

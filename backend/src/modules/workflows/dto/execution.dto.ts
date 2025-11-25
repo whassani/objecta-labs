@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsObject, IsNumber, IsDate } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsObject, IsNumber, IsDate, IsBoolean } from 'class-validator';
 import { WorkflowExecutionStatus } from '../entities/workflow-execution.entity';
 import { StepStatus } from '../entities/workflow-execution-step.entity';
 
