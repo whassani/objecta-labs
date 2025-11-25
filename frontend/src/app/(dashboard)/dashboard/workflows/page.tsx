@@ -268,29 +268,37 @@ export default function WorkflowsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 ml-4">
+                  {/* Test Run Button - Always visible */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleExecuteWorkflow(workflow.id);
                     }}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                    title="Execute workflow"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 rounded-lg transition text-sm font-medium"
                     disabled={executeMutation.isPending}
                   >
                     {executeMutation.isPending ? (
-                      <Loader2 size={18} className="animate-spin" />
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Running...</span>
+                      </>
                     ) : (
-                      <Play size={18} />
+                      <>
+                        <Play size={16} className="fill-current" />
+                        <span>Test Run</span>
+                      </>
                     )}
                   </button>
+                  
+                  {/* Status Toggle - Only show icon */}
                   {workflow.status === 'active' ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleToggleStatus(workflow);
                       }}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                      title="Pause workflow"
+                      className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
+                      title="Deactivate workflow"
                     >
                       <Pause size={18} />
                     </button>
@@ -300,7 +308,7 @@ export default function WorkflowsPage() {
                         e.stopPropagation();
                         handleToggleStatus(workflow);
                       }}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                      className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition"
                       title="Activate workflow"
                     >
                       <Play size={18} />
