@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
-import { debugLog } from '@/lib/debug-logger'
 
 export default function DashboardLayout({
   children,
@@ -18,19 +17,13 @@ export default function DashboardLayout({
   const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
-    debugLog('9️⃣ Dashboard layout mounting...')
-    
     // Simple approach: just read from Zustand store directly
     const tokenFromStore = useAuthStore.getState().token
-    debugLog(`🔟 Token from Zustand store: ${tokenFromStore ? 'EXISTS' : 'MISSING'}`)
     
     if (tokenFromStore) {
-      debugLog('✅ Token found, setting state...')
       setToken(tokenFromStore)
       setIsLoading(false)
-      debugLog('✅ Dashboard should render')
     } else {
-      debugLog('❌ No token found, will redirect...')
       setShouldRedirect(true)
       setIsLoading(false)
     }
@@ -65,24 +58,17 @@ export default function DashboardLayout({
     return null
   }
 
-  debugLog('🎨 Rendering dashboard with token')
-
-  try {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:pl-64">
-          <Header />
-          <main className="py-6">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
-          </main>
-        </div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Sidebar />
+      <div className="lg:pl-64">
+        <Header />
+        <main className="py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
       </div>
-    )
-  } catch (renderError: any) {
-    debugLog('❌ RENDER ERROR: ' + renderError.message)
-    return <div>Render Error: {renderError.message}</div>
-  }
+    </div>
+  )
 }

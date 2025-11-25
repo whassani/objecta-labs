@@ -30,42 +30,22 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true)
-    clearDebugLogs() // Clear old logs
     
     try {
-      debugLog('1️⃣ Starting login...')
       const response = await authApi.login(data)
       const { user, token } = response.data
-      
-      debugLog('2️⃣ Login API success')
-      debugLog(`3️⃣ Received token: ${token ? 'YES' : 'NO'}`)
       
       // Set token first (which also sets localStorage)
       setToken(token)
       setUser(user)
       
-      debugLog('4️⃣ Called setToken and setUser')
-      
-      // Wait a bit for Zustand to persist
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      const tokenInStore = useAuthStore.getState().token
-      debugLog(`5️⃣ Token in Zustand store: ${tokenInStore ? 'EXISTS' : 'MISSING'}`)
-      
-      const authStorage = localStorage.getItem('auth-storage')
-      debugLog(`6️⃣ auth-storage in localStorage: ${authStorage ? 'EXISTS' : 'MISSING'}`)
-      
       toast.success('Welcome back!')
       
       // Small delay to ensure Zustand persists
       setTimeout(() => {
-        const tokenBeforeNav = useAuthStore.getState().token
-        debugLog(`7️⃣ Before navigation - token in store: ${tokenBeforeNav ? 'EXISTS' : 'MISSING'}`)
-        debugLog('8️⃣ Calling router.push("/dashboard")...')
         router.push('/dashboard')
       }, 100)
     } catch (error: any) {
-      debugLog('❌ Login error: ' + error.message)
       toast.error(error.response?.data?.message || 'Login failed')
     } finally {
       setIsLoading(false)
