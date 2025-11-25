@@ -23,11 +23,13 @@ export class CreateToolDto {
   @IsString()
   actionType: string;
 
-  @ApiProperty()
-  config: any;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  config?: any;
 
-  @ApiProperty()
-  schema: any;
+  @ApiProperty({ required: false })
+  @IsOptional()
+  schema?: any;
 
   @ApiProperty({ required: false })
   @IsOptional()
