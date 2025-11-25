@@ -96,12 +96,22 @@ export class ConversationsService {
     try {
       const response = await llm.invoke(messages);
       
-      // Extract content from response (handle different response types)
-      const content = typeof response.content === 'string' 
-        ? response.content 
-        : Array.isArray(response.content)
-          ? response.content.map(c => typeof c === 'string' ? c : c.text).join('')
-          : String(response.content);
+      // Extract content from response
+      let content: string;
+      if (typeof response === 'string') {
+        content = response;
+      } else if ('content' in response) {
+        const responseContent = response.content;
+        if (typeof responseContent === 'string') {
+          content = responseContent;
+        } else if (Array.isArray(responseContent)) {
+          content = responseContent.map(c => typeof c === 'string' ? c : (c as any).text || '').join('');
+        } else {
+          content = String(responseContent);
+        }
+      } else {
+        content = String(response);
+      }
       
       // Save AI response
       const aiMessage = this.messagesRepository.create({
