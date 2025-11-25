@@ -61,33 +61,13 @@ const edgeStyles = `
     }
   }
   
-  /* Node execution states */
+  /* Node execution states - Clean backgrounds only */
   .react-flow__node.running {
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
-    position: relative;
-  }
-  
-  .react-flow__node.running::before {
-    content: '⚙️';
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 16px;
-    animation: spin 2s linear infinite;
   }
   
   .react-flow__node.completed {
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
-  }
-  
-  .react-flow__node.completed::after {
-    content: '✓';
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 16px;
-    color: #10b981;
-    font-weight: bold;
   }
   
   .react-flow__node.error,
@@ -95,24 +75,8 @@ const edgeStyles = `
     background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
   }
   
-  .react-flow__node.error::after,
-  .react-flow__node.failed::after {
-    content: '✗';
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 16px;
-    color: #ef4444;
-    font-weight: bold;
-  }
-  
   .react-flow__node.pending {
     opacity: 0.5;
-  }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
   }
   
   @keyframes pulse {
