@@ -436,6 +436,9 @@ export function useWorkflowExecution(
             if (executionData.status === 'completed' || executionData.status === 'failed') {
               clearInterval(pollInterval);
               
+              console.log('Execution data received:', executionData);
+              console.log('Steps:', executionData.steps);
+              
               // Update execution status and results
               setExecution((prev) => ({
                 ...prev,
@@ -447,6 +450,7 @@ export function useWorkflowExecution(
               
               // Update node statuses from execution steps
               if (executionData.steps && Array.isArray(executionData.steps)) {
+                console.log(`Processing ${executionData.steps.length} steps...`);
                 executionData.steps.forEach((step: any) => {
                   updateNodeStatus(step.nodeId, step.status as any);
                   
