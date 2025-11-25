@@ -38,6 +38,21 @@ export class Document {
   @Column({ name: 'processing_status', default: 'pending' })
   processingStatus: string; // pending, processing, completed, failed
 
+  @Column({ type: 'simple-array', nullable: true })
+  tags: string[];
+
+  @Column({ nullable: true })
+  category: string;
+
+  @Column({ name: 'file_hash', nullable: true })
+  fileHash: string;
+
+  @Column({ default: 1 })
+  version: number;
+
+  @Column({ name: 'collection_id', nullable: true })
+  collectionId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
