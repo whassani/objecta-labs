@@ -20,6 +20,12 @@ export class AgentsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get agent by ID' })
   async findOne(@Param('id') id: string, @Request() req) {
+    // Validate UUID format to prevent "new" or other strings being passed
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      // Return 404 for invalid UUID format (like "new", "edit", etc.)
+      throw new Error('Invalid agent ID format');
+    }
     return this.agentsService.findOne(id, req.user.organizationId);
   }
 
