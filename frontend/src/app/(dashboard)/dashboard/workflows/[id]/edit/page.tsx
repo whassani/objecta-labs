@@ -348,12 +348,19 @@ export default function EditWorkflowPage() {
               node={selectedNode}
               onClose={() => setShowNodeEditor(false)}
               onChange={(updatedNode) => {
-                setDefinition((prev) => ({
-                  ...prev,
-                  nodes: prev.nodes.map((n) =>
-                    n.id === updatedNode.id ? updatedNode : n
-                  ),
-                }));
+                console.log('Updating node:', updatedNode);
+                setDefinition((prev) => {
+                  const newDefinition = {
+                    ...prev,
+                    nodes: prev.nodes.map((n) =>
+                      n.id === updatedNode.id ? updatedNode : n
+                    ),
+                  };
+                  console.log('New definition:', newDefinition);
+                  return newDefinition;
+                });
+                // Also update selectedNode so editor shows latest data
+                setSelectedNode(updatedNode);
               }}
             />
           )}
