@@ -195,6 +195,11 @@ export default function EditWorkflowPage() {
     setDefinition(newDefinition);
   }, []);
 
+  const handleNodeClick = useCallback((node: any) => {
+    setSelectedNode(node);
+    setShowNodeEditor(true);
+  }, []);
+
   const handleSave = async () => {
     if (!workflow) return;
     
@@ -333,6 +338,7 @@ export default function EditWorkflowPage() {
               initialDefinition={definition}
               onChange={handleDefinitionChange}
               onInit={setReactFlowInstance}
+              onNodeClick={handleNodeClick}
             />
           </div>
 

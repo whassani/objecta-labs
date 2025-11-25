@@ -32,6 +32,7 @@ interface WorkflowCanvasProps {
   initialDefinition?: WorkflowDefinition;
   onChange?: (definition: WorkflowDefinition) => void;
   onInit?: (instance: any) => void;
+  onNodeClick?: (node: any) => void;
   readOnly?: boolean;
 }
 
@@ -39,6 +40,7 @@ export default function WorkflowCanvas({
   initialDefinition,
   onChange,
   onInit,
+  onNodeClick,
   readOnly = false,
 }: WorkflowCanvasProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -92,9 +94,12 @@ export default function WorkflowCanvas({
   );
 
   // Handle node selection
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node);
-  }, []);
+    if (onNodeClick) {
+      onNodeClick(node);
+    }
+  }, [onNodeClick]);
 
   // Handle node deletion
   const onNodesDelete = useCallback(
@@ -168,7 +173,7 @@ export default function WorkflowCanvas({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
-        onNodeClick={onNodeClick}
+        onNodeClick={handleNodeClick}
         onNodesDelete={onNodesDelete}
         onEdgesDelete={onEdgesDelete}
         onInit={onInit}
