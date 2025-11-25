@@ -63,26 +63,56 @@ const edgeStyles = `
   
   /* Node execution states */
   .react-flow__node.running {
-    animation: pulse 1.5s ease-in-out infinite;
-    box-shadow: 0 0 0 3px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.5) !important;
-    border: 2px solid #3b82f6 !important;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+    position: relative;
+  }
+  
+  .react-flow__node.running::before {
+    content: '⚙️';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 16px;
+    animation: spin 2s linear infinite;
   }
   
   .react-flow__node.completed {
-    box-shadow: 0 0 0 2px #10b981 !important;
-    border: 2px solid #10b981 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #d1fae5 100%) !important;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  }
+  
+  .react-flow__node.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 16px;
+    color: #10b981;
+    font-weight: bold;
   }
   
   .react-flow__node.error,
   .react-flow__node.failed {
-    box-shadow: 0 0 0 2px #ef4444 !important;
-    border: 2px solid #ef4444 !important;
-    background: linear-gradient(135deg, #ffffff 0%, #fee2e2 100%) !important;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+  }
+  
+  .react-flow__node.error::after,
+  .react-flow__node.failed::after {
+    content: '✗';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 16px;
+    color: #ef4444;
+    font-weight: bold;
   }
   
   .react-flow__node.pending {
     opacity: 0.5;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
   
   @keyframes pulse {
