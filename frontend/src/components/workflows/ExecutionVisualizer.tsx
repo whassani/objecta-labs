@@ -481,7 +481,24 @@ export default function ExecutionVisualizer({
       <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden flex-shrink-0" style={{ maxHeight: isMaximized ? '30vh' : '250px' }}>
         <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status (Click to see I/O)</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-          {nodes.map((node) => {
+          {[...nodes].sort((a, b) => {
+            // Sort trigger nodes first, then by execution order
+            const aIsTrigger = a.type === 'trigger' || a.data?.triggerType;
+            const bIsTrigger = b.type === 'trigger' || b.data?.triggerType;
+            
+            if (aIsTrigger && !bIsTrigger) return -1;
+            if (!aIsTrigger && bIsTrigger) return 1;
+            
+            // Then sort by start time if available
+            const aState = execution.nodeStates[a.id];
+            const bState = execution.nodeStates[b.id];
+            if (aState?.startTime && bState?.startTime) {
+              return aState.startTime - bState.startTime;
+            }
+            
+            // Keep original order if no timing info
+            return 0;
+          }).map((node) => {
             const status = getNodeStatus(node.id);
             const state = execution.nodeStates[node.id];
             const hasBreakpoint = breakpoints.get(node.id)?.enabled;
