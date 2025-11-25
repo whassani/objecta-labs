@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface NodeEditorProps {
   node: any;
@@ -11,6 +12,28 @@ interface NodeEditorProps {
 
 export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps) {
   const [editedNode, setEditedNode] = useState(node);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+
+  // Load agents from API
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        setLoadingAgents(true);
+        const response = await api.get('/agents');
+        setAgents(response.data || []);
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+        setAgents([]);
+      } finally {
+        setLoadingAgents(false);
+      }
+    };
+
+    if (editedNode.data?.actionType === 'agent') {
+      loadAgents();
+    }
+  }, [editedNode.data?.actionType]);
 
   useEffect(() => {
     setEditedNode(node);
