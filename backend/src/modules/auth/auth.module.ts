@@ -18,7 +18,6 @@ import { LocalStrategy } from './strategies/local.strategy';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const secret = configService.get<string>('JWT_SECRET') || 'your-secret-key';
-        console.log('🔐 AuthModule JWT Secret (from ConfigService):', secret);
         return {
           secret: secret,
           signOptions: { expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d' },
