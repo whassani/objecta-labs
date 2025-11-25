@@ -436,6 +436,29 @@ export function useWorkflowExecution(
             
             addLog(`Execution status: ${executionData.status}`);
             
+            // Update node states even while running (not just when completed)
+            if (executionData.steps && Array.isArray(executionData.steps)) {
+              const nodeStates: Record<string, NodeExecutionState> = {};
+              
+              executionData.steps.forEach((step: any) => {
+                nodeStates[step.nodeId] = {
+                  status: step.status === 'completed' ? 'completed' : 
+                          step.status === 'failed' ? 'error' : 
+                          step.status === 'running' ? 'running' :
+                          'pending',
+                  startTime: step.startTime ? new Date(step.startTime).getTime() : undefined,
+                  endTime: step.endTime ? new Date(step.endTime).getTime() : undefined,
+                  output: step.outputData,
+                };
+              });
+              
+              // Update execution with latest node states
+              setExecution((prev) => ({
+                ...prev,
+                nodeStates: { ...prev.nodeStates, ...nodeStates },
+              }));
+            }
+            
             if (executionData.status === 'completed' || executionData.status === 'failed') {
               clearInterval(pollInterval);
               
