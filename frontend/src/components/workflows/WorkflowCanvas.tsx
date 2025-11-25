@@ -48,16 +48,30 @@ export default function WorkflowCanvas({
     initialDefinition?.edges || []
   );
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Update nodes and edges when initialDefinition changes
+  // Only update nodes and edges on initial mount or when adding/removing nodes
   useEffect(() => {
-    if (initialDefinition?.nodes) {
-      setNodes(initialDefinition.nodes as any);
+    if (!isInitialized && initialDefinition) {
+      setIsInitialized(true);
+      return;
     }
-    if (initialDefinition?.edges) {
-      setEdges(initialDefinition.edges as any);
+
+    // Only update if the number of nodes/edges changed (not position)
+    const currentNodeCount = nodes.length;
+    const newNodeCount = initialDefinition?.nodes?.length || 0;
+    const currentEdgeCount = edges.length;
+    const newEdgeCount = initialDefinition?.edges?.length || 0;
+
+    if (currentNodeCount !== newNodeCount || currentEdgeCount !== newEdgeCount) {
+      if (initialDefinition?.nodes) {
+        setNodes(initialDefinition.nodes as any);
+      }
+      if (initialDefinition?.edges) {
+        setEdges(initialDefinition.edges as any);
+      }
     }
-  }, [initialDefinition, setNodes, setEdges]);
+  }, [initialDefinition?.nodes?.length, initialDefinition?.edges?.length]);
 
   // Handle connection between nodes
   const onConnect = useCallback(
