@@ -126,13 +126,22 @@ export default function WorkflowCanvas({
   // Handle node deletion
   const handleNodesDelete = useCallback(
     (deleted: Node[]) => {
+      console.log('handleNodesDelete called with:', deleted);
+      console.log('readOnly:', readOnly);
+      
       if (readOnly) return;
       
       const deletedIds = deleted.map((n) => n.id);
+      console.log('Deleting node IDs:', deletedIds);
+      console.log('Current nodes:', nodes);
+      
       const remainingNodes = nodes.filter((n) => !deletedIds.includes(n.id));
       const remainingEdges = edges.filter(
         (e) => !deletedIds.includes(e.source) && !deletedIds.includes(e.target)
       );
+      
+      console.log('Remaining nodes:', remainingNodes);
+      console.log('Remaining edges:', remainingEdges);
       
       setNodes(remainingNodes);
       setEdges(remainingEdges);
