@@ -436,11 +436,40 @@ export function useWorkflowExecution(
             if (executionData.status === 'completed' || executionData.status === 'failed') {
               clearInterval(pollInterval);
               
+              // Update execution status and results
               setExecution((prev) => ({
                 ...prev,
                 status: executionData.status,
                 endTime: Date.now(),
+                result: executionData.result,
+                error: executionData.error,
               }));
+              
+              // Update node statuses from execution steps
+              if (executionData.steps && Array.isArray(executionData.steps)) {
+                executionData.steps.forEach((step: any) => {
+                  updateNodeStatus(step.nodeId, step.status as any);
+                  
+                  // Store step output in variables
+                  if (step.output) {
+                    setVariables((prev) => {
+                      const newVars = new Map(prev);
+                      newVars.set(step.nodeId, {
+                        inputData: step.input || {},
+                        outputData: step.output,
+                        variables: {},
+                      });
+                      return newVars;
+                    });
+                  }
+                  
+                  addLog(
+                    `Node ${step.nodeId}: ${step.status}`,
+                    step.nodeId,
+                    step.status === 'completed' ? 'info' : step.status === 'failed' ? 'error' : 'info'
+                  );
+                });
+              }
               
               addLog(`Workflow ${executionData.status}`, undefined, executionData.status === 'completed' ? 'info' : 'error');
             }
