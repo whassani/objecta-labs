@@ -24,10 +24,23 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
         };
       }
 
-      // Get prompt from node data or interpolate from context
-      const finalPrompt = prompt 
-        ? this.interpolateTemplate(prompt, context)
-        : this.getInputValue('prompt', context) || 'Execute agent task';
+      // Get prompt - prioritize trigger data, then node config, then default
+      let finalPrompt: string;
+      
+      // First check if there's a prompt or message in trigger data (from test UI)
+      const triggerPrompt = this.getInputValue('prompt', context) || 
+                           this.getInputValue('message', context);
+      
+      if (triggerPrompt) {
+        // Use prompt from test data
+        finalPrompt = triggerPrompt;
+      } else if (prompt) {
+        // Use prompt from node configuration (with variable interpolation)
+        finalPrompt = this.interpolateTemplate(prompt, context);
+      } else {
+        // Fallback default
+        finalPrompt = 'Execute agent task';
+      }
 
       // Get organizationId from context (passed through trigger data or variables)
       const organizationId = context.variables?.organizationId || 
