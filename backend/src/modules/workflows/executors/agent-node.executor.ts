@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BaseNodeExecutor, NodeExecutionResult } from './base-node.executor';
 import { ExecutionContext } from '../workflow-executor.service';
-// Note: AgentsService would need to be injected - this is a placeholder for now
+import { AgentsService } from '../../agents/agents.service';
 
 @Injectable()
 export class AgentNodeExecutor extends BaseNodeExecutor {
-  // TODO: Inject AgentsService when implementing full integration
-  // constructor(private agentsService: AgentsService) { super(); }
+  constructor(private agentsService: AgentsService) {
+    super();
+  }
 
   async execute(node: any, context: ExecutionContext): Promise<NodeExecutionResult> {
     try {
@@ -21,20 +22,34 @@ export class AgentNodeExecutor extends BaseNodeExecutor {
         ? this.interpolateTemplate(prompt, context)
         : this.getInputValue('prompt', context) || 'Execute agent task';
 
-      // TODO: Replace with actual AgentsService call
-      // const agent = await this.agentsService.findOne(agentId, organizationId);
-      // const response = await this.agentsService.execute(agentId, finalPrompt, context);
+      // Get organizationId from context (passed through trigger data or variables)
+      const organizationId = context.variables?.organizationId || 
+                            context.triggerData?.organizationId;
 
-      // For now, return placeholder response
+      if (!organizationId) {
+        throw new Error('Organization ID is required for agent execution');
+      }
+
+      // Fetch agent from database
+      const agent = await this.agentsService.findOne(agentId, organizationId);
+
+      // TODO: In a future phase, integrate with actual LLM to get real AI responses
+      // For now, return agent configuration and prompt
+      // This would be replaced with:
+      // const llmResponse = await this.llmService.chat(agent.model, finalPrompt, agent.systemPrompt);
+
       return {
         success: true,
         data: {
-          agentId,
-          agentName: agentName || 'AI Agent',
+          agentId: agent.id,
+          agentName: agent.name,
           prompt: finalPrompt,
-          response: `[Placeholder] Agent response to: ${finalPrompt}`,
+          response: `Agent "${agent.name}" received prompt: ${finalPrompt}. [Note: LLM integration pending]`,
+          model: agent.model,
+          systemPrompt: agent.systemPrompt,
+          temperature: agent.temperature,
           timestamp: new Date().toISOString(),
-          // Will include: tokens, model, etc. when integrated
+          // Future: tokens, actualResponse, etc.
         },
       };
     } catch (error) {

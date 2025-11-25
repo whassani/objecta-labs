@@ -66,8 +66,8 @@ export class WorkflowExecutorService {
 
     const savedExecution = await this.executionRepository.save(execution);
 
-    // Execute workflow asynchronously
-    this.executeWorkflowAsync(savedExecution.id, workflow, executeDto).catch((error) => {
+    // Execute workflow asynchronously, passing organizationId
+    this.executeWorkflowAsync(savedExecution.id, workflow, executeDto, organizationId).catch((error) => {
       this.logger.error(`Workflow execution failed: ${error.message}`, error.stack);
     });
 
@@ -81,15 +81,22 @@ export class WorkflowExecutorService {
     executionId: string,
     workflow: Workflow,
     executeDto: ExecuteWorkflowDto,
+    organizationId: string,
   ): Promise<void> {
     const startTime = Date.now();
 
     try {
-      // Initialize execution context
+      // Initialize execution context with organizationId
       const context: ExecutionContext = {
-        variables: executeDto.context || {},
+        variables: {
+          ...(executeDto.context || {}),
+          organizationId, // Make organizationId available to all nodes
+        },
         stepOutputs: {},
-        triggerData: executeDto.triggerData || {},
+        triggerData: {
+          ...(executeDto.triggerData || {}),
+          organizationId, // Also in triggerData for backward compatibility
+        },
       };
 
       // Get workflow definition

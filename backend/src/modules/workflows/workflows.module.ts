@@ -15,6 +15,8 @@ import { ConditionNodeExecutor } from './executors/condition-node.executor';
 import { DelayNodeExecutor } from './executors/delay-node.executor';
 import { AgentNodeExecutor } from './executors/agent-node.executor';
 import { ToolNodeExecutor } from './executors/tool-node.executor';
+import { AgentsModule } from '../agents/agents.module';
+import { ToolsModule } from '../tools/tools.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { ToolNodeExecutor } from './executors/tool-node.executor';
       WorkflowSecret,
       WorkflowWebhook,
     ]),
+    AgentsModule,
+    ToolsModule,
   ],
   controllers: [WorkflowsController],
   providers: [

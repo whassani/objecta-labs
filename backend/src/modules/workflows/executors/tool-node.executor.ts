@@ -1,12 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BaseNodeExecutor, NodeExecutionResult } from './base-node.executor';
 import { ExecutionContext } from '../workflow-executor.service';
-// Note: ToolsService would need to be injected
+import { ToolExecutorService } from '../../tools/tool-executor.service';
 
 @Injectable()
 export class ToolNodeExecutor extends BaseNodeExecutor {
-  // TODO: Inject ToolsService when implementing full integration
-  // constructor(private toolsService: ToolsService) { super(); }
+  private readonly logger = new Logger(ToolNodeExecutor.name);
+
+  constructor(private toolExecutorService: ToolExecutorService) {
+    super();
+  }
 
   async execute(node: any, context: ExecutionContext): Promise<NodeExecutionResult> {
     try {
@@ -17,32 +20,91 @@ export class ToolNodeExecutor extends BaseNodeExecutor {
       }
 
       // Prepare input for tool execution
-      const toolInput = input 
-        ? (typeof input === 'string' 
-            ? this.interpolateTemplate(input, context)
-            : input)
-        : this.getInputValue('input', context) || {};
+      let toolInput = input;
 
-      // TODO: Replace with actual ToolsService call
-      // const tool = await this.toolsService.findOne(toolId, organizationId);
-      // const result = await this.toolsService.execute(toolId, toolInput);
+      // If input is a string template, interpolate it
+      if (typeof input === 'string') {
+        toolInput = this.interpolateTemplate(input, context);
+        // Try to parse as JSON if it looks like JSON
+        if (toolInput.startsWith('{') || toolInput.startsWith('[')) {
+          try {
+            toolInput = JSON.parse(toolInput);
+          } catch (e) {
+            // Keep as string if not valid JSON
+          }
+        }
+      } else if (typeof input === 'object' && input !== null) {
+        // Interpolate object values
+        toolInput = this.interpolateObjectValues(input, context);
+      } else if (!input) {
+        // Try to get input from context
+        toolInput = this.getInputValue('input', context) || {};
+      }
 
-      // For now, return placeholder response
+      // Get organizationId from context
+      const organizationId = context.variables?.organizationId || 
+                            context.triggerData?.organizationId;
+
+      if (!organizationId) {
+        throw new Error('Organization ID is required for tool execution');
+      }
+
+      this.logger.log(`Executing tool ${toolId || toolName} with input: ${JSON.stringify(toolInput)}`);
+
+      // Execute tool using ToolExecutorService
+      const result = await this.toolExecutorService.executeTool(
+        toolId,
+        toolInput,
+        organizationId
+      );
+
+      if (!result.success) {
+        throw new Error(result.error || 'Tool execution failed');
+      }
+
       return {
         success: true,
         data: {
-          toolId,
-          toolName: toolName || 'Tool',
+          toolId: result.toolId,
+          toolName: result.toolName,
           input: toolInput,
-          output: `[Placeholder] Tool executed with input: ${JSON.stringify(toolInput)}`,
-          timestamp: new Date().toISOString(),
+          output: result.result,
+          executionTime: result.executionTime,
+          timestamp: result.timestamp,
+          // Include additional debug info if available
+          request: result.request,
+          response: result.response,
         },
       };
     } catch (error) {
+      this.logger.error(`Tool execution failed: ${error.message}`, error.stack);
       return {
         success: false,
         error: `Tool execution failed: ${error.message}`,
       };
     }
+  }
+
+  /**
+   * Recursively interpolate values in an object
+   */
+  private interpolateObjectValues(obj: any, context: ExecutionContext): any {
+    if (typeof obj === 'string') {
+      return this.interpolateTemplate(obj, context);
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.interpolateObjectValues(item, context));
+    }
+
+    if (typeof obj === 'object' && obj !== null) {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = this.interpolateObjectValues(value, context);
+      }
+      return result;
+    }
+
+    return obj;
   }
 }
