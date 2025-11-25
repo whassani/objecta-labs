@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -48,6 +48,16 @@ export default function WorkflowCanvas({
     initialDefinition?.edges || []
   );
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+
+  // Update nodes and edges when initialDefinition changes
+  useEffect(() => {
+    if (initialDefinition?.nodes) {
+      setNodes(initialDefinition.nodes as any);
+    }
+    if (initialDefinition?.edges) {
+      setEdges(initialDefinition.edges as any);
+    }
+  }, [initialDefinition, setNodes, setEdges]);
 
   // Handle connection between nodes
   const onConnect = useCallback(
