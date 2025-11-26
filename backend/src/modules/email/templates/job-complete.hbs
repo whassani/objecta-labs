@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { background: #10b981; color: white; padding: 40px 20px; text-align: center; }
+    .content { padding: 40px 20px; background: #ffffff; }
+    .status-box { background: #d1fae5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+    .button { display: inline-block; padding: 12px 30px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>✅ Job Completed!</h1>
+    </div>
+    <div class="content">
+      <h2>Your job has finished</h2>
+      <div class="status-box">
+        <strong>{{jobName}}</strong><br>
+        <small>Job ID: {{jobId}}</small>
+      </div>
+      <p>Your background job has completed successfully. You can now view the results.</p>
+      <a href="{{jobUrl}}" class="button">View Results</a>
+    </div>
+    <div class="footer">
+      <p>&copy; 2024 AI Platform. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
