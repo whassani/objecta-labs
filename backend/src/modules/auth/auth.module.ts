@@ -6,13 +6,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
+import { Role } from './entities/role.entity';
+import { UserRoleAssignment } from './entities/user-role.entity';
+import { RbacService } from './services/rbac.service';
+import { RolesGuard } from './guards/roles.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
 import { Organization } from '../organizations/entities/organization.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Organization]),
+    TypeOrmModule.forFeature([User, Organization, Role, UserRoleAssignment]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -27,7 +32,7 @@ import { LocalStrategy } from './strategies/local.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy],
-  exports: [AuthService],
+  providers: [AuthService, RbacService, JwtStrategy, LocalStrategy, RolesGuard, PermissionsGuard],
+  exports: [AuthService, RbacService, RolesGuard, PermissionsGuard],
 })
 export class AuthModule {}
