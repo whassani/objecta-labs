@@ -43,7 +43,7 @@ export default function WebhookPanel({ workflowId }: WebhookPanelProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/webhooks/${workflowId}`);
+      const response = await api.get(`/webhooks/workflow/${workflowId}`);
       setWebhook(response.data);
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -80,7 +80,7 @@ export default function WebhookPanel({ workflowId }: WebhookPanelProps) {
       setError(null);
       // Delete old webhook
       if (webhook?.id) {
-        await api.delete(`/webhooks/${webhook.id}`);
+        await api.delete(`/webhooks/manage/${webhook.id}`);
       }
       // Create new webhook
       const response = await api.post(`/webhooks/create/${workflowId}`);
@@ -98,7 +98,7 @@ export default function WebhookPanel({ workflowId }: WebhookPanelProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.patch(`/webhooks/${webhook.id}/toggle`);
+      const response = await api.post(`/webhooks/manage/${webhook.id}/toggle`);
       setWebhook(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update webhook status');
