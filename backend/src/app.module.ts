@@ -11,12 +11,17 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { FineTuningModule } from './modules/fine-tuning/fine-tuning.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { rateLimitConfig } from './config/rate-limit.config';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot(rateLimitConfig),
+    HealthModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',
