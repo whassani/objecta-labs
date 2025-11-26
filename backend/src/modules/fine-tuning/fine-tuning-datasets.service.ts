@@ -444,10 +444,9 @@ export class FineTuningDatasetsService {
 
   /**
    * Convert CSV file to JSONL format
-   * Expected CSV format:
-   * system,user,assistant
-   * "You are helpful","Hello","Hi there!"
-   * "You are helpful","How are you?","I'm doing well!"
+   * Supports two formats:
+   * 1. Training format: system,user,assistant columns
+   * 2. Data format: Any columns - will generate Q&A pairs
    */
   private async convertCsvToJsonl(csvFilePath: string): Promise<string> {
     const jsonlFilePath = csvFilePath.replace(/\.csv$/i, '.jsonl');
@@ -461,6 +460,7 @@ export class FineTuningDatasetsService {
 
     let isFirstLine = true;
     let headers: string[] = [];
+    let examplesWritten = 0;
 
     for await (const line of rl) {
       if (!line.trim()) continue;
@@ -469,27 +469,72 @@ export class FineTuningDatasetsService {
         // Parse header row
         headers = this.parseCsvLine(line);
         isFirstLine = false;
+        
+        // Check if it's training format (has system, user, assistant columns)
+        const hasTrainingColumns = headers.some(h => 
+          ['system', 'user', 'assistant'].includes(h.trim().toLowerCase())
+        );
+        
+        if (!hasTrainingColumns) {
+          this.logger.warn(
+            `CSV does not have training format columns (system, user, assistant). ` +
+            `Found columns: ${headers.join(', ')}. Converting to Q&A format...`
+          );
+        }
+        
         continue;
       }
 
       try {
         const values = this.parseCsvLine(line);
         
-        // Build messages array from CSV columns
+        // Build messages array
         const messages: any[] = [];
         
-        for (let i = 0; i < Math.min(headers.length, values.length); i++) {
-          const role = headers[i].trim().toLowerCase();
-          const content = values[i].trim();
+        // Check if this is training format
+        const hasSystemCol = headers.some(h => h.trim().toLowerCase() === 'system');
+        const hasUserCol = headers.some(h => h.trim().toLowerCase() === 'user');
+        const hasAssistantCol = headers.some(h => h.trim().toLowerCase() === 'assistant');
+        
+        if (hasSystemCol || hasUserCol || hasAssistantCol) {
+          // Training format - use specified columns
+          for (let i = 0; i < Math.min(headers.length, values.length); i++) {
+            const role = headers[i].trim().toLowerCase();
+            const content = values[i].trim();
+            
+            if (content && ['system', 'user', 'assistant'].includes(role)) {
+              messages.push({ role, content });
+            }
+          }
+        } else {
+          // Data format - generate Q&A from row data
+          // Create a summary of the row data
+          const dataPoints: string[] = [];
+          for (let i = 0; i < Math.min(headers.length, values.length); i++) {
+            const header = headers[i].trim();
+            const value = values[i].trim();
+            if (value) {
+              dataPoints.push(`${header}: ${value}`);
+            }
+          }
           
-          if (content && ['system', 'user', 'assistant'].includes(role)) {
-            messages.push({ role, content });
+          if (dataPoints.length > 0) {
+            // Create training examples from the data
+            const firstValue = values[0]?.trim();
+            if (firstValue) {
+              messages.push(
+                { role: 'system', content: 'You are a helpful assistant that provides information based on data.' },
+                { role: 'user', content: `Tell me about ${firstValue}` },
+                { role: 'assistant', content: dataPoints.join('. ') + '.' }
+              );
+            }
           }
         }
 
-        if (messages.length > 0) {
+        if (messages.length >= 2) { // Need at least user and assistant
           const jsonlLine = JSON.stringify({ messages }) + '\n';
           writeStream.write(jsonlLine);
+          examplesWritten++;
         }
       } catch (error) {
         this.logger.warn(`Failed to parse CSV line: ${error.message}`);
@@ -503,7 +548,15 @@ export class FineTuningDatasetsService {
       writeStream.on('error', reject);
     });
 
-    this.logger.log(`Converted CSV to JSONL: ${jsonlFilePath}`);
+    this.logger.log(`Converted CSV to JSONL: ${jsonlFilePath} (${examplesWritten} examples)`);
+    
+    if (examplesWritten === 0) {
+      throw new BadRequestException(
+        'No valid training examples could be generated from CSV. ' +
+        'Please ensure CSV has either (system, user, assistant) columns or valid data rows.'
+      );
+    }
+    
     return jsonlFilePath;
   }
 
