@@ -274,13 +274,12 @@ export class OllamaFineTuningProvider implements IFineTuningProvider {
       modelfile += `SYSTEM """${systemMessages[0]}"""\n\n`;
     }
 
-    // Add parameters
+    // Add parameters (only valid Ollama parameters)
     modelfile += `PARAMETER temperature ${hyperparameters.temperature || 0.7}\n`;
     modelfile += `PARAMETER num_ctx ${hyperparameters.context_window || 2048}\n`;
     
-    if (hyperparameters.n_epochs) {
-      modelfile += `PARAMETER num_train ${hyperparameters.n_epochs}\n`;
-    }
+    // Note: Ollama doesn't support n_epochs parameter in Modelfile
+    // Training iterations are handled by the model itself
 
     // Add training examples as TEMPLATE
     if (conversationExamples.length > 0) {
