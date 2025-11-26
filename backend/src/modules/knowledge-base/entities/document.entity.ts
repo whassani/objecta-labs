@@ -53,6 +53,9 @@ export class Document {
   @Column({ name: 'collection_id', nullable: true })
   collectionId: string;
 
+  @Column({ name: 'source_path', nullable: true })
+  sourcePath: string; // Full path from source system (e.g., "docs/api/README.md")
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -22,22 +22,87 @@ export default function ConversationPage() {
     documentTitle: string
     score: number
   } | null>(null)
+  const [streamingMessage, setStreamingMessage] = useState<string>('')
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingSources, setStreamingSources] = useState<any[]>([])
+  const eventSourceRef = useRef<EventSource | null>(null)
+
+  const handleStreamingMessage = async (content: string) => {
+    setIsStreaming(true)
+    setStreamingMessage('')
+    setStreamingSources([])
+    
+    // Cancel any pending queries
+    await queryClient.cancelQueries({ queryKey: ['conversation', params.id] })
+    const previousConversation = queryClient.getQueryData(['conversation', params.id])
+    
+    try {
+      await conversationsApi.streamMessage(
+        params.id as string,
+        content,
+        (data) => {
+          // Handle different event types
+          if (data.type === 'user_message') {
+            // Server confirmed user message - add it to display
+            queryClient.setQueryData(['conversation', params.id], (old: any) => ({
+              ...old,
+              messages: [
+                ...(old?.messages || []),
+                {
+                  id: data.messageId,
+                  role: 'user',
+                  content: data.content,
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+            }))
+          } else if (data.type === 'token') {
+            setStreamingMessage((prev) => prev + data.content)
+          } else if (data.type === 'sources') {
+            setStreamingSources(data.sources)
+          } else if (data.type === 'done') {
+            setIsStreaming(false)
+            // Refresh to get the complete saved message
+            queryClient.invalidateQueries({ queryKey: ['conversation', params.id] })
+          } else if (data.type === 'error') {
+            setIsStreaming(false)
+            toast.error('Failed to generate response')
+            // Rollback
+            if (previousConversation) {
+              queryClient.setQueryData(['conversation', params.id], previousConversation)
+            }
+          }
+        },
+        () => {
+          setIsStreaming(false)
+          setStreamingMessage('')
+          setStreamingSources([])
+        },
+        (error) => {
+          setIsStreaming(false)
+          toast.error('Connection error')
+          queryClient.setQueryData(['conversation', params.id], previousConversation)
+        }
+      )
+    } catch (error) {
+      setIsStreaming(false)
+      toast.error('Failed to send message')
+      queryClient.setQueryData(['conversation', params.id], previousConversation)
+    }
+  }
+
+  const sendMessageMutation = useMutation({
+    mutationFn: (content: string) => handleStreamingMessage(content),
+    onSuccess: () => {
+      setMessage('')
+    },
+  })
 
   const { data: conversation, isLoading } = useQuery({
     queryKey: ['conversation', params.id],
     queryFn: () => conversationsApi.getOne(params.id as string).then(res => res.data),
-    refetchInterval: 3000, // Poll for new messages
-  })
-
-  const sendMessageMutation = useMutation({
-    mutationFn: (content: string) => conversationsApi.sendMessage(params.id as string, content),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversation', params.id] })
-      setMessage('')
-    },
-    onError: () => {
-      toast.error('Failed to send message')
-    },
+    // Only poll when not streaming
+    refetchInterval: isStreaming ? false : 10000, // Poll every 10s when idle
   })
 
   const handleSend = (e: React.FormEvent) => {
@@ -146,6 +211,75 @@ export default function ConversationPage() {
                 )}
               </div>
             ))}
+            
+            {/* Streaming message */}
+            {isStreaming && streamingMessage && (
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+                  <SparklesIcon className="h-5 w-5 text-primary-600 animate-pulse" />
+                </div>
+                <div className="max-w-3xl space-y-2">
+                  <div className="rounded-lg p-4 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <ReactMarkdown className="prose dark:prose-invert max-w-none">
+                      {streamingMessage}
+                    </ReactMarkdown>
+                    <span className="inline-block w-2 h-4 ml-1 bg-primary-600 animate-pulse"></span>
+                  </div>
+                  
+                  {/* Streaming sources */}
+                  {streamingSources.length > 0 && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <DocumentTextIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-medium text-blue-900 dark:text-blue-200">
+                          Sources Used ({streamingSources.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {streamingSources.map((source: any, idx: number) => (
+                          <button
+                            key={idx}
+                            onClick={() => setPreviewSource(source)}
+                            className="w-full flex items-center justify-between text-xs hover:bg-blue-100 dark:hover:bg-blue-800/30 p-1 rounded transition"
+                          >
+                            <span className="text-blue-700 dark:text-blue-300 truncate">
+                              {source.documentTitle}
+                            </span>
+                            <span className="text-blue-600 dark:text-blue-400 ml-2 flex-shrink-0">
+                              {(source.score * 100).toFixed(0)}% match
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Loading indicator */}
+            {isStreaming && !streamingMessage && (
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center">
+                  <SparklesIcon className="h-5 w-5 text-primary-600 animate-pulse" />
+                </div>
+                <div className="max-w-3xl">
+                  <div className="rounded-lg p-4 bg-gray-100 dark:bg-gray-700">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Thinking...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </>
         ) : (
@@ -163,15 +297,15 @@ export default function ConversationPage() {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your message..."
-          disabled={sendMessageMutation.isPending}
+          disabled={isStreaming}
           className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={!message.trim() || sendMessageMutation.isPending}
+          disabled={!message.trim() || isStreaming}
           className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
         >
-          <span>{sendMessageMutation.isPending ? 'Sending...' : 'Send'}</span>
+          <span>{isStreaming ? 'Sending...' : 'Send'}</span>
           <PaperAirplaneIcon className="h-5 w-5" />
         </button>
       </form>

@@ -1,0 +1,16 @@
+✅ DOCUMENT DEDUPLICATION FIX APPLIED
+
+PROBLEM:
+  Multiple README.md files showing (one per chunk/duplicate)
+  Confusing for users
+
+SOLUTION:
+  Added intelligent deduplication in frontend
+  - Groups by: title + dataSourceId + url
+  - Keeps: Best version (more chunks or newer)
+  - Shows: Only unique documents
+
+RESULT:
+  Clean document list with no duplicates!
+
+REFRESH BROWSER TO SEE THE FIX!

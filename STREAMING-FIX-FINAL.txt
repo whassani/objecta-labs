@@ -1,0 +1,18 @@
+✅ FOUND THE BUG!
+
+The streaming service was using:
+  Ollama (basic LLM)
+  
+Instead of:
+  ChatOllama (chat model)
+
+Ollama doesn't handle message objects properly for streaming!
+It was converting SystemMessage/HumanMessage to "[object Object]"
+
+FIXED:
+  Changed to ChatOllama which properly handles chat messages
+
+RESTART BACKEND AND TEST:
+  cd backend && npm run start:dev
+  
+This should completely fix the "JavaScript objects" issue!

@@ -48,6 +48,12 @@ See the `/docs` folder and project markdown files for detailed documentation:
 - [Features](./product/features.md)
 - [Tech Stack](./development/tech-stack.md)
 
+### 🔄 Data Source Sync (New!)
+- **[Quick Start Guide](./DATA-SOURCE-SYNC-QUICK-START.md)** - Get started in 10 minutes
+- **[Visual Guide](./DATA-SOURCE-SYNC-VISUAL-GUIDE.md)** - Architecture diagrams and flows
+- **[Implementation Guide](./DATA-SOURCE-SYNC-IMPLEMENTATION.md)** - Complete documentation
+- **[Index](./KNOWLEDGE-BASE-SYNC-INDEX.md)** - Central navigation hub
+
 ## 🏗️ Project Structure
 
 ```
@@ -74,9 +80,12 @@ agentforge/
 
 - ✅ **Multi-tenant architecture** - Organization and workspace isolation
 - ✅ **AI Agent Builder** - Create custom agents with system prompts
-- ✅ **Knowledge Base** - Connect to GitHub, Confluence, Notion, Jira, etc.
+- ✅ **Knowledge Base** - RAG system with vector search and semantic search
+- ✅ **Data Source Sync** - Auto-sync from GitHub, Confluence, Notion, Google Drive
 - ✅ **Agent Actions** - Execute CRUD operations across systems
 - ✅ **Conversations** - Chat with agents and maintain history
+- ✅ **Workflow Automation** - Visual workflow builder with parallel execution
+- ✅ **Tool Execution** - Custom tools and integrations
 - ✅ **Fine-tuning** - Train custom models (planned)
 
 ## 🛠️ Tech Stack

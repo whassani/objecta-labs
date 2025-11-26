@@ -1,0 +1,28 @@
+✅ CHAT MESSAGE BUG FIXED!
+
+ISSUE:
+  AI was responding with:
+  "It appears you've provided a list of JavaScript objects..."
+
+ROOT CAUSE:
+  The streaming code was querying conversation history AFTER 
+  saving the user message, so historyMessages already contained
+  the current message. Then we were adding it again, causing
+  a duplicate that confused the LLM.
+
+FIX APPLIED:
+  Removed the duplicate message addition. Now the code correctly
+  uses the historyMessages which already includes the current
+  user message.
+
+HOW TO TEST:
+  1. Restart backend: cd backend && npm run start:dev
+  2. Refresh browser
+  3. Send message: "Hello"
+  4. Should get proper response! ✅
+
+EXPECTED:
+  User: "Hello"
+  AI: "Hello! How can I help you today?"
+
+The bug is now fixed!

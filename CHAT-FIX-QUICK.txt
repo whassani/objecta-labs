@@ -1,0 +1,37 @@
+🔧 QUICK FIX FOR CHAT RESPONSE ISSUE
+
+PROBLEM:
+  Chat always responds with:
+  "It appears you've provided a list of JavaScript objects..."
+
+MOST LIKELY CAUSE:
+  Bad agent system prompt
+
+QUICK FIX:
+═══════════════════════════════════════════════════════════
+
+1. Go to: http://localhost:3000/dashboard/agents
+
+2. Edit your agent (click the agent, then Edit button)
+
+3. Set System Prompt to:
+   "You are a helpful AI assistant. Answer questions 
+    clearly and concisely."
+
+4. Disable "Use Knowledge Base" (temporarily)
+
+5. Save the agent
+
+6. Create NEW conversation with this agent
+
+7. Test with: "Hello"
+
+8. Should get proper response now!
+
+═══════════════════════════════════════════════════════════
+
+If still not working, check:
+  - Is Ollama running? (if USE_OLLAMA=true)
+  - Is OPENAI_API_KEY set? (if USE_OLLAMA=false)
+  - Backend environment variables correct?
+

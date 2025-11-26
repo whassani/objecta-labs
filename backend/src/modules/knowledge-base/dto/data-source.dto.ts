@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateDataSourceDto {
@@ -24,11 +24,13 @@ export class CreateDataSourceDto {
   @IsString()
   authType: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: 'object' })
+  @IsObject()
   credentials: any;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, type: 'object' })
   @IsOptional()
+  @IsObject()
   config?: any;
 
   @ApiProperty({ default: 'daily' })

@@ -1,0 +1,30 @@
+🔍 NEXT DEBUG STEPS
+
+I've added more logging to see what agent is being loaded.
+
+PLEASE DO THIS:
+═══════════════════════════════════════════════════════════
+
+1. Restart Backend:
+   cd backend
+   npm run start:dev
+
+2. Send a new message in a NEW conversation
+
+3. Share the COMPLETE debug output that shows:
+   === DEBUG: Agent Configuration ===
+   Agent ID: ...
+   Agent Name: ...
+   System Prompt: ...
+   === END Agent DEBUG ===
+   
+   === DEBUG: Messages being sent to LLM ===
+   ...
+   === END DEBUG ===
+
+This will tell us:
+- Is the agent actually updated?
+- Is it loading the right agent?
+- What's the actual system prompt being used?
+
+Please share those logs and I'll identify the exact issue!

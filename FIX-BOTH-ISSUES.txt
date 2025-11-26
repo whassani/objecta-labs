@@ -1,0 +1,45 @@
+🔧 TWO ISSUES TO FIX
+
+ISSUE 1: Agent System Prompt Still "generaliste"
+══════════════════════════════════════════════════════════
+The agent wasn't updated yet. The system prompt is still:
+"generaliste"
+
+FIX:
+1. Go to: http://localhost:3000/dashboard/agents
+2. Find and click on your agent
+3. Click "Edit" button
+4. Replace "generaliste" with:
+
+   "Vous êtes un assistant IA professionnel et serviable. 
+    Répondez aux questions de manière claire et précise en 
+    utilisant les informations fournies."
+
+5. Click "Save"
+
+
+ISSUE 2: Bad Conversation History
+══════════════════════════════════════════════════════════
+The conversation has a previous bad response (Message 2):
+"It seems like you've provided JSON objects..."
+
+This bad message is being included in history and confusing
+the AI even more.
+
+FIX:
+1. DELETE the current conversation (it has bad history)
+2. CREATE a NEW conversation with the updated agent
+3. Test with fresh start
+
+
+COMPLETE STEPS:
+══════════════════════════════════════════════════════════
+1. Update Agent System Prompt (see above)
+2. Delete current conversation
+3. Create NEW conversation
+4. Send: "Qui est Walid HASSANI?"
+5. Should work now! ✅
+
+The issue is NOT in the code - it's:
+- Agent config needs update
+- Old conversation has bad history

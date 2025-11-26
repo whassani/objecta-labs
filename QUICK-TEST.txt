@@ -1,0 +1,23 @@
+🧪 QUICK ISOLATION TEST
+
+Your 2-message version looked CORRECT!
+Let's test if it's a RAG issue:
+
+TEST 1: Disable RAG
+═══════════════════════════════════════════════════════════
+1. Go to agent settings
+2. Disable "Use Knowledge Base"
+3. Save
+4. New conversation
+5. Send: "Hello, how are you?"
+
+If this gives a NORMAL response, then RAG is the problem.
+
+TEST 2: Check What You Got
+═══════════════════════════════════════════════════════════
+With the clean 2-message version, what response did you get?
+- Normal response?
+- Still "JavaScript objects"?
+- Something else?
+
+Please tell me the result!

@@ -596,10 +596,10 @@ export default function EditWorkflowPage() {
                           }`}
                         >
                           <div className="text-sm font-medium text-gray-900">
-                            Step {entry.step}
+                            Execution #{index + 1}
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            {entry.timestamp.toLocaleTimeString()}
+                            {new Date(entry.startTime).toLocaleTimeString()}
                           </div>
                         </button>
                       ))}

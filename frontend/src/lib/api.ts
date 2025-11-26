@@ -73,6 +73,14 @@ export const knowledgeBaseApi = {
   deleteDataSource: (id: string) => api.delete(`/knowledge-base/data-sources/${id}`),
   syncDataSource: (id: string) => api.post(`/knowledge-base/data-sources/${id}/sync`),
   
+  // Sync API (New!)
+  getSupportedSources: () => api.get('/knowledge-base/sync/supported-sources'),
+  testConnection: (sourceType: string, credentials: any, config: any) => 
+    api.post('/knowledge-base/sync/test-connection', { sourceType, credentials, config }),
+  triggerSync: (id: string) => api.post(`/knowledge-base/sync/data-sources/${id}`),
+  triggerOrganizationSync: () => api.post('/knowledge-base/sync/organization'),
+  getAdapterSchema: (sourceType: string) => api.get(`/knowledge-base/sync/adapters/${sourceType}/schema`),
+  
   // Documents API
   getDocuments: (dataSourceId?: string) => api.get('/knowledge-base/documents', { params: { dataSourceId } }),
   getDocument: (id: string) => api.get(`/knowledge-base/documents/${id}`),
@@ -175,6 +183,71 @@ export const conversationsApi = {
   create: (data: any) => api.post('/conversations', data),
   sendMessage: (id: string, content: string) => api.post(`/conversations/${id}/messages`, { content }),
   delete: (id: string) => api.delete(`/conversations/${id}`),
+  
+  // Streaming endpoint
+  streamMessage: async (
+    id: string, 
+    content: string, 
+    onToken: (data: any) => void, 
+    onComplete: () => void, 
+    onError: (error: any) => void
+  ) => {
+    const token = useAuthStore.getState().token
+    
+    // Use POST with SSE (note: API has /api prefix)
+    const response = await fetch(`${API_URL}/api/conversations/${id}/messages/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to start streaming')
+    }
+
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder()
+
+    if (!reader) {
+      throw new Error('No reader available')
+    }
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) {
+          onComplete()
+          break
+        }
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              onToken(data)
+              
+              if (data.type === 'done' || data.type === 'error') {
+                onComplete()
+                return
+              }
+            } catch (error) {
+              console.error('Error parsing SSE data:', error)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Streaming error:', error)
+      onError(error)
+    }
+  },
 }
 
 // Workflows API
