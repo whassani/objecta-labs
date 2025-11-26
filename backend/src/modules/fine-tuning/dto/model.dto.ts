@@ -25,10 +25,6 @@ export class UpdateFineTunedModelDto {
 }
 
 export class DeployModelDto {
-  @ApiProperty({ description: 'Model ID to deploy' })
-  @IsString()
-  modelId: string;
-
   @ApiPropertyOptional({ description: 'Agent ID to deploy to (optional)' })
   @IsOptional()
   @IsString()
