@@ -129,7 +129,7 @@ export default function WebhookPanel({ workflowId }: WebhookPanelProps) {
   const getFullWebhookUrl = () => {
     if (!webhook) return '';
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    return `${baseUrl}/webhooks/${webhook.webhookUrl}`;
+    return `${baseUrl}/api/webhooks/${webhook.webhookUrl}`;
   };
 
   const getCurlCommand = () => {
