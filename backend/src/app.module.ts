@@ -9,6 +9,7 @@ import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.mod
 import { ToolsModule } from './modules/tools/tools.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
+import { FineTuningModule } from './modules/fine-tuning/fine-tuning.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { WorkflowsModule } from './modules/workflows/workflows.module';
     ToolsModule,
     ConversationsModule,
     WorkflowsModule,
+    FineTuningModule,
   ],
 })
 export class AppModule {}
