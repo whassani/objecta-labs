@@ -1,8 +1,12 @@
 import { ThrottlerModuleOptions } from '@nestjs/throttler';
 
 export const rateLimitConfig: ThrottlerModuleOptions = {
-  ttl: 60, // Time window in seconds
-  limit: 100, // Max requests per ttl
+  throttlers: [
+    {
+      ttl: 60000, // Time window in milliseconds
+      limit: 100, // Max requests per ttl
+    },
+  ],
 };
 
 // Custom limits for specific endpoints
