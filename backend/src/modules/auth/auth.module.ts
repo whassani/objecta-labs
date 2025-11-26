@@ -17,7 +17,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Organization, Role, UserRoleAssignment]),
+    TypeOrmModule.forFeature([User, Organization, Role, UserRoleAssignment, ApiKey]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -31,8 +31,17 @@ import { LocalStrategy } from './strategies/local.strategy';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, RbacService, JwtStrategy, LocalStrategy, RolesGuard, PermissionsGuard],
-  exports: [AuthService, RbacService, RolesGuard, PermissionsGuard],
+  controllers: [AuthController, ApiKeysController],
+  providers: [
+    AuthService,
+    RbacService,
+    ApiKeyService,
+    JwtStrategy,
+    LocalStrategy,
+    RolesGuard,
+    PermissionsGuard,
+    ApiKeyGuard,
+  ],
+  exports: [AuthService, RbacService, ApiKeyService, RolesGuard, PermissionsGuard, ApiKeyGuard],
 })
 export class AuthModule {}
