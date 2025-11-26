@@ -184,7 +184,7 @@ export default function JobsPage() {
                         {job.estimatedCostUsd && (
                           <>
                             <span>•</span>
-                            <span>Cost: <strong>${job.estimatedCostUsd.toFixed(2)}</strong></span>
+                            <span>Cost: <strong>${job.estimatedCostUsd ? job.estimatedCostUsd.toFixed(2) : '0.00'}</strong></span>
                           </>
                         )}
                       </div>

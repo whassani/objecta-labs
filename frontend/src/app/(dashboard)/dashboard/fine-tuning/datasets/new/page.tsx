@@ -87,9 +87,9 @@ export default function NewDatasetPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Training Dataset</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Supervised Training Dataset</h1>
           <p className="text-gray-600">
-            Choose how you want to create your training dataset
+            Provide labeled examples to teach your AI model through supervised learning
           </p>
         </div>
 
@@ -101,15 +101,15 @@ export default function NewDatasetPage() {
             className="p-8 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-lg transition-all text-left"
           >
             <CloudArrowUpIcon className="h-12 w-12 text-blue-600 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload File</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Labeled Examples</h3>
             <p className="text-gray-600 mb-4">
-              Upload a JSONL, CSV, or JSON file with your training data
+              Upload a file with input→output pairs for supervised learning
             </p>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Best for prepared datasets</li>
+              <li>• Best for prepared labeled datasets</li>
+              <li>• Each example: question + desired answer</li>
               <li>• Supports JSONL, CSV, JSON formats</li>
-              <li>• Up to 100MB file size</li>
-              <li>• Minimum 10 examples required</li>
+              <li>• Minimum 10 labeled examples required</li>
             </ul>
           </button>
 
@@ -149,9 +149,9 @@ export default function NewDatasetPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Training Dataset</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload Supervised Training Dataset</h1>
           <p className="text-gray-600">
-            Upload a file containing your training examples
+            Upload conversation pairs showing desired AI behavior (input → output examples)
           </p>
         </div>
 
@@ -214,16 +214,35 @@ export default function NewDatasetPage() {
               </p>
             </div>
 
-            {/* Info Box */}
+            {/* Educational Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">JSONL Format Example:</h4>
-              <pre className="text-xs bg-white p-3 rounded border border-blue-200 overflow-x-auto">
+              <div className="flex items-start gap-2 mb-3">
+                <div className="text-xl">💡</div>
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">Supervised Learning Format</h4>
+                  <p className="text-sm text-blue-800">
+                    Each example shows: <strong>INPUT</strong> (user question) → <strong>OUTPUT</strong> (desired response)
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded border border-blue-200">
+                <p className="text-xs font-semibold text-gray-700 mb-2">Example labeled pair:</p>
+                <pre className="text-xs overflow-x-auto">
 {`{"messages": [
-  {"role": "system", "content": "You are a helpful assistant."},
-  {"role": "user", "content": "Hello!"},
-  {"role": "assistant", "content": "Hi! How can I help you?"}
+  {"role": "system", "content": "Context/instructions"},
+  {"role": "user", "content": "INPUT: What is AI?"},
+  {"role": "assistant", "content": "OUTPUT: AI is..."}
 ]}`}
-              </pre>
+                </pre>
+              </div>
+              <div className="mt-3 text-xs text-blue-800">
+                <p><strong>Format Clarity:</strong></p>
+                <ul className="mt-1 space-y-1 ml-4">
+                  <li>• User messages = Inputs (what you want to handle)</li>
+                  <li>• Assistant messages = Outputs (how you want to respond)</li>
+                  <li>• System messages = Context/instructions for the model</li>
+                </ul>
+              </div>
             </div>
 
             <div className="flex space-x-3 pt-4">

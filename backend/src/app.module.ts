@@ -10,6 +10,7 @@ import { ToolsModule } from './modules/tools/tools.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { WorkflowsModule } from './modules/workflows/workflows.module';
 import { FineTuningModule } from './modules/fine-tuning/fine-tuning.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FineTuningModule } from './modules/fine-tuning/fine-tuning.module';
     ConversationsModule,
     WorkflowsModule,
     FineTuningModule,
+    JobsModule,
   ],
 })
 export class AppModule {}

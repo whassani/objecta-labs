@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import {
@@ -11,6 +12,7 @@ import {
   XCircleIcon,
   ArrowUpTrayIcon,
   DocumentTextIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -63,12 +65,19 @@ export default function DatasetsPage() {
       {/* Header */}
       <div className="mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Training Datasets</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Supervised Training Datasets</h1>
           <p className="text-gray-600">
-            Manage your training datasets for fine-tuning AI models
+            Manage labeled examples for supervised fine-tuning (input → output pairs)
           </p>
         </div>
         <div className="flex space-x-3">
+          <Link
+            href="/dashboard/fine-tuning/datasets/convert"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <ArrowPathIcon className="h-5 w-5 mr-2" />
+            Convert Data (CSV/JSON)
+          </Link>
           <button
             onClick={() => setImportModalOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -113,11 +122,18 @@ export default function DatasetsPage() {
                       <p className="text-xs text-gray-500">{dataset.format.toUpperCase()}</p>
                     </div>
                   </div>
-                  {dataset.validated ? (
-                    <CheckCircleIcon className="h-6 w-6 text-green-500" title="Validated" />
-                  ) : (
-                    <XCircleIcon className="h-6 w-6 text-gray-400" title="Not validated" />
-                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    {dataset.validated && (
+                      <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded font-medium">
+                        ✓ Supervised
+                      </span>
+                    )}
+                    {dataset.validated ? (
+                      <CheckCircleIcon className="h-5 w-5 text-green-500" title="Validated" />
+                    ) : (
+                      <XCircleIcon className="h-5 w-5 text-gray-400" title="Not validated" />
+                    )}
+                  </div>
                 </div>
 
                 {dataset.description && (
@@ -128,9 +144,9 @@ export default function DatasetsPage() {
 
                 <div className="space-y-2 mb-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Examples:</span>
+                    <span className="text-gray-600">Labeled Examples:</span>
                     <span className="font-semibold text-gray-900">
-                      {dataset.totalExamples.toLocaleString()}
+                      {dataset.totalExamples.toLocaleString()} pairs
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -191,6 +207,13 @@ export default function DatasetsPage() {
             Upload your first training dataset or import from conversations
           </p>
           <div className="flex justify-center space-x-4">
+            <Link
+              href="/dashboard/fine-tuning/datasets/convert"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <ArrowPathIcon className="h-5 w-5 mr-2" />
+              Convert Data (CSV/JSON)
+            </Link>
             <button
               onClick={() => setUploadModalOpen(true)}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"

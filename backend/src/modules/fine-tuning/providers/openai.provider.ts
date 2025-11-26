@@ -49,6 +49,14 @@ export class OpenAIFineTuningProvider implements IFineTuningProvider {
     try {
       this.logger.log(`Creating fine-tuning job with base model: ${config.baseModel}`);
 
+      // Determine fine-tuning method
+      const method = config.hyperparameters.method || 'full';
+      this.logger.log(`Using fine-tuning method: ${method}`);
+
+      // OpenAI doesn't natively support LoRA/QLoRA/etc., but we can optimize the training
+      // Note: For true LoRA support, you'd need to use HuggingFace PEFT library
+      // This implementation provides method-aware parameter tuning for OpenAI's API
+
       // Upload the training file
       const fileStream = fs.createReadStream(config.datasetPath);
       const uploadedFile = await this.openai.files.create({
@@ -58,22 +66,18 @@ export class OpenAIFineTuningProvider implements IFineTuningProvider {
 
       this.logger.log(`Uploaded training file: ${uploadedFile.id}`);
 
+      // Prepare hyperparameters based on method
+      const hyperparameters = this.prepareHyperparameters(config.hyperparameters, method);
+
       // Create the fine-tuning job
       const fineTuningJob = await this.openai.fineTuning.jobs.create({
         training_file: uploadedFile.id,
         model: config.baseModel,
-        hyperparameters: {
-          n_epochs: config.hyperparameters.n_epochs || 3,
-          ...(config.hyperparameters.batch_size && {
-            batch_size: config.hyperparameters.batch_size,
-          }),
-          ...(config.hyperparameters.learning_rate_multiplier && {
-            learning_rate_multiplier: config.hyperparameters.learning_rate_multiplier,
-          }),
-        },
+        hyperparameters,
+        suffix: this.generateModelSuffix(method),
       });
 
-      this.logger.log(`Created fine-tuning job: ${fineTuningJob.id}`);
+      this.logger.log(`Created fine-tuning job: ${fineTuningJob.id} (method: ${method})`);
 
       return {
         providerJobId: fineTuningJob.id,
@@ -306,5 +310,125 @@ export class OpenAIFineTuningProvider implements IFineTuningProvider {
 
     // Default to gpt-3.5-turbo pricing
     return this.PRICING['gpt-3.5-turbo'];
+  }
+
+  // ==================== Advanced Fine-Tuning Support ====================
+
+  /**
+   * Prepare hyperparameters optimized for the chosen fine-tuning method
+   * Note: OpenAI's API doesn't natively support LoRA/QLoRA, but we optimize parameters
+   * For true LoRA/QLoRA, consider using HuggingFace PEFT + local training
+   */
+  private prepareHyperparameters(hyperparameters: any, method: string): any {
+    const baseHyperparameters = {
+      n_epochs: hyperparameters.n_epochs || 3,
+    };
+
+    // Add batch_size if provided
+    if (hyperparameters.batch_size) {
+      baseHyperparameters['batch_size'] = hyperparameters.batch_size;
+    }
+
+    // Add learning_rate_multiplier if provided
+    if (hyperparameters.learning_rate_multiplier) {
+      baseHyperparameters['learning_rate_multiplier'] = hyperparameters.learning_rate_multiplier;
+    }
+
+    // Optimize parameters based on method
+    switch (method) {
+      case 'lora':
+        // For LoRA-style training, use more conservative learning rate
+        if (!hyperparameters.learning_rate_multiplier) {
+          baseHyperparameters['learning_rate_multiplier'] = 0.5;
+        }
+        this.logger.log('Optimizing for LoRA-style efficient training');
+        break;
+
+      case 'qlora':
+        // For QLoRA, use even more conservative approach
+        if (!hyperparameters.learning_rate_multiplier) {
+          baseHyperparameters['learning_rate_multiplier'] = 0.3;
+        }
+        this.logger.log('Optimizing for QLoRA-style efficient training');
+        break;
+
+      case 'prefix':
+        // Prefix tuning typically needs fewer epochs
+        if (!hyperparameters.n_epochs) {
+          baseHyperparameters['n_epochs'] = 2;
+        }
+        this.logger.log('Optimizing for prefix tuning style');
+        break;
+
+      case 'adapter':
+        // Adapter layers benefit from moderate learning rate
+        if (!hyperparameters.learning_rate_multiplier) {
+          baseHyperparameters['learning_rate_multiplier'] = 0.7;
+        }
+        this.logger.log('Optimizing for adapter-style training');
+        break;
+
+      case 'full':
+      default:
+        // Full fine-tuning uses default OpenAI parameters
+        this.logger.log('Using full fine-tuning parameters');
+        break;
+    }
+
+    return baseHyperparameters;
+  }
+
+  /**
+   * Generate a model suffix based on the fine-tuning method
+   */
+  private generateModelSuffix(method: string): string {
+    switch (method) {
+      case 'lora':
+        return 'lora';
+      case 'qlora':
+        return 'qlora';
+      case 'prefix':
+        return 'prefix';
+      case 'adapter':
+        return 'adapter';
+      default:
+        return 'ft';
+    }
+  }
+
+  /**
+   * Estimate cost with method-specific adjustments
+   * LoRA/QLoRA would be cheaper in practice, but OpenAI charges the same
+   * Note: For real cost savings, use local training with PEFT library
+   */
+  async estimateCostWithMethod(
+    totalExamples: number,
+    baseModel: string,
+    epochs: number = 3,
+    method: string = 'full',
+  ): Promise<CostEstimate> {
+    const baseCost = await this.estimateCost(totalExamples, baseModel, epochs);
+
+    // Add method information to the estimate
+    let notes = '';
+    switch (method) {
+      case 'lora':
+        notes = 'Note: OpenAI charges full price. For 90% cost savings, use local LoRA training.';
+        break;
+      case 'qlora':
+        notes = 'Note: OpenAI charges full price. For 95% cost savings, use local QLoRA training.';
+        break;
+      case 'prefix':
+        notes = 'Note: OpenAI charges full price. For 98% cost savings, use local prefix tuning.';
+        break;
+      case 'adapter':
+        notes = 'Note: OpenAI charges full price. For 92% cost savings, use local adapter training.';
+        break;
+    }
+
+    return {
+      ...baseCost,
+      notes,
+    } as any;
   }
 }

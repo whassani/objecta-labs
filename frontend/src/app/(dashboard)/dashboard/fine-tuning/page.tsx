@@ -73,10 +73,36 @@ export default function FineTuningDashboard() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Fine-Tuning</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Supervised Fine-Tuning</h1>
         <p className="text-gray-600">
-          Train custom AI models on your data to improve performance for specific use cases.
+          Train custom AI models with labeled examples (input → output pairs) through supervised learning.
         </p>
+      </div>
+
+      {/* Educational Info Box */}
+      <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="text-3xl">💡</div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">What is Supervised Fine-Tuning?</h3>
+            <p className="text-sm text-blue-800 mb-3">
+              Supervised fine-tuning teaches your AI model by showing it labeled examples where each example contains:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-sm font-semibold text-gray-900 mb-1">📥 INPUT</p>
+                <p className="text-xs text-gray-600">User questions or requests</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-sm font-semibold text-gray-900 mb-1">📤 OUTPUT</p>
+                <p className="text-xs text-gray-600">Your desired AI responses</p>
+              </div>
+            </div>
+            <p className="text-sm text-blue-800">
+              The model learns patterns from these labeled pairs and improves its responses for similar questions.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -86,7 +112,10 @@ export default function FineTuningDashboard() {
           className="flex items-center justify-center p-6 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
         >
           <FolderIcon className="h-6 w-6 text-blue-600 mr-3" />
-          <span className="text-blue-900 font-semibold">Upload Dataset</span>
+          <div className="text-left">
+            <div className="text-blue-900 font-semibold">Upload Labeled Examples</div>
+            <div className="text-xs text-blue-700">Input → Output pairs</div>
+          </div>
         </Link>
 
         <Link
@@ -94,7 +123,10 @@ export default function FineTuningDashboard() {
           className="flex items-center justify-center p-6 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 transition-colors"
         >
           <CpuChipIcon className="h-6 w-6 text-green-600 mr-3" />
-          <span className="text-green-900 font-semibold">Create Job</span>
+          <div className="text-left">
+            <div className="text-green-900 font-semibold">Start Training Job</div>
+            <div className="text-xs text-green-700">Supervised learning</div>
+          </div>
         </Link>
 
         <Link
@@ -111,7 +143,10 @@ export default function FineTuningDashboard() {
         {/* Datasets Card */}
         <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Datasets</h3>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Training Datasets</h3>
+              <p className="text-xs text-gray-500">Labeled examples</p>
+            </div>
             <FolderIcon className="h-8 w-8 text-blue-500" />
           </div>
           {isLoading ? (
@@ -125,7 +160,7 @@ export default function FineTuningDashboard() {
                 {dashboardStats.datasets.total}
               </div>
               <div className="text-sm text-gray-600">
-                {dashboardStats.datasets.validated} validated
+                {dashboardStats.datasets.validated} ready for supervised learning
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <Link

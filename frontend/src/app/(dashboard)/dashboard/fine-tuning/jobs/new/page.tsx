@@ -11,8 +11,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 const STEPS = [
-  { id: 1, name: 'Select Dataset', description: 'Choose training data' },
-  { id: 2, name: 'Configure Model', description: 'Select base model and parameters' },
+  { id: 1, name: 'Select Dataset', description: 'Choose labeled examples for supervised learning' },
+  { id: 2, name: 'Configure Model', description: 'Select base model and fine-tuning method' },
   { id: 3, name: 'Review & Launch', description: 'Review settings and estimate cost' },
 ];
 
@@ -29,6 +29,13 @@ export default function CreateJobPage() {
       n_epochs: 3,
       batch_size: 4,
       learning_rate_multiplier: 1.0,
+      method: 'lora',
+      lora_rank: 8,
+      lora_alpha: 16,
+      lora_dropout: 0.1,
+      quantization_bits: 4,
+      prefix_length: 20,
+      adapter_size: 64,
     },
   });
 
@@ -434,9 +441,315 @@ function Step2ConfigureModel({ formData, onChange }: any) {
           </div>
         </div>
 
+        {/* Fine-Tuning Method */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Fine-Tuning Method *
+          </label>
+          <p className="text-sm text-gray-600 mb-3">
+            Choose how your model will learn from labeled examples
+          </p>
+          <div className="space-y-2">
+            <div
+              onClick={() => onChange({ hyperparameters: { ...formData.hyperparameters, method: 'lora' } })}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.hyperparameters.method === 'lora'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">LoRA (Recommended)</h4>
+                    <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded">Most Efficient</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Low-Rank Adaptation - Fast & memory efficient</p>
+                  <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <li>• 90% less memory usage</li>
+                    <li>• 10x faster training</li>
+                    <li>• Best for most use cases</li>
+                  </ul>
+                </div>
+                {formData.hyperparameters.method === 'lora' && (
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            <div
+              onClick={() => onChange({ hyperparameters: { ...formData.hyperparameters, method: 'qlora' } })}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.hyperparameters.method === 'qlora'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">QLoRA</h4>
+                    <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">Ultra Efficient</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Quantized LoRA - Train on consumer hardware</p>
+                  <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <li>• Works on 16GB GPU (vs 80GB full fine-tuning)</li>
+                    <li>• 4-bit quantization + LoRA</li>
+                    <li>• Best for limited hardware</li>
+                  </ul>
+                </div>
+                {formData.hyperparameters.method === 'qlora' && (
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            <div
+              onClick={() => onChange({ hyperparameters: { ...formData.hyperparameters, method: 'prefix' } })}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.hyperparameters.method === 'prefix'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">Prefix Tuning</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Trains continuous prompts only</p>
+                  <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <li>• Even faster than LoRA</li>
+                    <li>• Minimal parameter updates</li>
+                    <li>• Best for small adjustments</li>
+                  </ul>
+                </div>
+                {formData.hyperparameters.method === 'prefix' && (
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            <div
+              onClick={() => onChange({ hyperparameters: { ...formData.hyperparameters, method: 'adapter' } })}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.hyperparameters.method === 'adapter'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">Adapter Layers</h4>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Adds trainable layers between frozen layers</p>
+                  <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <li>• Modular & composable</li>
+                    <li>• Multiple task-specific adapters</li>
+                    <li>• Good for multi-task scenarios</li>
+                  </ul>
+                </div>
+                {formData.hyperparameters.method === 'adapter' && (
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+
+            <div
+              onClick={() => onChange({ hyperparameters: { ...formData.hyperparameters, method: 'full' } })}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.hyperparameters.method === 'full'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">Full Fine-Tuning</h4>
+                    <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">Resource Intensive</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">Updates all model parameters</p>
+                  <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                    <li>• Highest quality potential</li>
+                    <li>• Requires significant compute</li>
+                    <li>• Best for major domain adaptation</li>
+                  </ul>
+                </div>
+                {formData.hyperparameters.method === 'full' && (
+                  <CheckCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Educational Info Box */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">💡</div>
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-2">What is Supervised Fine-Tuning?</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                Supervised fine-tuning teaches your AI model by showing it labeled examples:
+              </p>
+              <ul className="text-sm text-blue-800 space-y-1 mb-3">
+                <li>• <strong>INPUT</strong>: User questions or requests</li>
+                <li>• <strong>OUTPUT</strong>: Your desired AI responses</li>
+              </ul>
+              <p className="text-sm text-blue-800">
+                The model learns patterns from these input→output pairs and improves its responses for similar questions.
+              </p>
+              <div className="mt-3 p-3 bg-white rounded border border-blue-200">
+                <p className="text-xs font-semibold text-gray-700 mb-1">Example:</p>
+                <p className="text-xs text-gray-600"><strong>INPUT:</strong> "What's the refund policy?"</p>
+                <p className="text-xs text-gray-600"><strong>OUTPUT:</strong> "We offer a 30-day money-back guarantee..."</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Method-Specific Parameters */}
+        {formData.hyperparameters.method === 'lora' && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">LoRA Parameters</h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LoRA Rank (r)
+                </label>
+                <input
+                  type="number"
+                  value={formData.hyperparameters.lora_rank}
+                  onChange={(e) => onChange({ 
+                    hyperparameters: { ...formData.hyperparameters, lora_rank: parseInt(e.target.value) } 
+                  })}
+                  min={1}
+                  max={256}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="text-xs text-gray-600 mt-1">Lower = faster training, Higher = better quality (typical: 8-64)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LoRA Alpha (α)
+                </label>
+                <input
+                  type="number"
+                  value={formData.hyperparameters.lora_alpha}
+                  onChange={(e) => onChange({ 
+                    hyperparameters: { ...formData.hyperparameters, lora_alpha: parseInt(e.target.value) } 
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="text-xs text-gray-600 mt-1">Scaling parameter (typically 2x rank)</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LoRA Dropout
+                </label>
+                <input
+                  type="number"
+                  step="0.05"
+                  value={formData.hyperparameters.lora_dropout}
+                  onChange={(e) => onChange({ 
+                    hyperparameters: { ...formData.hyperparameters, lora_dropout: parseFloat(e.target.value) } 
+                  })}
+                  min={0}
+                  max={1}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="text-xs text-gray-600 mt-1">Prevents overfitting (0.0-0.3 recommended)</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {formData.hyperparameters.method === 'qlora' && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">QLoRA Parameters</h4>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantization Bits
+                </label>
+                <select
+                  value={formData.hyperparameters.quantization_bits}
+                  onChange={(e) => onChange({ 
+                    hyperparameters: { ...formData.hyperparameters, quantization_bits: parseInt(e.target.value) } 
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value={4}>4-bit (Ultra efficient, fits in 16GB GPU)</option>
+                  <option value={8}>8-bit (Better quality, needs 24GB GPU)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  LoRA Rank (r)
+                </label>
+                <input
+                  type="number"
+                  value={formData.hyperparameters.lora_rank}
+                  onChange={(e) => onChange({ 
+                    hyperparameters: { ...formData.hyperparameters, lora_rank: parseInt(e.target.value) } 
+                  })}
+                  min={1}
+                  max={256}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+                <p className="text-xs text-gray-600 mt-1">QLoRA uses LoRA adapters with quantized base model</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {formData.hyperparameters.method === 'prefix' && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Prefix Tuning Parameters</h4>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prefix Length
+              </label>
+              <input
+                type="number"
+                value={formData.hyperparameters.prefix_length}
+                onChange={(e) => onChange({ 
+                  hyperparameters: { ...formData.hyperparameters, prefix_length: parseInt(e.target.value) } 
+                })}
+                min={1}
+                max={100}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <p className="text-xs text-gray-600 mt-1">Number of trainable prefix tokens (typical: 10-50)</p>
+            </div>
+          </div>
+        )}
+
+        {formData.hyperparameters.method === 'adapter' && (
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Adapter Parameters</h4>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Adapter Size
+              </label>
+              <input
+                type="number"
+                value={formData.hyperparameters.adapter_size}
+                onChange={(e) => onChange({ 
+                  hyperparameters: { ...formData.hyperparameters, adapter_size: parseInt(e.target.value) } 
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+              <p className="text-xs text-gray-600 mt-1">Bottleneck dimension for adapter layers (typical: 64-256)</p>
+            </div>
+          </div>
+        )}
+
         {/* Hyperparameters */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">Hyperparameters</h3>
+          <h3 className="text-lg font-semibold mb-3">General Training Parameters</h3>
           
           <div className="space-y-4">
             <div>
@@ -540,7 +853,7 @@ function Step3Review({ formData, dataset, costEstimate, loading }: any) {
               <div className="flex justify-between">
                 <span className="text-blue-800">Estimated Cost:</span>
                 <span className="font-bold text-blue-900 text-lg">
-                  ${costEstimate.estimatedCostUsd.toFixed(2)}
+                  ${costEstimate.estimatedCostUsd ? costEstimate.estimatedCostUsd.toFixed(2) : '0.00'}
                 </span>
               </div>
               <div className="flex justify-between text-blue-700">

@@ -4,10 +4,30 @@ export interface FineTuningJobConfig {
   datasetPath: string;
   baseModel: string;
   hyperparameters: {
+    // Method selection
+    method?: 'full' | 'lora' | 'qlora' | 'prefix' | 'adapter';
+    
+    // Standard parameters
     n_epochs?: number;
     batch_size?: number;
     learning_rate_multiplier?: number;
     prompt_loss_weight?: number;
+    temperature?: number;
+    context_window?: number;
+    
+    // LoRA-specific parameters
+    lora_rank?: number;
+    lora_alpha?: number;
+    lora_dropout?: number;
+    
+    // QLoRA-specific parameters
+    quantization_bits?: number;
+    
+    // Prefix Tuning-specific parameters
+    prefix_length?: number;
+    
+    // Adapter-specific parameters
+    adapter_size?: number;
   };
   validationSplit?: number;
 }

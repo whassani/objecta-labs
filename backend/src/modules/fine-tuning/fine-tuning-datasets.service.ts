@@ -17,6 +17,7 @@ import {
   ImportFromConversationsDto,
   DatasetStatsDto,
 } from './dto/dataset.dto';
+import { DataConversionService } from './data-conversion.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
@@ -35,6 +36,7 @@ export class FineTuningDatasetsService {
     private conversationsRepository: Repository<Conversation>,
     @InjectRepository(Message)
     private messagesRepository: Repository<Message>,
+    private readonly dataConversionService: DataConversionService,
   ) {
     // Ensure upload directory exists
     if (!fs.existsSync(this.uploadDir)) {
@@ -443,12 +445,33 @@ export class FineTuningDatasetsService {
   }
 
   /**
-   * Convert CSV file to JSONL format
-   * Supports two formats:
-   * 1. Training format: system,user,assistant columns
-   * 2. Data format: Any columns - will generate Q&A pairs
+   * Convert CSV/JSON file to JSONL format
+   * DEPRECATED: Use DataConversionService for new conversions
+   * This method is kept for backward compatibility
+   * 
+   * Supports CSV, JSON, and JSONL formats
    */
   private async convertCsvToJsonl(csvFilePath: string): Promise<string> {
+    // Use new data conversion service with default guided mode
+    this.logger.log('Using legacy conversion - consider using Guided or Smart conversion');
+    
+    try {
+      const result = await this.dataConversionService.convertWithGuided(csvFilePath, {
+        template: 'qa' as any,
+        multiTurn: false,
+      });
+      return result.outputPath;
+    } catch (error) {
+      // Fallback to legacy method if new service fails
+      this.logger.warn('New conversion failed, falling back to legacy method');
+      return this.legacyConvertCsvToJsonl(csvFilePath);
+    }
+  }
+
+  /**
+   * Legacy CSV conversion method (kept for backward compatibility)
+   */
+  private async legacyConvertCsvToJsonl(csvFilePath: string): Promise<string> {
     const jsonlFilePath = csvFilePath.replace(/\.csv$/i, '.jsonl');
     const readStream = fs.createReadStream(csvFilePath, { encoding: 'utf8' });
     const writeStream = fs.createWriteStream(jsonlFilePath);
