@@ -32,6 +32,26 @@ export default function CreateJobPage() {
     },
   });
 
+  // Available models based on provider
+  const getAvailableModels = () => {
+    if (formData.provider === 'ollama') {
+      return [
+        { id: 'llama2', name: 'Llama 2', description: 'Meta\'s Llama 2 model (7B)' },
+        { id: 'llama2:13b', name: 'Llama 2 13B', description: 'Larger Llama 2 variant' },
+        { id: 'mistral', name: 'Mistral', description: 'Mistral 7B model' },
+        { id: 'codellama', name: 'Code Llama', description: 'Specialized for code' },
+        { id: 'phi', name: 'Phi', description: 'Microsoft Phi model' },
+        { id: 'neural-chat', name: 'Neural Chat', description: 'Optimized for conversations' },
+      ];
+    }
+    // OpenAI models
+    return [
+      { id: 'gpt-3.5-turbo-1106', name: 'GPT-3.5 Turbo', description: 'Fast and cost-effective' },
+      { id: 'gpt-3.5-turbo-0613', name: 'GPT-3.5 Turbo (Legacy)', description: 'Previous version' },
+      { id: 'gpt-4-0613', name: 'GPT-4', description: 'Most capable, higher cost' },
+    ];
+  };
+
   // Fetch datasets
   const { data: datasets } = useQuery({
     queryKey: ['fine-tuning', 'datasets'],
@@ -271,11 +291,24 @@ function Step1SelectDataset({ datasets, selectedDatasetId, onSelect }: any) {
 
 // Step 2: Configure Model (continued in next file due to size)
 function Step2ConfigureModel({ formData, onChange }: any) {
-  const availableModels = [
-    { id: 'gpt-3.5-turbo-1106', name: 'GPT-3.5 Turbo', description: 'Fast and cost-effective' },
-    { id: 'gpt-3.5-turbo-0613', name: 'GPT-3.5 Turbo (Legacy)', description: 'Previous version' },
-    { id: 'gpt-4-0613', name: 'GPT-4', description: 'Most capable, higher cost' },
-  ];
+  const getAvailableModels = () => {
+    if (formData.provider === 'ollama') {
+      return [
+        { id: 'llama2', name: 'Llama 2', description: 'Meta\'s Llama 2 model (7B) - Free, runs locally' },
+        { id: 'llama2:13b', name: 'Llama 2 13B', description: 'Larger variant, better quality' },
+        { id: 'mistral', name: 'Mistral', description: 'Mistral 7B - Fast and efficient' },
+        { id: 'codellama', name: 'Code Llama', description: 'Specialized for code generation' },
+        { id: 'phi', name: 'Phi', description: 'Microsoft Phi - Compact model' },
+      ];
+    }
+    return [
+      { id: 'gpt-3.5-turbo-1106', name: 'GPT-3.5 Turbo', description: 'Fast and cost-effective' },
+      { id: 'gpt-3.5-turbo-0613', name: 'GPT-3.5 Turbo (Legacy)', description: 'Previous version' },
+      { id: 'gpt-4-0613', name: 'GPT-4', description: 'Most capable, higher cost' },
+    ];
+  };
+
+  const availableModels = getAvailableModels();
 
   return (
     <div>
@@ -308,6 +341,47 @@ function Step2ConfigureModel({ formData, onChange }: any) {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Describe the purpose of this training job..."
           />
+        </div>
+
+        {/* Provider Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Provider *
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div
+              onClick={() => {
+                onChange({ 
+                  provider: 'openai',
+                  baseModel: 'gpt-3.5-turbo-1106'
+                });
+              }}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.provider === 'openai'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <h4 className="font-semibold text-gray-900">OpenAI</h4>
+              <p className="text-sm text-gray-600">Cloud-based (paid)</p>
+            </div>
+            <div
+              onClick={() => {
+                onChange({ 
+                  provider: 'ollama',
+                  baseModel: 'llama2'
+                });
+              }}
+              className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.provider === 'ollama'
+                  ? 'border-green-600 bg-green-50'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <h4 className="font-semibold text-gray-900">Ollama</h4>
+              <p className="text-sm text-gray-600">Local (free)</p>
+            </div>
+          </div>
         </div>
 
         {/* Base Model */}

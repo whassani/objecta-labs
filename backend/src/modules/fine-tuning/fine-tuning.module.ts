@@ -7,6 +7,7 @@ import { FineTuningDatasetsService } from './fine-tuning-datasets.service';
 import { FineTuningJobsService } from './fine-tuning-jobs.service';
 import { FineTunedModelsService } from './fine-tuned-models.service';
 import { OpenAIFineTuningProvider } from './providers/openai.provider';
+import { OllamaFineTuningProvider } from './providers/ollama.provider';
 import { FineTuningDataset } from './entities/fine-tuning-dataset.entity';
 import { FineTuningJob } from './entities/fine-tuning-job.entity';
 import { FineTunedModel } from './entities/fine-tuned-model.entity';
@@ -41,6 +42,7 @@ import { Agent } from '../agents/entities/agent.entity';
     FineTuningJobsService,
     FineTunedModelsService,
     OpenAIFineTuningProvider,
+    OllamaFineTuningProvider,
   ],
   exports: [
     FineTuningDatasetsService,

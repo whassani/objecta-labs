@@ -17,6 +17,7 @@ import {
   CostEstimateResponseDto,
 } from './dto/job.dto';
 import { OpenAIFineTuningProvider } from './providers/openai.provider';
+import { OllamaFineTuningProvider } from './providers/ollama.provider';
 import { IFineTuningProvider } from './providers/fine-tuning-provider.interface';
 
 @Injectable()
@@ -34,10 +35,12 @@ export class FineTuningJobsService {
     @InjectRepository(FineTuningDataset)
     private datasetsRepository: Repository<FineTuningDataset>,
     private openaiProvider: OpenAIFineTuningProvider,
+    private ollamaProvider: OllamaFineTuningProvider,
   ) {
     // Initialize providers
     this.providers = new Map();
     this.providers.set('openai', openaiProvider);
+    this.providers.set('ollama', ollamaProvider);
   }
 
   async create(
