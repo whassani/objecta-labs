@@ -16,7 +16,34 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class WebhooksController {
   constructor(private readonly webhookService: WebhookService) {}
 
-  // Public webhook endpoint (no auth required)
+  // Protected endpoints for webhook management (must come BEFORE catch-all route)
+  @Post('create/:workflowId')
+  @UseGuards(JwtAuthGuard)
+  async createWebhook(@Param('workflowId') workflowId: string, @Request() req) {
+    return this.webhookService.createWebhook(workflowId, req.user.organizationId);
+  }
+
+  @Get('workflow/:workflowId')
+  @UseGuards(JwtAuthGuard)
+  async getWebhook(@Param('workflowId') workflowId: string) {
+    return this.webhookService.getWebhook(workflowId);
+  }
+
+  @Delete('manage/:webhookId')
+  @UseGuards(JwtAuthGuard)
+  async deleteWebhook(@Param('webhookId') webhookId: string) {
+    await this.webhookService.deleteWebhook(webhookId);
+    return { message: 'Webhook deleted successfully' };
+  }
+
+  @Post('manage/:webhookId/toggle')
+  @UseGuards(JwtAuthGuard)
+  async toggleWebhook(@Param('webhookId') webhookId: string) {
+    return this.webhookService.toggleWebhook(webhookId);
+  }
+
+  // Public webhook endpoint (no auth required) - MUST BE LAST
+  // This catches all POST requests to /webhooks/:webhookUrl
   @Post(':webhookUrl')
   async handleWebhook(
     @Param('webhookUrl') webhookUrl: string,
@@ -24,25 +51,5 @@ export class WebhooksController {
     @Headers() headers: Record<string, string>,
   ) {
     return this.webhookService.handleWebhook(webhookUrl, payload, headers);
-  }
-
-  // Protected endpoints for webhook management
-  @Post('create/:workflowId')
-  @UseGuards(JwtAuthGuard)
-  async createWebhook(@Param('workflowId') workflowId: string, @Request() req) {
-    return this.webhookService.createWebhook(workflowId, req.user.organizationId);
-  }
-
-  @Get(':workflowId')
-  @UseGuards(JwtAuthGuard)
-  async getWebhook(@Param('workflowId') workflowId: string) {
-    return this.webhookService.getWebhook(workflowId);
-  }
-
-  @Delete(':webhookId')
-  @UseGuards(JwtAuthGuard)
-  async deleteWebhook(@Param('webhookId') webhookId: string) {
-    await this.webhookService.deleteWebhook(webhookId);
-    return { message: 'Webhook deleted successfully' };
   }
 }

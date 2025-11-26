@@ -11,6 +11,7 @@ import NodePalette from '@/components/workflows/NodePalette';
 import NodeEditor from '@/components/workflows/NodeEditor';
 import ExecutionVisualizer from '@/components/workflows/ExecutionVisualizer';
 import TestWorkflowModal from '@/components/workflows/TestWorkflowModal';
+import WebhookPanel from '@/components/workflows/WebhookPanel';
 import { useWorkflowExecution } from '@/hooks/useWorkflowExecution';
 import { WorkflowDefinition, Workflow } from '@/types/workflow';
 
@@ -58,6 +59,7 @@ export default function EditWorkflowPage() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<'nodes' | 'settings' | 'webhooks' | 'history'>('nodes');
 
   // Execution mode state - Use backend mode for real LLM execution
   const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('backend');
@@ -473,23 +475,140 @@ export default function EditWorkflowPage() {
             />
           </div>
 
-          {/* Node Editor (Sidebar) */}
-          {showNodeEditor && selectedNode && (
-            <NodeEditor
-              node={selectedNode}
-              onClose={() => setShowNodeEditor(false)}
-              onChange={(updatedNode) => {
-                setDefinition((prev) => ({
-                  ...prev,
-                  nodes: prev.nodes.map((n) =>
-                    n.id === updatedNode.id ? updatedNode : n
-                  ),
-                }));
-                // Also update selectedNode so editor shows latest data
-                setSelectedNode(updatedNode);
-              }}
-            />
-          )}
+          {/* Right Sidebar */}
+          <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+            {/* Sidebar Tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => {
+                  setSidebarTab('nodes');
+                  setShowNodeEditor(false);
+                }}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  sidebarTab === 'nodes' && !showNodeEditor
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Nodes
+              </button>
+              <button
+                onClick={() => {
+                  setSidebarTab('webhooks');
+                  setShowNodeEditor(false);
+                }}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  sidebarTab === 'webhooks' && !showNodeEditor
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                📡 Webhooks
+              </button>
+              <button
+                onClick={() => {
+                  setSidebarTab('history');
+                  setShowNodeEditor(false);
+                }}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  sidebarTab === 'history' && !showNodeEditor
+                    ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                History
+              </button>
+            </div>
+
+            {/* Sidebar Content */}
+            <div className="flex-1 overflow-y-auto">
+              {showNodeEditor && selectedNode ? (
+                <NodeEditor
+                  node={selectedNode}
+                  onClose={() => setShowNodeEditor(false)}
+                  onChange={(updatedNode) => {
+                    setDefinition((prev) => ({
+                      ...prev,
+                      nodes: prev.nodes.map((n) =>
+                        n.id === updatedNode.id ? updatedNode : n
+                      ),
+                    }));
+                    setSelectedNode(updatedNode);
+                  }}
+                />
+              ) : sidebarTab === 'nodes' ? (
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Workflow Nodes
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Click on a node in the canvas to edit its configuration.
+                  </p>
+                  <div className="space-y-2">
+                    {definition.nodes.map((node) => (
+                      <button
+                        key={node.id}
+                        onClick={() => {
+                          setSelectedNode(node);
+                          setShowNodeEditor(true);
+                        }}
+                        className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <div className="text-sm font-medium text-gray-900">
+                          {node.data.label || node.type}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {node.id}
+                        </div>
+                      </button>
+                    ))}
+                    {definition.nodes.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-8">
+                        No nodes yet. Drag from the palette to add nodes.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : sidebarTab === 'webhooks' ? (
+                <WebhookPanel workflowId={workflowId} />
+              ) : sidebarTab === 'history' ? (
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+                    Execution History
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    View past workflow executions and their results.
+                  </p>
+                  {history.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      No execution history yet.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {history.map((entry, index) => (
+                        <button
+                          key={index}
+                          onClick={() => loadHistoryEntry(index)}
+                          className={`w-full text-left p-3 rounded-lg transition-colors ${
+                            index === currentHistoryIndex
+                              ? 'bg-indigo-50 border border-indigo-200'
+                              : 'bg-gray-50 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            Step {entry.step}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {entry.timestamp.toLocaleTimeString()}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         {/* Test Workflow Modal */}

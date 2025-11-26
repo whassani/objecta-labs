@@ -62,6 +62,22 @@ export class WebhookService {
   }
 
   /**
+   * Toggle webhook active status
+   */
+  async toggleWebhook(webhookId: string): Promise<WorkflowWebhook> {
+    const webhook = await this.webhookRepository.findOne({
+      where: { id: webhookId },
+    });
+
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    webhook.isActive = !webhook.isActive;
+    return this.webhookRepository.save(webhook);
+  }
+
+  /**
    * Handle incoming webhook request
    */
   async handleWebhook(
