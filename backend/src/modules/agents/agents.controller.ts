@@ -7,6 +7,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser, UserPayload } from '../auth/decorators/current-user.decorator';
+import { UserRole } from '../auth/enums/role.enum';
 import { CreateAgentDto, UpdateAgentDto } from './dto/agent.dto';
 
 @ApiTags('agents')
@@ -37,7 +38,7 @@ export class AgentsController {
   }
 
   @Post()
-  @Roles('admin', 'editor')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @RequirePermissions('agents:create')
   @ApiOperation({ summary: 'Create agent' })
   async create(@Body() createDto: CreateAgentDto, @CurrentUser() user: UserPayload) {
@@ -45,7 +46,7 @@ export class AgentsController {
   }
 
   @Put(':id')
-  @Roles('admin', 'editor')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @RequirePermissions('agents:update')
   @ApiOperation({ summary: 'Update agent' })
   async update(@Param('id') id: string, @Body() updateDto: UpdateAgentDto, @CurrentUser() user: UserPayload) {
@@ -53,7 +54,7 @@ export class AgentsController {
   }
 
   @Delete(':id')
-  @Roles('admin', 'editor')
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @RequirePermissions('agents:delete')
   @ApiOperation({ summary: 'Delete agent' })
   async remove(@Param('id') id: string, @CurrentUser() user: UserPayload) {
