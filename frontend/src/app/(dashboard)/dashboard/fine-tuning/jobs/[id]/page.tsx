@@ -261,11 +261,11 @@ export default function JobDetailPage() {
           <div className="text-2xl font-bold text-gray-900">{job.baseModel}</div>
         </div>
 
-        {job.estimatedCostUsd !== undefined && (
+        {job.estimatedCostUsd !== undefined && job.estimatedCostUsd !== null && (
           <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
             <div className="text-sm text-gray-600 mb-1">Estimated Cost</div>
             <div className="text-2xl font-bold text-gray-900">
-              ${job.estimatedCostUsd.toFixed(2)}
+              ${Number(job.estimatedCostUsd).toFixed(2)}
             </div>
           </div>
         )}
@@ -359,7 +359,7 @@ export default function JobDetailPage() {
               <div>
                 <div className="text-sm text-gray-600 mb-1">Tokens Trained</div>
                 <div className="text-3xl font-bold text-gray-900">
-                  {job.trainedTokens.toLocaleString()}
+                  {Number(job.trainedTokens).toLocaleString()}
                 </div>
               </div>
             )}
@@ -367,7 +367,7 @@ export default function JobDetailPage() {
               <div>
                 <div className="text-sm text-gray-600 mb-1">Training Loss</div>
                 <div className="text-3xl font-bold text-gray-900">
-                  {job.trainingLoss.toFixed(4)}
+                  {Number(job.trainingLoss).toFixed(4)}
                 </div>
               </div>
             )}
@@ -375,7 +375,7 @@ export default function JobDetailPage() {
               <div>
                 <div className="text-sm text-gray-600 mb-1">Validation Loss</div>
                 <div className="text-3xl font-bold text-gray-900">
-                  {job.validationLoss.toFixed(4)}
+                  {Number(job.validationLoss).toFixed(4)}
                 </div>
               </div>
             )}
