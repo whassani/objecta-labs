@@ -151,14 +151,14 @@ export default function CreateJobPage() {
           <Step1SelectDataset
             datasets={validatedDatasets}
             selectedDatasetId={formData.datasetId}
-            onSelect={(id) => setFormData({ ...formData, datasetId: id })}
+            onSelect={(id: string) => setFormData({ ...formData, datasetId: id })}
           />
         )}
 
         {currentStep === 2 && (
           <Step2ConfigureModel
             formData={formData}
-            onChange={(updates) => setFormData({ ...formData, ...updates })}
+            onChange={(updates: any) => setFormData({ ...formData, ...updates })}
           />
         )}
 
