@@ -19,6 +19,7 @@ import {
 import { OpenAIFineTuningProvider } from './providers/openai.provider';
 import { OllamaFineTuningProvider } from './providers/ollama.provider';
 import { IFineTuningProvider } from './providers/fine-tuning-provider.interface';
+import { JobsService } from '../jobs/jobs.service';
 
 @Injectable()
 export class FineTuningJobsService {
@@ -36,6 +37,7 @@ export class FineTuningJobsService {
     private datasetsRepository: Repository<FineTuningDataset>,
     private openaiProvider: OpenAIFineTuningProvider,
     private ollamaProvider: OllamaFineTuningProvider,
+    private backgroundJobsService: JobsService,
   ) {
     // Initialize providers
     this.providers = new Map();
@@ -89,10 +91,29 @@ export class FineTuningJobsService {
 
       this.logger.log(`Created fine-tuning job: ${job.id}`);
 
-      // Start the job asynchronously
-      this.startJob(job.id).catch((error) => {
-        this.logger.error(`Failed to start job ${job.id}: ${error.message}`);
-      });
+      // Create background job
+      const backgroundJob = await this.backgroundJobsService.createJob(
+        userId,
+        organizationId,
+        {
+          type: 'fine-tuning',
+          name: `Fine-tune ${createJobDto.baseModel}`,
+          description: `Fine-tuning ${createJobDto.baseModel} with dataset ${dataset.name}`,
+          data: {
+            fineTuningJobId: job.id,
+            datasetId: dataset.id,
+            baseModel: createJobDto.baseModel,
+            provider: createJobDto.provider,
+          },
+          priority: 2, // Higher priority than data conversion
+        },
+      );
+
+      // Store background job ID in fine-tuning job
+      job.providerJobId = backgroundJob.id; // Temporarily store background job ID
+      await this.jobsRepository.save(job);
+
+      this.logger.log(`Created background job ${backgroundJob.id} for fine-tuning job ${job.id}`);
 
       return job;
     } catch (error) {

@@ -7,6 +7,7 @@ import {
   ValidateNested,
   Min,
   Max,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -39,6 +40,60 @@ export class HyperparametersDto {
   @Min(0)
   @Max(1)
   prompt_loss_weight?: number;
+
+  // Advanced Fine-Tuning Techniques
+  @ApiPropertyOptional({ 
+    description: 'Fine-tuning method: full, lora, qlora, prefix, adapter', 
+    enum: ['full', 'lora', 'qlora', 'prefix', 'adapter'],
+    default: 'lora' 
+  })
+  @IsOptional()
+  @IsEnum(['full', 'lora', 'qlora', 'prefix', 'adapter'])
+  method?: string;
+
+  // LoRA/QLoRA specific parameters
+  @ApiPropertyOptional({ description: 'LoRA rank (lower = faster, higher = better quality)', default: 8, minimum: 1, maximum: 256 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(256)
+  lora_rank?: number;
+
+  @ApiPropertyOptional({ description: 'LoRA alpha scaling parameter', default: 16 })
+  @IsOptional()
+  @IsNumber()
+  lora_alpha?: number;
+
+  @ApiPropertyOptional({ description: 'LoRA dropout rate', default: 0.1, minimum: 0, maximum: 1 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  lora_dropout?: number;
+
+  @ApiPropertyOptional({ description: 'Target modules for LoRA (e.g., q_proj,v_proj)', type: [String] })
+  @IsOptional()
+  lora_target_modules?: string[];
+
+  // QLoRA specific
+  @ApiPropertyOptional({ description: 'Quantization bits for QLoRA (4 or 8)', enum: [4, 8], default: 4 })
+  @IsOptional()
+  @IsNumber()
+  quantization_bits?: number;
+
+  // Prefix Tuning specific
+  @ApiPropertyOptional({ description: 'Number of prefix tokens', default: 20, minimum: 1, maximum: 100 })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  prefix_length?: number;
+
+  // Adapter specific
+  @ApiPropertyOptional({ description: 'Adapter bottleneck dimension', default: 64 })
+  @IsOptional()
+  @IsNumber()
+  adapter_size?: number;
 }
 
 export class CreateFineTuningJobDto {

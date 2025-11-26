@@ -9,6 +9,7 @@ import {
   CpuChipIcon,
   ChartBarIcon,
   ArrowPathIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -73,68 +74,83 @@ export default function FineTuningDashboard() {
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Supervised Fine-Tuning</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Model Fine-Tuning</h1>
         <p className="text-gray-600">
-          Train custom AI models with labeled examples (input → output pairs) through supervised learning.
+          Customize AI models with your own training data to improve performance on specific tasks.
         </p>
       </div>
 
       {/* Educational Info Box */}
       <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
         <div className="flex items-start gap-4">
-          <div className="text-3xl">💡</div>
+          <div className="text-3xl">🎯</div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">What is Supervised Fine-Tuning?</h3>
-            <p className="text-sm text-blue-800 mb-3">
-              Supervised fine-tuning teaches your AI model by showing it labeled examples where each example contains:
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">How Fine-Tuning Works</h3>
+            <p className="text-sm text-blue-800 mb-4">
+              Fine-tuning adapts a pre-trained AI model to your specific use case by training it on your custom examples in conversation format (JSONL).
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <p className="text-sm font-semibold text-gray-900 mb-1">📥 INPUT</p>
-                <p className="text-xs text-gray-600">User questions or requests</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">1️⃣ Prepare Dataset</p>
+                <p className="text-xs text-gray-600">Upload conversation examples in JSONL format</p>
               </div>
               <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <p className="text-sm font-semibold text-gray-900 mb-1">📤 OUTPUT</p>
-                <p className="text-xs text-gray-600">Your desired AI responses</p>
+                <p className="text-sm font-semibold text-gray-900 mb-1">2️⃣ Start Training</p>
+                <p className="text-xs text-gray-600">Create a fine-tuning job with your dataset</p>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-blue-200">
+                <p className="text-sm font-semibold text-gray-900 mb-1">3️⃣ Deploy Model</p>
+                <p className="text-xs text-gray-600">Use your custom model in agents</p>
               </div>
             </div>
-            <p className="text-sm text-blue-800">
-              The model learns patterns from these labeled pairs and improves its responses for similar questions.
-            </p>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
         <Link
           href="/dashboard/fine-tuning/datasets/new"
-          className="flex items-center justify-center p-6 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          className="flex flex-col items-center justify-center p-6 bg-blue-50 border-2 border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
         >
-          <FolderIcon className="h-6 w-6 text-blue-600 mr-3" />
-          <div className="text-left">
-            <div className="text-blue-900 font-semibold">Upload Labeled Examples</div>
-            <div className="text-xs text-blue-700">Input → Output pairs</div>
+          <FolderIcon className="h-8 w-8 text-blue-600 mb-2" />
+          <div className="text-center">
+            <div className="text-blue-900 font-semibold">Upload Dataset</div>
+            <div className="text-xs text-blue-700 mt-1">JSONL format</div>
           </div>
         </Link>
 
         <Link
-          href="/dashboard/fine-tuning/jobs/new"
-          className="flex items-center justify-center p-6 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          href="/dashboard/fine-tuning/datasets/convert"
+          className="flex flex-col items-center justify-center p-6 bg-purple-50 border-2 border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
         >
-          <CpuChipIcon className="h-6 w-6 text-green-600 mr-3" />
-          <div className="text-left">
-            <div className="text-green-900 font-semibold">Start Training Job</div>
-            <div className="text-xs text-green-700">Supervised learning</div>
+          <ArrowPathIcon className="h-8 w-8 text-purple-600 mb-2" />
+          <div className="text-center">
+            <div className="text-purple-900 font-semibold">Convert Data</div>
+            <div className="text-xs text-purple-700 mt-1">CSV/JSON to JSONL</div>
           </div>
         </Link>
 
         <Link
           href="/dashboard/fine-tuning/datasets?import=true"
-          className="flex items-center justify-center p-6 bg-purple-50 border-2 border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+          className="flex flex-col items-center justify-center p-6 bg-indigo-50 border-2 border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors"
         >
-          <ArrowPathIcon className="h-6 w-6 text-purple-600 mr-3" />
-          <span className="text-purple-900 font-semibold">Import from Conversations</span>
+          <ChatBubbleLeftRightIcon className="h-8 w-8 text-indigo-600 mb-2" />
+          <div className="text-center">
+            <div className="text-indigo-900 font-semibold">Import Conversations</div>
+            <div className="text-xs text-indigo-700 mt-1">Use chat history</div>
+          </div>
+        </Link>
+
+        <Link
+          href="/dashboard/fine-tuning/jobs/new"
+          className="flex flex-col items-center justify-center p-6 bg-green-50 border-2 border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+        >
+          <CpuChipIcon className="h-8 w-8 text-green-600 mb-2" />
+          <div className="text-center">
+            <div className="text-green-900 font-semibold">Start Training</div>
+            <div className="text-xs text-green-700 mt-1">Fine-tune model</div>
+          </div>
         </Link>
       </div>
 
@@ -160,7 +176,7 @@ export default function FineTuningDashboard() {
                 {dashboardStats.datasets.total}
               </div>
               <div className="text-sm text-gray-600">
-                {dashboardStats.datasets.validated} ready for supervised learning
+                {dashboardStats.datasets.validated} validated for training
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <Link

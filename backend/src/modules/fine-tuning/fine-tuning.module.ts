@@ -11,6 +11,7 @@ import { FineTunedModelsService } from './fine-tuned-models.service';
 import { DataConversionService } from './data-conversion.service';
 import { OpenAIFineTuningProvider } from './providers/openai.provider';
 import { OllamaFineTuningProvider } from './providers/ollama.provider';
+import { JobsModule } from '../jobs/jobs.module';
 import { FineTuningDataset } from './entities/fine-tuning-dataset.entity';
 import { FineTuningJob } from './entities/fine-tuning-job.entity';
 import { FineTunedModel } from './entities/fine-tuned-model.entity';
@@ -23,6 +24,7 @@ import { AgentsModule } from '../agents/agents.module';
 
 @Module({
   imports: [
+    JobsModule,
     TypeOrmModule.forFeature([
       FineTuningDataset,
       FineTuningJob,

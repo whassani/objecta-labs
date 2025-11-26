@@ -12,6 +12,7 @@ import {
   Cog6ToothIcon,
   BoltIcon,
   CpuChipIcon,
+  QueueListIcon,
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Tools & Actions', href: '/dashboard/tools', icon: WrenchScrewdriverIcon },
   { name: 'Workflows', href: '/dashboard/workflows', icon: BoltIcon },
   { name: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: CpuChipIcon },
+  { name: 'Background Jobs', href: '/dashboard/jobs', icon: QueueListIcon },
   { name: 'Conversations', href: '/dashboard/conversations', icon: ChatBubbleLeftRightIcon },
   { name: 'Workspaces', href: '/dashboard/workspaces', icon: FolderIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
