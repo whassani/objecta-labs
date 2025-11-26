@@ -28,7 +28,7 @@ export class OllamaFineTuningProvider implements IFineTuningProvider {
   private activeJobs: Map<string, any> = new Map();
 
   constructor(private configService: ConfigService) {
-    this.ollamaHost = this.configService.get<string>('OLLAMA_HOST') || 'http://localhost:11434';
+    this.ollamaHost = this.configService.get<string>('OLLAMA_HOST') || 'http://127.0.0.1:11434';
   }
 
   async createFineTuningJob(config: FineTuningJobConfig): Promise<FineTuningJobResult> {
