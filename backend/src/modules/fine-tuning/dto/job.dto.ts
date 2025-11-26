@@ -59,9 +59,9 @@ export class CreateFineTuningJobDto {
   @IsString()
   baseModel: string;
 
-  @ApiPropertyOptional({ description: 'Provider', enum: ['openai', 'anthropic', 'local'], default: 'openai' })
+  @ApiPropertyOptional({ description: 'Provider', enum: ['openai', 'ollama', 'anthropic', 'local'], default: 'openai' })
   @IsOptional()
-  @IsEnum(['openai', 'anthropic', 'local'])
+  @IsEnum(['openai', 'ollama', 'anthropic', 'local'])
   provider?: string;
 
   @ApiPropertyOptional({ description: 'Workspace ID (optional)' })
