@@ -195,11 +195,24 @@ export class WorkflowExecutorService {
         nextEdges = nextEdges.filter((edge) => edge.sourceHandle === output.nextNodeId);
       }
       
-      for (const edge of nextEdges) {
-        const nextNode = allNodes.find((n) => n.id === edge.target);
-        if (nextNode) {
-          await this.executeNode(executionId, nextNode, allNodes, edges, context);
+      // Execute next nodes in parallel for better performance
+      if (nextEdges.length > 0) {
+        this.logger.debug(`Node ${node.id} has ${nextEdges.length} outgoing edge(s)`);
+        
+        if (nextEdges.length > 1) {
+          this.logger.log(`Executing ${nextEdges.length} parallel branches from node ${node.id}`);
         }
+        
+        const nextNodePromises = nextEdges.map(async (edge) => {
+          const nextNode = allNodes.find((n) => n.id === edge.target);
+          if (nextNode) {
+            return this.executeNode(executionId, nextNode, allNodes, edges, context);
+          }
+          return null;
+        });
+        
+        // Wait for all parallel branches to complete
+        await Promise.all(nextNodePromises);
       }
 
       return output;

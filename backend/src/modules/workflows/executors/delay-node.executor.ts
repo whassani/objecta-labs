@@ -6,28 +6,36 @@ import { ExecutionContext } from '../workflow-executor.service';
 export class DelayNodeExecutor extends BaseNodeExecutor {
   async execute(node: any, context: ExecutionContext): Promise<NodeExecutionResult> {
     try {
-      const { delay = 1000, unit = 'ms' } = node.data;
+      // Support both 'duration' (new) and 'delay' (old) for backwards compatibility
+      const duration = node.data.duration || node.data.delay || 1;
+      const unit = node.data.unit || 'seconds';
 
-      let delayMs = delay;
+      let delayMs = duration;
 
       // Convert to milliseconds based on unit
       switch (unit) {
         case 's':
         case 'seconds':
-          delayMs = delay * 1000;
+          delayMs = duration * 1000;
           break;
         case 'm':
         case 'minutes':
-          delayMs = delay * 60 * 1000;
+          delayMs = duration * 60 * 1000;
           break;
         case 'h':
         case 'hours':
-          delayMs = delay * 60 * 60 * 1000;
+          delayMs = duration * 60 * 60 * 1000;
           break;
         case 'ms':
         case 'milliseconds':
+          delayMs = duration;
+          break;
+        case 'days':
+          delayMs = duration * 24 * 60 * 60 * 1000;
+          break;
         default:
-          delayMs = delay;
+          // If unit not recognized, treat duration as seconds
+          delayMs = duration * 1000;
           break;
       }
 
@@ -38,7 +46,7 @@ export class DelayNodeExecutor extends BaseNodeExecutor {
       return {
         success: true,
         data: {
-          requestedDelay: delay,
+          requestedDuration: duration,
           unit,
           delayMs,
           actualDelay,

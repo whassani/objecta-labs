@@ -14,6 +14,7 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
   const [editedNode, setEditedNode] = useState(node);
   const [agents, setAgents] = useState<any[]>([]);
   const [loadingAgents, setLoadingAgents] = useState(false);
+  const [showReplaceWarning, setShowReplaceWarning] = useState(false);
 
   // Load agents from API
   useEffect(() => {
@@ -40,8 +41,6 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
   }, [node]);
 
   const handleSave = () => {
-    console.log('NodeEditor saving:', editedNode);
-    console.log('Agent ID being saved:', editedNode.data?.agentId);
     onChange(editedNode);
     onClose();
   };
@@ -90,6 +89,41 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
     );
 
     // Type-specific fields
+    if (type === 'control-delay') {
+      return (
+        <>
+          {commonFields}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Delay Duration
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={data.duration || 1}
+                onChange={(e) => handleFieldChange('duration', parseInt(e.target.value) || 1)}
+                min="1"
+                max="3600"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <select
+                value={data.unit || 'seconds'}
+                onChange={(e) => handleFieldChange('unit', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+              </select>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              💡 Use 1-5 seconds for testing, longer delays for production
+            </p>
+          </div>
+        </>
+      );
+    }
+
     if (type === 'trigger') {
       return (
         <>
@@ -144,7 +178,20 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
               </label>
               <select
                 value={data.agentId || ''}
-                onChange={(e) => handleFieldChange('agentId', e.target.value)}
+                onChange={(e) => {
+                  const selectedAgentId = e.target.value;
+                  const selectedAgent = agents.find(a => a.id === selectedAgentId);
+                  
+                  // Save both agentId and agentName
+                  setEditedNode({
+                    ...editedNode,
+                    data: {
+                      ...editedNode.data,
+                      agentId: selectedAgentId,
+                      agentName: selectedAgent ? selectedAgent.name : '',
+                    },
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 disabled={loadingAgents}
               >
@@ -171,7 +218,23 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
               </label>
               <select
                 value={data.toolId || ''}
-                onChange={(e) => handleFieldChange('toolId', e.target.value)}
+                onChange={(e) => {
+                  const selectedToolId = e.target.value;
+                  const toolNames: Record<string, string> = {
+                    'tool-1': 'Calculator',
+                    'tool-2': 'HTTP API',
+                  };
+                  
+                  // Save both toolId and toolName
+                  setEditedNode({
+                    ...editedNode,
+                    data: {
+                      ...editedNode.data,
+                      toolId: selectedToolId,
+                      toolName: toolNames[selectedToolId] || '',
+                    },
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="">Select tool</option>
@@ -211,35 +274,6 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
                 />
               </div>
             </>
-          )}
-          {data.actionType === 'delay' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Delay Duration
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={data.delay || 1}
-                  onChange={(e) => handleFieldChange('delay', parseInt(e.target.value) || 1)}
-                  min="1"
-                  max="3600"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <select
-                  value={data.delayUnit || 'seconds'}
-                  onChange={(e) => handleFieldChange('delayUnit', e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                >
-                  <option value="seconds">Seconds</option>
-                  <option value="minutes">Minutes</option>
-                  <option value="hours">Hours</option>
-                </select>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">
-                💡 Use 1-5 seconds for testing, longer delays for production
-              </p>
-            </div>
           )}
           {data.actionType === 'email' && (
             <>

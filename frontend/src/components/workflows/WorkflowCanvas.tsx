@@ -92,6 +92,14 @@ const edgeStyles = `
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
   }
+  @keyframes progress {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
 `;
 
 import TriggerNode from './nodes/TriggerNode';
@@ -184,13 +192,43 @@ export default function WorkflowCanvas({
 
   // Apply execution state classes to nodes and edges
   useEffect(() => {
-    if (!executionState) return;
+    if (!executionState) {
+      // If no execution state, clear all execution statuses
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          className: node.className?.replace(/\b(running|completed|failed|pending)\b/g, '').trim(),
+          data: {
+            ...node.data,
+            executionStatus: undefined,
+          }
+        }))
+      );
+      
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          className: edge.className?.replace(/\bexecuting\b/g, '').trim(),
+          animated: false,
+        }))
+      );
+      return;
+    }
 
     setNodes((nds) =>
       nds.map((node) => {
         const state = executionState.nodeStates[node.id];
         const className = state?.status ? `${node.className || ''} ${state.status}`.trim() : node.className;
-        return { ...node, className };
+        
+        // Pass execution status to node data so it can render visual indicators
+        return { 
+          ...node, 
+          className,
+          data: {
+            ...node.data,
+            executionStatus: state?.status || 'idle',
+          }
+        };
       })
     );
 
