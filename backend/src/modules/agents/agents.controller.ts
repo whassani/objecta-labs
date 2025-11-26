@@ -46,4 +46,10 @@ export class AgentsController {
   async remove(@Param('id') id: string, @Request() req) {
     return this.agentsService.remove(id, req.user.organizationId);
   }
+
+  @Get('available-models/list')
+  @ApiOperation({ summary: 'Get available models including fine-tuned models' })
+  async getAvailableModels(@Request() req) {
+    return this.agentsService.getAvailableModels(req.user.organizationId);
+  }
 }
