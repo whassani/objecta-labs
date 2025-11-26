@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { agentsApi } from '@/lib/api'
+import { api, agentsApi } from '@/lib/api'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -35,6 +35,12 @@ export default function EditAgentPage() {
   const { data: agent, isLoading } = useQuery({
     queryKey: ['agent', agentId],
     queryFn: () => agentsApi.getOne(agentId).then(res => res.data),
+  })
+
+  // Fetch available models including fine-tuned models
+  const { data: availableModels, isLoading: modelsLoading } = useQuery({
+    queryKey: ['agents', 'available-models'],
+    queryFn: () => api.get('/agents/available-models/list').then((res) => res.data),
   })
 
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<AgentForm>({
@@ -182,12 +188,55 @@ export default function EditAgentPage() {
                 {...register('model')}
                 id="model"
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                disabled={modelsLoading}
               >
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="mistral">Mistral (Ollama)</option>
-                <option value="llama2">Llama 2 (Ollama)</option>
+                {modelsLoading ? (
+                  <option>Loading models...</option>
+                ) : (
+                  <>
+                    {/* Base Models */}
+                    {availableModels?.baseModels && availableModels.baseModels.length > 0 && (
+                      <optgroup label="Base Models">
+                        {availableModels.baseModels.map((model: any) => (
+                          <option key={model.id} value={model.id}>
+                            {model.name} ({model.provider})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+
+                    {/* Fine-Tuned Models */}
+                    {availableModels?.fineTunedModels && availableModels.fineTunedModels.length > 0 && (
+                      <optgroup label="🎯 Fine-Tuned Models (Your Custom Models)">
+                        {availableModels.fineTunedModels.map((model: any) => (
+                          <option key={model.id} value={model.id}>
+                            {model.name} (based on {model.baseModel})
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+
+                    {/* Fallback if no models loaded */}
+                    {!availableModels && (
+                      <>
+                        <optgroup label="OpenAI">
+                          <option value="gpt-4">GPT-4</option>
+                          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        </optgroup>
+                        <optgroup label="Ollama">
+                          <option value="mistral">Mistral</option>
+                          <option value="llama2">Llama 2</option>
+                        </optgroup>
+                      </>
+                    )}
+                  </>
+                )}
               </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {availableModels?.fineTunedModels && availableModels.fineTunedModels.length > 0 
+                  ? `${availableModels.fineTunedModels.length} fine-tuned model${availableModels.fineTunedModels.length > 1 ? 's' : ''} available`
+                  : 'Select a model for your agent. Fine-tuned models will appear here once deployed.'}
+              </p>
             </div>
 
             <div>

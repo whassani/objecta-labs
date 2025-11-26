@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useMutation } from '@tanstack/react-query'
-import { agentsApi } from '@/lib/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { api, agentsApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
@@ -37,6 +37,12 @@ export default function NewAgentPage() {
       knowledgeBaseMaxResults: 3,
       knowledgeBaseThreshold: 0.7,
     },
+  })
+
+  // Fetch available models including fine-tuned models
+  const { data: availableModels, isLoading: modelsLoading } = useQuery({
+    queryKey: ['agents', 'available-models'],
+    queryFn: () => api.get('/agents/available-models/list').then((res) => res.data),
   })
 
   const createMutation = useMutation({
@@ -151,26 +157,55 @@ export default function NewAgentPage() {
                   {...register('model')}
                   id="model"
                   className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+                  disabled={modelsLoading}
                 >
-                  <optgroup label="OpenAI">
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                  </optgroup>
-                  <optgroup label="Ollama (Local, Free)">
-                    <option value="mistral">Mistral (7B)</option>
-                    <option value="llama2">Llama 2 (7B)</option>
-                    <option value="codellama">CodeLlama (7B)</option>
-                    <option value="phi">Phi (2.7B - Fast)</option>
-                    <option value="neural-chat">Neural Chat (7B)</option>
-                  </optgroup>
-                  <optgroup label="Anthropic">
-                    <option value="claude-3-opus">Claude 3 Opus</option>
-                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                  </optgroup>
+                  {modelsLoading ? (
+                    <option>Loading models...</option>
+                  ) : (
+                    <>
+                      {/* Base Models */}
+                      {availableModels?.baseModels && availableModels.baseModels.length > 0 && (
+                        <optgroup label="Base Models">
+                          {availableModels.baseModels.map((model: any) => (
+                            <option key={model.id} value={model.id}>
+                              {model.name} ({model.provider})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {/* Fine-Tuned Models */}
+                      {availableModels?.fineTunedModels && availableModels.fineTunedModels.length > 0 && (
+                        <optgroup label="🎯 Fine-Tuned Models (Your Custom Models)">
+                          {availableModels.fineTunedModels.map((model: any) => (
+                            <option key={model.id} value={model.id}>
+                              {model.name} (based on {model.baseModel})
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+
+                      {/* Fallback if no models loaded */}
+                      {!availableModels && (
+                        <>
+                          <optgroup label="OpenAI">
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-4-turbo-preview">GPT-4 Turbo</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                          </optgroup>
+                          <optgroup label="Ollama (Local, Free)">
+                            <option value="mistral">Mistral (7B)</option>
+                            <option value="llama2">Llama 2 (7B)</option>
+                          </optgroup>
+                        </>
+                      )}
+                    </>
+                  )}
                 </select>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  OpenAI requires API key. Ollama models run locally for free.
+                  {availableModels?.fineTunedModels && availableModels.fineTunedModels.length > 0 
+                    ? `${availableModels.fineTunedModels.length} fine-tuned model${availableModels.fineTunedModels.length > 1 ? 's' : ''} available`
+                    : 'Select a model for your agent. Fine-tuned models will appear here once deployed.'}
                 </p>
               </div>
 

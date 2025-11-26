@@ -146,6 +146,10 @@ export class ConversationsStreamService {
     // Build system prompt
     let systemPrompt = agent.systemPrompt || 'You are a helpful AI assistant.';
     
+    // Add explicit conversational instruction for fine-tuned models
+    // This prevents the model from reproducing training example formats
+    systemPrompt = `You are having a natural conversation with a user. Respond naturally and conversationally, not in example format.\n\n${systemPrompt}`;
+    
     // If we have context from RAG, append it with clear instructions
     if (contextFromDocs) {
       systemPrompt +=
@@ -154,7 +158,9 @@ export class ConversationsStreamService {
         `- Use the information above to answer the user's question accurately.\n` +
         `- If the information is relevant, reference the sources in your answer.\n` +
         `- If the information doesn't help answer the question, use your general knowledge.\n` +
-        `- Always be helpful, clear, and concise.`;
+        `- Always be helpful, clear, and concise.\n` +
+        `- DO NOT format your response as training examples (e.g., "INPUT:", "OUTPUT:").\n` +
+        `- Respond naturally as if having a conversation.`;
     }
 
     // Build message history for LangChain

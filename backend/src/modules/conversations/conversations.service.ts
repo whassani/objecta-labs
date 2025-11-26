@@ -139,11 +139,17 @@ export class ConversationsService {
     }
 
     // Build system prompt with context
-    let systemPrompt = agent.systemPrompt;
+    let systemPrompt = agent.systemPrompt || 'You are a helpful AI assistant.';
+    
+    // Add explicit conversational instruction for fine-tuned models
+    // This prevents the model from reproducing training example formats
+    systemPrompt = `You are having a natural conversation with a user. Respond naturally and conversationally, not in example format.\n\n${systemPrompt}`;
+    
     if (contextFromDocs) {
       systemPrompt += `\n\n### Relevant Information from Knowledge Base:\n${contextFromDocs}\n\n` +
         `Use the above information to answer the user's question. If the information is relevant, cite the sources. ` +
-        `If the information doesn't answer the question, you can say so and provide a general response.`;
+        `If the information doesn't answer the question, you can say so and provide a general response.\n` +
+        `DO NOT format your response as training examples (e.g., "INPUT:", "OUTPUT:"). Respond naturally as if having a conversation.`;
     }
 
     // Build message history for LangChain
