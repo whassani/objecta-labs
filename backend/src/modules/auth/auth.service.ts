@@ -6,6 +6,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { Organization } from '../organizations/entities/organization.entity';
 import { RegisterDto } from './dto/auth.dto';
+import { RbacService } from './services/rbac.service';
+import { UserRole } from './enums/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     @InjectRepository(Organization)
     private organizationsRepository: Repository<Organization>,
     private jwtService: JwtService,
+    private rbacService: RbacService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -56,8 +59,20 @@ export class AuthService {
 
     const savedUser = await this.usersRepository.save(user);
 
+    // Assign default editor role to first user
+    const editorRole = await this.rbacService.getRoleByName(UserRole.EDITOR);
+    if (editorRole) {
+      await this.rbacService.assignRole(
+        savedUser.id,
+        editorRole.id,
+        savedOrganization.id,
+        null, // Organization-level
+        savedUser.id, // Self-granted on registration
+      );
+    }
+
     // Generate token
-    const token = this.generateToken(savedUser);
+    const token = await this.generateToken(savedUser);
 
     return {
       user: this.sanitizeUser(savedUser),
@@ -79,7 +94,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const token = this.generateToken(user);
+    const token = await this.generateToken(user);
 
     return {
       user,
@@ -87,12 +102,18 @@ export class AuthService {
     };
   }
 
-  private generateToken(user: User) {
+  private async generateToken(user: User) {
+    // Get user's roles and permissions
+    const roles = await this.rbacService.getUserRoles(user.id, user.organizationId);
+    const permissions = await this.rbacService.getUserPermissions(user.id, user.organizationId);
+
     const payload = {
       sub: user.id,
       email: user.email,
       organizationId: user.organizationId,
-      role: user.role,
+      role: user.role, // Legacy field, keep for backward compatibility
+      roles: roles.map(r => r.name),
+      permissions,
     };
 
     return this.jwtService.sign(payload);
