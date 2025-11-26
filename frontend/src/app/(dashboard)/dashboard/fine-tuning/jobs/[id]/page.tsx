@@ -35,13 +35,7 @@ export default function JobDetailPage() {
   const { data: job, isLoading, refetch } = useQuery({
     queryKey: ['fine-tuning', 'jobs', jobId],
     queryFn: () => api.get(`/fine-tuning/jobs/${jobId}`).then((res) => res.data),
-    refetchInterval: (data) => {
-      // Auto-refresh every 10 seconds if job is active
-      if (data && ['running', 'queued', 'validating'].includes(data.status)) {
-        return 10000;
-      }
-      return false;
-    },
+    refetchInterval: 10000, // Auto-refresh every 10 seconds
   });
 
   // Fetch events
