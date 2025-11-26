@@ -54,13 +54,22 @@ export class FineTuningDatasetsService {
       const filePath = path.join(this.uploadDir, fileName);
       fs.writeFileSync(filePath, file.buffer);
 
+      // Convert CSV to JSONL if needed
+      let finalFilePath = filePath;
+      if (createDatasetDto.format === 'csv') {
+        finalFilePath = await this.convertCsvToJsonl(filePath);
+        // Delete original CSV file
+        fs.unlinkSync(filePath);
+      }
+
       // Create dataset record
       const dataset = this.datasetsRepository.create({
         ...createDatasetDto,
         organizationId,
         createdBy: userId,
-        filePath,
-        fileSizeBytes: file.size,
+        filePath: finalFilePath,
+        fileSizeBytes: fs.statSync(finalFilePath).size,
+        format: 'jsonl', // Always store as JSONL internally
       });
 
       await this.datasetsRepository.save(dataset);
@@ -68,7 +77,7 @@ export class FineTuningDatasetsService {
       this.logger.log(`Created dataset: ${dataset.id}`);
 
       // Parse and store examples asynchronously
-      this.parseAndStoreExamples(dataset.id, filePath).catch((error) => {
+      this.parseAndStoreExamples(dataset.id, finalFilePath).catch((error) => {
         this.logger.error(`Failed to parse examples for dataset ${dataset.id}: ${error.message}`);
       });
 
@@ -431,5 +440,106 @@ export class FineTuningDatasetsService {
       totalChars += msg.content?.length || 0;
     }
     return Math.ceil(totalChars / 4);
+  }
+
+  /**
+   * Convert CSV file to JSONL format
+   * Expected CSV format:
+   * system,user,assistant
+   * "You are helpful","Hello","Hi there!"
+   * "You are helpful","How are you?","I'm doing well!"
+   */
+  private async convertCsvToJsonl(csvFilePath: string): Promise<string> {
+    const jsonlFilePath = csvFilePath.replace(/\.csv$/i, '.jsonl');
+    const readStream = fs.createReadStream(csvFilePath, { encoding: 'utf8' });
+    const writeStream = fs.createWriteStream(jsonlFilePath);
+    
+    const rl = readline.createInterface({
+      input: readStream,
+      crlfDelay: Infinity,
+    });
+
+    let isFirstLine = true;
+    let headers: string[] = [];
+
+    for await (const line of rl) {
+      if (!line.trim()) continue;
+
+      if (isFirstLine) {
+        // Parse header row
+        headers = this.parseCsvLine(line);
+        isFirstLine = false;
+        continue;
+      }
+
+      try {
+        const values = this.parseCsvLine(line);
+        
+        // Build messages array from CSV columns
+        const messages: any[] = [];
+        
+        for (let i = 0; i < Math.min(headers.length, values.length); i++) {
+          const role = headers[i].trim().toLowerCase();
+          const content = values[i].trim();
+          
+          if (content && ['system', 'user', 'assistant'].includes(role)) {
+            messages.push({ role, content });
+          }
+        }
+
+        if (messages.length > 0) {
+          const jsonlLine = JSON.stringify({ messages }) + '\n';
+          writeStream.write(jsonlLine);
+        }
+      } catch (error) {
+        this.logger.warn(`Failed to parse CSV line: ${error.message}`);
+      }
+    }
+
+    writeStream.end();
+
+    await new Promise<void>((resolve, reject) => {
+      writeStream.on('finish', () => resolve());
+      writeStream.on('error', reject);
+    });
+
+    this.logger.log(`Converted CSV to JSONL: ${jsonlFilePath}`);
+    return jsonlFilePath;
+  }
+
+  /**
+   * Parse a CSV line handling quoted values
+   */
+  private parseCsvLine(line: string): string[] {
+    const values: string[] = [];
+    let currentValue = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          // Escaped quote
+          currentValue += '"';
+          i++; // Skip next quote
+        } else {
+          // Toggle quote state
+          insideQuotes = !insideQuotes;
+        }
+      } else if (char === ',' && !insideQuotes) {
+        // End of value
+        values.push(currentValue);
+        currentValue = '';
+      } else {
+        currentValue += char;
+      }
+    }
+
+    // Add last value
+    values.push(currentValue);
+
+    return values;
   }
 }
