@@ -44,6 +44,7 @@ export function useWorkflowExecution(
     waitingForStep: boolean;
     backendExecutionId?: string;
     websocket?: WebSocket;
+    pollInterval?: NodeJS.Timeout;
   }>({ 
     isPaused: false, 
     isStopped: false,
@@ -385,7 +386,7 @@ export function useWorkflowExecution(
     return nextNodes;
   }, [nodes, edges, activateEdge]);
 
-  const executeWorkflow = async () => {
+  const executeWorkflow = async (testData?: any) => {
     executionRef.current = { 
       isPaused: false, 
       isStopped: false,
@@ -407,21 +408,127 @@ export function useWorkflowExecution(
     setVariables(new Map());
 
     addLog('Starting workflow execution');
+    if (testData) {
+      addLog(`Test data: ${JSON.stringify(testData)}`);
+    }
 
     // Backend mode: delegate to backend
     if (mode === 'backend' && workflowId) {
       try {
         const response = await api.post(`/workflows/${workflowId}/execute`, {
-          mode: 'async',
+          triggerData: testData || {},
+          context: {},
         });
         
-        const executionId = response.data.executionId;
+        const executionId = response.data.id; // Backend returns { id, status, ... }
         executionRef.current.backendExecutionId = executionId;
         
         addLog(`Backend execution started: ${executionId}`);
         
         // Connect WebSocket for real-time updates
         connectWebSocket(executionId);
+        
+        // Fallback: Poll for execution status since WebSocket might not be fully implemented
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusResponse = await api.get(`/workflows/executions/${executionId}`);
+            const executionData = statusResponse.data;
+            
+            addLog(`Execution status: ${executionData.status}`);
+            
+            // Update node states even while running (not just when completed)
+            if (executionData.steps && Array.isArray(executionData.steps)) {
+              const nodeStates: Record<string, NodeExecutionState> = {};
+              
+              executionData.steps.forEach((step: any) => {
+                nodeStates[step.nodeId] = {
+                  nodeId: step.nodeId,
+                  status: step.status === 'completed' ? 'completed' : 
+                          step.status === 'failed' ? 'failed' : 
+                          step.status === 'running' ? 'running' :
+                          'pending',
+                  startTime: step.startTime ? new Date(step.startTime).getTime() : undefined,
+                  endTime: step.endTime ? new Date(step.endTime).getTime() : undefined,
+                  output: step.outputData,
+                };
+              });
+              
+              // Update execution with latest node states
+              setExecution((prev) => ({
+                ...prev,
+                nodeStates: { ...prev.nodeStates, ...nodeStates },
+              }));
+            }
+            
+            if (executionData.status === 'completed' || executionData.status === 'failed') {
+              clearInterval(pollInterval);
+              
+              console.log('Execution data received:', executionData);
+              console.log('Steps:', executionData.steps);
+              
+              // Update execution status and results
+              setExecution((prev) => ({
+                ...prev,
+                status: executionData.status,
+                endTime: Date.now(),
+                result: executionData.result,
+                error: executionData.error,
+              }));
+              
+              // Update node statuses from execution steps
+              if (executionData.steps && Array.isArray(executionData.steps)) {
+                console.log(`Processing ${executionData.steps.length} steps...`);
+                
+                const nodeStates: Record<string, NodeExecutionState> = {};
+                
+                executionData.steps.forEach((step: any) => {
+                  // Update node state
+                  nodeStates[step.nodeId] = {
+                    nodeId: step.nodeId,
+                    status: step.status === 'completed' ? 'completed' : 
+                            step.status === 'failed' ? 'failed' : 
+                            'running',
+                    startTime: step.startTime ? new Date(step.startTime).getTime() : undefined,
+                    endTime: step.endTime ? new Date(step.endTime).getTime() : undefined,
+                    output: step.outputData,
+                  };
+                  
+                  // Store step output in variables
+                  setVariables((prev) => {
+                    const newVars = new Map(prev);
+                    newVars.set(step.nodeId, {
+                      nodeId: step.nodeId,
+                      timestamp: step.endTime ? new Date(step.endTime).getTime() : Date.now(),
+                      inputData: step.inputData || {},
+                      outputData: step.outputData,
+                      variables: {},
+                    });
+                    return newVars;
+                  });
+                  
+                  addLog(
+                    `Node ${step.nodeId}: ${step.status}`,
+                    step.nodeId,
+                    step.status === 'completed' ? 'info' : step.status === 'failed' ? 'error' : 'info'
+                  );
+                });
+                
+                // Update all node states at once
+                setExecution((prev) => ({
+                  ...prev,
+                  nodeStates: { ...prev.nodeStates, ...nodeStates },
+                }));
+              }
+              
+              addLog(`Workflow ${executionData.status}`, undefined, executionData.status === 'completed' ? 'info' : 'error');
+            }
+          } catch (error) {
+            console.error('Failed to poll execution status:', error);
+          }
+        }, 2000); // Poll every 2 seconds
+        
+        // Store interval ID for cleanup
+        executionRef.current.pollInterval = pollInterval;
         
         return;
       } catch (error) {
@@ -448,56 +555,62 @@ export function useWorkflowExecution(
       return;
     }
 
-    // Execute workflow starting from trigger nodes
-    const queue: Node[] = [...triggerNodes];
+    // Execute workflow starting from trigger nodes with parallel execution support
     const executed = new Set<string>();
 
-    while (queue.length > 0 && !executionRef.current.isStopped) {
-      const currentNode = queue.shift()!;
-      
+    // Function to execute a single node and recursively execute its descendants in parallel
+    const executeNodeAndDescendants = async (node: Node): Promise<void> => {
       // Skip if already executed
-      if (executed.has(currentNode.id)) {
-        continue;
+      if (executed.has(node.id)) {
+        return;
       }
 
-      setExecution((prev) => ({ ...prev, currentNode: currentNode.id }));
+      if (executionRef.current.isStopped) {
+        return;
+      }
+
+      executed.add(node.id);
+      setExecution((prev) => ({ ...prev, currentNode: node.id }));
 
       // Execute current node
-      const success = await executeNode(currentNode);
-      executed.add(currentNode.id);
+      const success = await executeNode(node);
 
       if (!success) {
         // Node failed, stop execution
-        addLog('Workflow execution failed', currentNode.id, 'error');
+        addLog('Workflow execution failed', node.id, 'error');
         setExecution((prev) => ({ 
           ...prev, 
           status: 'failed', 
           endTime: Date.now() 
         }));
+        executionRef.current.isStopped = true;
         return;
       }
 
-      // Find and queue next nodes
-      const nextNodes = findNextNodes(currentNode.id);
+      // Find and execute next nodes
+      const nextNodes = findNextNodes(node.id);
       
       // Handle special control flow nodes
-      if (currentNode.type === 'condition') {
+      if (node.type === 'condition') {
         // Condition node - simulate branching
         // In real implementation, evaluate condition and take one path
         const takeTrue = Math.random() > 0.5; // Random for simulation
         const branch = takeTrue ? 'true' : 'false';
-        addLog(`Condition evaluated to: ${branch}`, currentNode.id);
+        addLog(`Condition evaluated to: ${branch}`, node.id);
         
-        // Only add nodes from the taken branch
-        const branchNodes = nextNodes.filter((node) => {
-          const edge = edges.find((e) => e.source === currentNode.id && e.target === node.id);
+        // Only execute nodes from the taken branch
+        const branchNodes = nextNodes.filter((n) => {
+          const edge = edges.find((e) => e.source === node.id && e.target === n.id);
           return edge?.sourceHandle === branch;
         });
-        queue.push(...branchNodes);
-      } else if (currentNode.type === 'control-loop') {
+        
+        // Execute branch nodes in parallel
+        await Promise.all(branchNodes.map(n => executeNodeAndDescendants(n)));
+        
+      } else if (node.type === 'control-loop') {
         // Loop node - execute loop body multiple times
-        const count = currentNode.data.count || 3;
-        const loopBodyEdge = edges.find((e) => e.source === currentNode.id && e.sourceHandle === 'loop-body');
+        const count = node.data.count || 3;
+        const loopBodyEdge = edges.find((e) => e.source === node.id && e.sourceHandle === 'loop-body');
         
         if (loopBodyEdge) {
           const loopBodyNode = nodes.find((n) => n.id === loopBodyEdge.target);
@@ -505,8 +618,8 @@ export function useWorkflowExecution(
             for (let i = 0; i < count; i++) {
               if (executionRef.current.isStopped) break;
               
-              addLog(`Loop iteration ${i + 1} of ${count}`, currentNode.id);
-              updateNodeState(currentNode.id, { iteration: i + 1 });
+              addLog(`Loop iteration ${i + 1} of ${count}`, node.id);
+              updateNodeState(node.id, { iteration: i + 1 });
               
               // Execute loop body
               await executeNode(loopBodyNode);
@@ -518,24 +631,33 @@ export function useWorkflowExecution(
         }
         
         // After loop completes, continue with 'complete' edge
-        const completeEdge = edges.find((e) => e.source === currentNode.id && e.sourceHandle === 'complete');
+        const completeEdge = edges.find((e) => e.source === node.id && e.sourceHandle === 'complete');
         if (completeEdge) {
           const nextNode = nodes.find((n) => n.id === completeEdge.target);
           if (nextNode) {
-            queue.push(nextNode);
+            await executeNodeAndDescendants(nextNode);
           }
         }
-      } else if (currentNode.type === 'control-merge') {
+        
+      } else if (node.type === 'control-merge') {
         // Merge node - wait for all inputs (simplified for demo)
-        queue.push(...nextNodes);
+        // Execute all next nodes in parallel
+        await Promise.all(nextNodes.map(n => executeNodeAndDescendants(n)));
+        
       } else {
-        // Regular node - continue to all next nodes
-        queue.push(...nextNodes);
+        // Regular node - execute all next nodes in parallel
+        if (nextNodes.length > 1) {
+          addLog(`Executing ${nextNodes.length} parallel branches from ${node.data.label || node.id}`, node.id, 'info');
+        }
+        await Promise.all(nextNodes.map(n => executeNodeAndDescendants(n)));
       }
 
-      // Small delay between nodes for visualization
+      // Small delay for visualization
       await sleep(300);
-    }
+    };
+
+    // Execute all trigger nodes and their descendants in parallel
+    await Promise.all(triggerNodes.map(trigger => executeNodeAndDescendants(trigger)));
 
     const endTime = Date.now();
     
@@ -570,8 +692,8 @@ export function useWorkflowExecution(
     }
   };
 
-  const start = useCallback(() => {
-    executeWorkflow();
+  const start = useCallback((testData?: any) => {
+    executeWorkflow(testData);
   }, [nodes, edges]);
 
   const pause = useCallback(() => {
@@ -595,6 +717,12 @@ export function useWorkflowExecution(
     if (executionRef.current.websocket) {
       executionRef.current.websocket.close();
       executionRef.current.websocket = undefined;
+    }
+    
+    // Clear polling interval
+    if (executionRef.current.pollInterval) {
+      clearInterval(executionRef.current.pollInterval);
+      executionRef.current.pollInterval = undefined;
     }
 
     // Stop backend execution if running
@@ -623,6 +751,12 @@ export function useWorkflowExecution(
     if (executionRef.current.websocket) {
       executionRef.current.websocket.close();
       executionRef.current.websocket = undefined;
+    }
+    
+    // Clear polling interval
+    if (executionRef.current.pollInterval) {
+      clearInterval(executionRef.current.pollInterval);
+      executionRef.current.pollInterval = undefined;
     }
 
     setExecution({

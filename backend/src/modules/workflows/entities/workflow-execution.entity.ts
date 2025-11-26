@@ -60,6 +60,7 @@ export class WorkflowExecution {
 
   @OneToMany(() => WorkflowExecutionStep, (step) => step.execution, {
     cascade: true,
+    eager: true,
   })
   steps: WorkflowExecutionStep[];
 }

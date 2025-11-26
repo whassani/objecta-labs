@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Node, Edge } from 'reactflow';
 import { 
   Play, Pause, RotateCcw, CheckCircle, XCircle, Clock, Loader2,
-  StepForward, Bug, History, Eye, Square, SkipForward
+  StepForward, Bug, History, Eye, Square, SkipForward, GripVertical, Maximize2, Minimize2
 } from 'lucide-react';
 
 export type ExecutionStatus = 'idle' | 'running' | 'paused' | 'completed' | 'failed';
@@ -112,6 +112,16 @@ export default function ExecutionVisualizer({
   const [showHistory, setShowHistory] = useState(false);
   const [showBreakpoints, setShowBreakpoints] = useState(false);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  
+  // Drag and resize state
+  const [position, setPosition] = useState({ x: 16, y: window.innerHeight - 400 });
+  const [size, setSize] = useState({ width: 800, height: 400 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isMaximized, setIsMaximized] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
   const getNodeStatus = (nodeId: string): NodeExecutionState['status'] => {
     return execution?.nodeStates[nodeId]?.status || 'pending';
@@ -182,18 +192,107 @@ export default function ExecutionVisualizer({
   const currentNodeId = execution?.currentNode;
   const currentVariables = currentNodeId ? variables.get(currentNodeId) : null;
 
+  // Handle dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: Math.max(0, Math.min(window.innerWidth - size.width, e.clientX - dragOffset.x)),
+          y: Math.max(0, Math.min(window.innerHeight - 100, e.clientY - dragOffset.y))
+        });
+      }
+      
+      if (isResizing) {
+        const rect = panelRef.current?.getBoundingClientRect();
+        if (rect) {
+          setSize({
+            width: Math.max(400, Math.min(window.innerWidth - position.x - 20, e.clientX - rect.left)),
+            height: Math.max(300, Math.min(window.innerHeight - position.y - 20, e.clientY - rect.top))
+          });
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      setIsResizing(false);
+    };
+
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, isResizing, dragOffset, size, position]);
+
+  // Handle maximize/restore
+  const toggleMaximize = () => {
+    if (isMaximized) {
+      // Restore to previous size and position
+      setPosition({ x: 16, y: window.innerHeight - 400 });
+      setSize({ width: 800, height: 400 });
+    } else {
+      // Maximize (leave some margin)
+      const leftMargin = 272; // Node palette width
+      const rightMargin = isNodeEditorOpen ? 336 : 16;
+      const topMargin = 80; // Header height
+      const bottomMargin = 16;
+      
+      setPosition({ x: leftMargin, y: topMargin });
+      setSize({ 
+        width: window.innerWidth - leftMargin - rightMargin,
+        height: window.innerHeight - topMargin - bottomMargin
+      });
+    }
+    setIsMaximized(!isMaximized);
+  };
+
+  const handleDragStart = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.drag-handle')) {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (rect) {
+        setDragOffset({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+        setIsDragging(true);
+      }
+    }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+  };
+
   if (!execution || execution.status === 'idle') {
     return null;
   }
-
-  // Calculate right margin based on whether node editor is open
-  const rightMargin = isNodeEditorOpen ? 'md:right-[336px]' : 'right-4';
   
   return (
-    <div className={`absolute bottom-4 left-4 ${rightMargin} md:left-[272px] bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-[70vh] flex flex-col transition-all duration-300 ease-in-out animate-slideUp`}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-3">
+    <div 
+      ref={panelRef}
+      className="fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 z-50 flex flex-col animate-slideUp"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        maxWidth: '95vw',
+        maxHeight: '95vh',
+        cursor: isDragging ? 'grabbing' : 'default'
+      }}
+    >
+      {/* Header with drag handle */}
+      <div 
+        className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 cursor-grab active:cursor-grabbing drag-handle rounded-t-lg"
+        onMouseDown={handleDragStart}
+      >
+        <div className="flex items-center gap-3 drag-handle pointer-events-none">
           <div className={`flex items-center gap-2 ${
             isExecuting ? 'text-blue-600' : 
             isCompleted ? 'text-green-600' : 
@@ -221,7 +320,18 @@ export default function ExecutionVisualizer({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Maximize/Restore Button */}
+          <button
+            onClick={toggleMaximize}
+            className="p-2 hover:bg-white/50 rounded transition"
+            title={isMaximized ? "Restore" : "Maximize"}
+          >
+            {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
+
+          <div className="w-px h-6 bg-gray-300" />
+
           {/* Control Buttons */}
           {!isExecuting && !isPaused && !isCompleted && !isFailed && (
             <button
@@ -336,10 +446,71 @@ export default function ExecutionVisualizer({
         </div>
       </div>
 
+      {/* Workflow Input/Output Summary */}
+      {(isCompleted || isFailed) && (
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+          <h3 className="font-semibold text-base mb-3 text-gray-800 flex items-center gap-2">
+            <CheckCircle size={18} className="text-green-600" />
+            Workflow Result
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Workflow Input */}
+            <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+              <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                📥 Input
+              </div>
+              <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
+                {JSON.stringify(execution.logs?.[0] || {}, null, 2)}
+              </pre>
+            </div>
+            
+            {/* Workflow Output - Get from last completed node */}
+            <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+              <div className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                📤 Output
+              </div>
+              <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200 max-h-32">
+                {(() => {
+                  // Find the last completed node's output
+                  const completedNodes = Object.entries(execution.nodeStates || {})
+                    .filter(([_, state]) => state.status === 'completed')
+                    .map(([nodeId, state]) => ({ nodeId, state }));
+                  
+                  if (completedNodes.length > 0) {
+                    const lastNode = completedNodes[completedNodes.length - 1];
+                    const output = variables.get(lastNode.nodeId)?.outputData;
+                    return JSON.stringify(output || {}, null, 2);
+                  }
+                  return '{}';
+                })()}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Node Execution Status */}
-      <div className="px-4 py-3 border-b border-gray-200 overflow-y-auto overflow-x-hidden" style={{ maxHeight: '150px' }}>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
-          {nodes.map((node) => {
+      <div className="px-6 py-4 border-b border-gray-200 overflow-y-auto overflow-x-hidden flex-shrink-0" style={{ maxHeight: isMaximized ? '30vh' : '250px' }}>
+        <h3 className="font-semibold text-sm mb-3 text-gray-700">Node Execution Status (Click to see I/O)</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          {[...nodes].sort((a, b) => {
+            // Sort trigger nodes first, then by execution order
+            const aIsTrigger = a.type === 'trigger' || a.data?.triggerType;
+            const bIsTrigger = b.type === 'trigger' || b.data?.triggerType;
+            
+            if (aIsTrigger && !bIsTrigger) return -1;
+            if (!aIsTrigger && bIsTrigger) return 1;
+            
+            // Then sort by start time if available
+            const aState = execution.nodeStates[a.id];
+            const bState = execution.nodeStates[b.id];
+            if (aState?.startTime && bState?.startTime) {
+              return aState.startTime - bState.startTime;
+            }
+            
+            // Keep original order if no timing info
+            return 0;
+          }).map((node) => {
             const status = getNodeStatus(node.id);
             const state = execution.nodeStates[node.id];
             const hasBreakpoint = breakpoints.get(node.id)?.enabled;
@@ -377,7 +548,7 @@ export default function ExecutionVisualizer({
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Breakpoints Panel */}
         {showBreakpoints && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-red-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+          <div className="border-b border-gray-200 px-6 py-4 bg-red-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '300px' }}>
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold text-sm flex items-center gap-2">
                 <Bug size={16} className="text-red-600" />
@@ -423,19 +594,50 @@ export default function ExecutionVisualizer({
           </div>
         )}
 
-        {/* Variables Panel */}
-        {showVariables && currentVariables && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
-            <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <Eye size={16} className="text-purple-600" />
-              Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
+        {/* Selected Node I/O Panel */}
+        {selectedNode && variables.get(selectedNode) && (
+          <div className="border-b border-gray-200 px-6 py-4 bg-blue-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '400px' }}>
+            <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
+              <Eye size={18} className="text-blue-600" />
+              {nodes.find(n => n.id === selectedNode)?.data.label || selectedNode} - Input/Output
             </h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Node Input */}
+              {variables.get(selectedNode)?.inputData && (
+                <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+                  <div className="text-sm font-semibold text-blue-700 mb-2">📥 Input:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
+                    {JSON.stringify(variables.get(selectedNode)?.inputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {/* Node Output */}
+              {variables.get(selectedNode)?.outputData && (
+                <div className="bg-white rounded-lg p-4 border border-blue-200 shadow-sm">
+                  <div className="text-sm font-semibold text-blue-700 mb-2">📤 Output:</div>
+                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
+                    {JSON.stringify(variables.get(selectedNode)?.outputData, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Variables Panel (Context Variables) */}
+        {showVariables && currentVariables && (
+          <div className="border-b border-gray-200 px-6 py-4 bg-purple-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '350px' }}>
+            <h3 className="font-semibold text-base flex items-center gap-2 mb-3">
+              <Eye size={18} className="text-purple-600" />
+              Context Variables at {nodes.find(n => n.id === currentNodeId)?.data.label || currentNodeId}
+            </h3>
+            <div className="space-y-3">
               {/* Input Data */}
               {currentVariables.inputData && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Input:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Input Data:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.inputData, null, 2)}
                   </pre>
                 </div>
@@ -443,9 +645,9 @@ export default function ExecutionVisualizer({
               
               {/* Output Data */}
               {currentVariables.outputData && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Output:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Output Data:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.outputData, null, 2)}
                   </pre>
                 </div>
@@ -453,9 +655,9 @@ export default function ExecutionVisualizer({
               
               {/* Context Variables */}
               {Object.keys(currentVariables.variables).length > 0 && (
-                <div className="bg-white rounded p-2 border border-purple-200">
-                  <div className="text-xs font-semibold text-purple-700 mb-1">Context:</div>
-                  <pre className="text-xs font-mono text-gray-700 overflow-x-auto">
+                <div className="bg-white rounded-lg p-4 border border-purple-200 shadow-sm">
+                  <div className="text-sm font-semibold text-purple-700 mb-2">Context Variables:</div>
+                  <pre className="text-sm font-mono text-gray-700 overflow-x-auto bg-gray-50 p-3 rounded border border-gray-200">
                     {JSON.stringify(currentVariables.variables, null, 2)}
                   </pre>
                 </div>
@@ -466,7 +668,7 @@ export default function ExecutionVisualizer({
 
         {/* History Panel */}
         {showHistory && history.length > 0 && (
-          <div className="border-b border-gray-200 px-4 py-3 bg-indigo-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
+          <div className="border-b border-gray-200 px-6 py-4 bg-indigo-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '300px' }}>
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-2">
               <History size={16} className="text-indigo-600" />
               Execution History ({history.length})
@@ -505,23 +707,23 @@ export default function ExecutionVisualizer({
 
         {/* Execution Logs */}
         {showLogs && execution.logs && execution.logs.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '200px' }}>
-            <h3 className="font-semibold text-sm mb-2">Execution Logs</h3>
-            <div className="space-y-1">
+          <div className="px-6 py-4 bg-gray-50 overflow-y-auto overflow-x-hidden animate-slideDown" style={{ maxHeight: '350px' }}>
+            <h3 className="font-semibold text-base mb-3 text-gray-700">Execution Logs</h3>
+            <div className="space-y-2">
               {execution.logs.map((log, index) => (
                 <div
                   key={index}
-                  className={`text-xs font-mono ${
-                    log.level === 'error' ? 'text-red-600' :
-                    log.level === 'warning' ? 'text-yellow-600' :
-                    'text-gray-600'
+                  className={`text-sm font-mono p-2 rounded border ${
+                    log.level === 'error' ? 'text-red-700 bg-red-50 border-red-200' :
+                    log.level === 'warning' ? 'text-yellow-700 bg-yellow-50 border-yellow-200' :
+                    'text-gray-700 bg-white border-gray-200'
                   }`}
                 >
-                  <span className="text-gray-400">
+                  <span className="text-gray-500 font-semibold">
                     [{new Date(log.timestamp).toLocaleTimeString()}]
                   </span>
                   {log.nodeId && (
-                    <span className="text-blue-600 ml-2">[{log.nodeId}]</span>
+                    <span className="text-blue-600 ml-2 font-semibold">[{log.nodeId}]</span>
                   )}
                   <span className="ml-2">{log.message}</span>
                 </div>
@@ -529,6 +731,16 @@ export default function ExecutionVisualizer({
             </div>
           </div>
         )}
+      </div>
+
+      {/* Resize Handle */}
+      <div
+        ref={resizeRef}
+        className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize group"
+        onMouseDown={handleResizeStart}
+        title="Drag to resize"
+      >
+        <div className="absolute bottom-1 right-1 w-4 h-4 border-r-2 border-b-2 border-gray-400 group-hover:border-blue-500 transition" />
       </div>
     </div>
   );

@@ -3,8 +3,12 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Timer, Trash2 } from 'lucide-react';
+import { getStatusBadge, getBorderColor, getBackgroundStyle, getIconColorClass, getTextColorClass, ProgressIndicator } from './NodeExecutionStatus';
 
 const DelayNode = ({ data, selected, id }: NodeProps) => {
+  // Get execution status from data (undefined means no execution, not 'idle')
+  const executionStatus = data.executionStatus;
+  
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     const event = new CustomEvent('deleteNode', { detail: { nodeId: id } });
@@ -22,10 +26,11 @@ const DelayNode = ({ data, selected, id }: NodeProps) => {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] bg-white shadow-md relative ${
-        selected ? 'border-amber-500 ring-2 ring-amber-200' : 'border-amber-300'
-      }`}
+      className={`px-4 py-3 rounded-lg border-2 min-w-[180px] shadow-md relative transition-all duration-300 ${
+        getBorderColor(executionStatus, selected, 'border-amber-500')
+      } ${getBackgroundStyle(executionStatus)}`}
     >
+      {getStatusBadge(executionStatus)}
       {/* Delete button */}
       {selected && (
         <button
@@ -45,11 +50,17 @@ const DelayNode = ({ data, selected, id }: NodeProps) => {
         className="!bg-amber-500 !w-3 !h-3 !border-2 !border-white"
       />
 
+      <ProgressIndicator show={executionStatus === 'running'} />
+      
       <div className="flex items-center gap-2 mb-2">
-        <div className="flex items-center justify-center w-6 h-6 rounded bg-amber-100 text-amber-600">
+        <div className={`flex items-center justify-center w-6 h-6 rounded transition-all duration-300 ${
+          getIconColorClass(executionStatus, 'bg-amber-100 text-amber-600')
+        }`}>
           <Timer size={16} />
         </div>
-        <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+        <div className={`text-xs font-semibold uppercase tracking-wide ${
+          getTextColorClass(executionStatus, 'text-amber-700')
+        }`}>
           Delay
         </div>
       </div>

@@ -10,6 +10,7 @@ import WorkflowCanvas from '@/components/workflows/WorkflowCanvas';
 import NodePalette from '@/components/workflows/NodePalette';
 import NodeEditor from '@/components/workflows/NodeEditor';
 import ExecutionVisualizer from '@/components/workflows/ExecutionVisualizer';
+import TestWorkflowModal from '@/components/workflows/TestWorkflowModal';
 import { useWorkflowExecution } from '@/hooks/useWorkflowExecution';
 import { WorkflowDefinition, Workflow } from '@/types/workflow';
 
@@ -53,12 +54,13 @@ export default function EditWorkflowPage() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [showNodeEditor, setShowNodeEditor] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  // Execution mode state
-  const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('normal');
+  // Execution mode state - Use backend mode for real LLM execution
+  const [executionMode, setExecutionMode] = useState<'normal' | 'step-by-step' | 'backend'>('backend');
 
   // Workflow execution with all advanced features
   const { 
@@ -371,11 +373,11 @@ export default function EditWorkflowPage() {
               Preview
             </button>
             <button
-              onClick={handleExecute}
+              onClick={() => setShowTestModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
               <Play size={18} />
-              Test Run
+              Test Workflow
             </button>
             <button
               onClick={handleSave}
@@ -489,6 +491,20 @@ export default function EditWorkflowPage() {
             />
           )}
         </div>
+
+        {/* Test Workflow Modal */}
+        {showTestModal && (
+          <TestWorkflowModal
+            workflowId={workflowId}
+            workflowName={workflow?.name || 'Workflow'}
+            triggerType={workflow?.triggerType || 'manual'}
+            onClose={() => setShowTestModal(false)}
+            onTest={(testData) => {
+              setShowTestModal(false);
+              start(testData);
+            }}
+          />
+        )}
 
         {/* Status Bar */}
         <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">

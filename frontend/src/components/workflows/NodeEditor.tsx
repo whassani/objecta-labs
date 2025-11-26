@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface NodeEditorProps {
   node: any;
@@ -11,6 +12,29 @@ interface NodeEditorProps {
 
 export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps) {
   const [editedNode, setEditedNode] = useState(node);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(false);
+  const [showReplaceWarning, setShowReplaceWarning] = useState(false);
+
+  // Load agents from API
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        setLoadingAgents(true);
+        const response = await api.get('/agents');
+        setAgents(response.data || []);
+      } catch (error) {
+        console.error('Failed to load agents:', error);
+        setAgents([]);
+      } finally {
+        setLoadingAgents(false);
+      }
+    };
+
+    if (editedNode.data?.actionType === 'agent') {
+      loadAgents();
+    }
+  }, [editedNode.data?.actionType]);
 
   useEffect(() => {
     setEditedNode(node);
@@ -22,6 +46,7 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
   };
 
   const handleFieldChange = (field: string, value: any) => {
+    console.log(`Field changed: ${field} = ${value}`);
     setEditedNode({
       ...editedNode,
       data: {
@@ -64,6 +89,41 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
     );
 
     // Type-specific fields
+    if (type === 'control-delay') {
+      return (
+        <>
+          {commonFields}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Delay Duration
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={data.duration || 1}
+                onChange={(e) => handleFieldChange('duration', parseInt(e.target.value) || 1)}
+                min="1"
+                max="3600"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <select
+                value={data.unit || 'seconds'}
+                onChange={(e) => handleFieldChange('unit', e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              >
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+              </select>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              💡 Use 1-5 seconds for testing, longer delays for production
+            </p>
+          </div>
+        </>
+      );
+    }
+
     if (type === 'trigger') {
       return (
         <>
@@ -118,13 +178,37 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
               </label>
               <select
                 value={data.agentId || ''}
-                onChange={(e) => handleFieldChange('agentId', e.target.value)}
+                onChange={(e) => {
+                  const selectedAgentId = e.target.value;
+                  const selectedAgent = agents.find(a => a.id === selectedAgentId);
+                  
+                  // Save both agentId and agentName
+                  setEditedNode({
+                    ...editedNode,
+                    data: {
+                      ...editedNode.data,
+                      agentId: selectedAgentId,
+                      agentName: selectedAgent ? selectedAgent.name : '',
+                    },
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                disabled={loadingAgents}
               >
-                <option value="">Select agent</option>
-                <option value="agent-1">Customer Support Agent</option>
-                <option value="agent-2">Sales Assistant</option>
+                <option value="">
+                  {loadingAgents ? 'Loading agents...' : 'Select agent'}
+                </option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name} ({agent.model})
+                  </option>
+                ))}
               </select>
+              {agents.length === 0 && !loadingAgents && (
+                <p className="mt-2 text-sm text-gray-500">
+                  No agents found. Create an agent first.
+                </p>
+              )}
             </div>
           )}
           {data.actionType === 'tool' && (
@@ -134,7 +218,23 @@ export default function NodeEditor({ node, onClose, onChange }: NodeEditorProps)
               </label>
               <select
                 value={data.toolId || ''}
-                onChange={(e) => handleFieldChange('toolId', e.target.value)}
+                onChange={(e) => {
+                  const selectedToolId = e.target.value;
+                  const toolNames: Record<string, string> = {
+                    'tool-1': 'Calculator',
+                    'tool-2': 'HTTP API',
+                  };
+                  
+                  // Save both toolId and toolName
+                  setEditedNode({
+                    ...editedNode,
+                    data: {
+                      ...editedNode.data,
+                      toolId: selectedToolId,
+                      toolName: toolNames[selectedToolId] || '',
+                    },
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               >
                 <option value="">Select tool</option>

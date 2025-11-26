@@ -172,6 +172,10 @@ export class WorkflowExecutorService {
 
       // Update step with output
       const durationMs = Date.now() - stepStartTime;
+      
+      this.logger.log(`Node ${node.id} completed in ${durationMs}ms`);
+      this.logger.log(`  Output: ${JSON.stringify(output)}`);
+      
       await this.stepRepository.update(savedStep.id, {
         status: StepStatus.COMPLETED,
         outputData: output,
@@ -191,11 +195,24 @@ export class WorkflowExecutorService {
         nextEdges = nextEdges.filter((edge) => edge.sourceHandle === output.nextNodeId);
       }
       
-      for (const edge of nextEdges) {
-        const nextNode = allNodes.find((n) => n.id === edge.target);
-        if (nextNode) {
-          await this.executeNode(executionId, nextNode, allNodes, edges, context);
+      // Execute next nodes in parallel for better performance
+      if (nextEdges.length > 0) {
+        this.logger.debug(`Node ${node.id} has ${nextEdges.length} outgoing edge(s)`);
+        
+        if (nextEdges.length > 1) {
+          this.logger.log(`Executing ${nextEdges.length} parallel branches from node ${node.id}`);
         }
+        
+        const nextNodePromises = nextEdges.map(async (edge) => {
+          const nextNode = allNodes.find((n) => n.id === edge.target);
+          if (nextNode) {
+            return this.executeNode(executionId, nextNode, allNodes, edges, context);
+          }
+          return null;
+        });
+        
+        // Wait for all parallel branches to complete
+        await Promise.all(nextNodePromises);
       }
 
       return output;
@@ -273,18 +290,31 @@ export class WorkflowExecutorService {
   }
 
   async getExecution(id: string, organizationId: string): Promise<WorkflowExecution> {
+    this.logger.log(`Getting execution ${id}`);
+    
     const execution = await this.executionRepository.findOne({
       where: { id },
       relations: ['workflow', 'steps'],
     });
 
     if (!execution) {
+      this.logger.error(`Execution with ID ${id} not found`);
       throw new NotFoundException(`Execution with ID ${id} not found`);
     }
 
     // Verify organization access
     if (execution.workflow.organizationId !== organizationId) {
+      this.logger.error(`Organization mismatch for execution ${id}`);
       throw new NotFoundException(`Execution with ID ${id} not found`);
+    }
+
+    this.logger.log(`Execution ${id} found with ${execution.steps?.length || 0} steps`);
+    if (execution.steps && execution.steps.length > 0) {
+      execution.steps.forEach((step, index) => {
+        this.logger.log(`Step ${index + 1}: ${step.nodeId} - ${step.status}`);
+        this.logger.log(`  Input: ${JSON.stringify(step.inputData)}`);
+        this.logger.log(`  Output: ${JSON.stringify(step.outputData)}`);
+      });
     }
 
     return execution;

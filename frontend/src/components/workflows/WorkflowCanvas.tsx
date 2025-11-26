@@ -37,8 +37,14 @@ const edgeStyles = `
   }
   .react-flow__edge.executing .react-flow__edge-path {
     stroke: #3b82f6 !important;
-    stroke-width: 3;
+    stroke-width: 3 !important;
+    stroke-dasharray: 10 !important;
     animation: flow 1s linear infinite;
+  }
+  
+  .react-flow__edge.completed .react-flow__edge-path {
+    stroke: #10b981 !important;
+    stroke-width: 2.5 !important;
   }
   @keyframes dash {
     to {
@@ -55,16 +61,24 @@ const edgeStyles = `
     }
   }
   
-  /* Node execution states */
-  .react-flow__node.executing {
-    animation: pulse 1.5s ease-in-out infinite;
+  /* Node execution states - Clean backgrounds only */
+  .react-flow__node.running {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
   }
+  
   .react-flow__node.completed {
-    opacity: 0.9;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
   }
+  
+  .react-flow__node.error,
   .react-flow__node.failed {
-    animation: shake 0.5s;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
   }
+  
+  .react-flow__node.pending {
+    opacity: 0.5;
+  }
+  
   @keyframes pulse {
     0%, 100% {
       box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
@@ -77,6 +91,14 @@ const edgeStyles = `
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+  }
+  @keyframes progress {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
   }
 `;
 
@@ -170,13 +192,43 @@ export default function WorkflowCanvas({
 
   // Apply execution state classes to nodes and edges
   useEffect(() => {
-    if (!executionState) return;
+    if (!executionState) {
+      // If no execution state, clear all execution statuses
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          className: node.className?.replace(/\b(running|completed|failed|pending)\b/g, '').trim(),
+          data: {
+            ...node.data,
+            executionStatus: undefined,
+          }
+        }))
+      );
+      
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          className: edge.className?.replace(/\bexecuting\b/g, '').trim(),
+          animated: false,
+        }))
+      );
+      return;
+    }
 
     setNodes((nds) =>
       nds.map((node) => {
         const state = executionState.nodeStates[node.id];
         const className = state?.status ? `${node.className || ''} ${state.status}`.trim() : node.className;
-        return { ...node, className };
+        
+        // Pass execution status to node data so it can render visual indicators
+        return { 
+          ...node, 
+          className,
+          data: {
+            ...node.data,
+            executionStatus: state?.status || 'idle',
+          }
+        };
       })
     );
 
