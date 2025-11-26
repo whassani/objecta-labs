@@ -76,6 +76,10 @@ export default function CreateJobPage() {
     onSuccess: (response) => {
       router.push(`/dashboard/fine-tuning/jobs/${response.data.id}`);
     },
+    onError: (error: any) => {
+      console.error('Failed to create job:', error);
+      alert(`Failed to create job: ${error.response?.data?.message || error.message}`);
+    },
   });
 
   const handleNext = () => {
@@ -91,6 +95,22 @@ export default function CreateJobPage() {
   };
 
   const handleSubmit = () => {
+    console.log('Submitting job with data:', formData);
+    
+    // Validate required fields
+    if (!formData.name) {
+      alert('Please enter a job name');
+      return;
+    }
+    if (!formData.datasetId) {
+      alert('Please select a dataset');
+      return;
+    }
+    if (!formData.baseModel) {
+      alert('Please select a base model');
+      return;
+    }
+    
     createJobMutation.mutate(formData);
   };
 
