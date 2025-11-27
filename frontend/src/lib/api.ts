@@ -12,12 +12,21 @@ export const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  // Get token from Zustand store instead of direct localStorage
-  const token = useAuthStore.getState().token
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  // For admin endpoints, use admin_token; otherwise use regular token
+  let token;
+  
+  if (typeof window !== 'undefined' && config.url?.includes('/admin/')) {
+    // Admin endpoint - use admin_token first, fallback to store token
+    token = localStorage.getItem('admin_token') || useAuthStore.getState().token;
+  } else {
+    // Regular endpoint - use token from Zustand store
+    token = useAuthStore.getState().token;
   }
-  return config
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 })
 
 // Handle auth errors
@@ -25,11 +34,24 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth and redirect to login
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+      // Check if it's an admin request
+      const isAdminRequest = error.config?.url?.includes('/admin/');
+      const hasAdminToken = typeof window !== 'undefined' && localStorage.getItem('admin_token');
+      
+      if (isAdminRequest || hasAdminToken) {
+        // Admin auth error - clear admin tokens and redirect to admin login
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+        }
+        window.location.href = '/admin/login';
+      } else {
+        // Regular user auth error - clear auth and redirect to user login
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
+      }
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
 )
 

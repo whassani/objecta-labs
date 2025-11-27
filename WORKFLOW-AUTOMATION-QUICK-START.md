@@ -72,7 +72,7 @@ npm install
 ```bash
 # Make sure PostgreSQL is running and database exists
 cd backend
-psql -U postgres -d agentforge -f src/migrations/create-workflows-tables.sql
+psql -U postgres -d objecta-labs -f src/migrations/create-workflows-tables.sql
 ```
 
 Expected output:

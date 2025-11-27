@@ -153,7 +153,7 @@ DELETE /fine-tuning/models/:id       Delete model
 
 ### 1. Run Database Migration
 ```bash
-psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql
+psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql
 ```
 
 ### 2. Configure Environment

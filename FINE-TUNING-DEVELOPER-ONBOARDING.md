@@ -102,7 +102,7 @@ The Fine-Tuning system allows users to train custom AI models on their own data,
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd agentforge
+cd objecta-labs
 
 # Install backend dependencies
 cd backend
@@ -117,10 +117,10 @@ npm install
 
 ```bash
 # Create PostgreSQL database
-createdb agentforge
+createdb objecta-labs
 
 # Run all migrations (including fine-tuning)
-psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql
+psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql
 ```
 
 ### 3. Environment Configuration
@@ -132,7 +132,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
-DATABASE_NAME=agentforge
+DATABASE_NAME=objecta-labs
 
 # Auth
 JWT_SECRET=your-secret-key-here
@@ -845,9 +845,9 @@ A: You can test dataset upload and validation, but actual job creation requires 
 ### Q: How do I reset my local database?
 
 ```bash
-dropdb agentforge
-createdb agentforge
-psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql
+dropdb objecta-labs
+createdb objecta-labs
+psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql
 ```
 
 ### Q: Where are uploaded files stored?

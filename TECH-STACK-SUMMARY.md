@@ -1,8 +1,8 @@
-# 🚀 AgentForge Technology Stack Summary
+# 🚀 ObjectaLabs Technology Stack Summary
 
 ## Complete TypeScript/JavaScript Stack
 
-AgentForge is built entirely on modern TypeScript/JavaScript technologies for a unified, developer-friendly experience.
+ObjectaLabs is built entirely on modern TypeScript/JavaScript technologies for a unified, developer-friendly experience.
 
 ---
 
@@ -302,20 +302,20 @@ CMD ["npm", "run", "start:prod"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: agentforge-backend
+  name: objecta-labs-backend
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: agentforge-backend
+      app: objecta-labs-backend
   template:
     metadata:
       labels:
-        app: agentforge-backend
+        app: objecta-labs-backend
     spec:
       containers:
       - name: backend
-        image: agentforge/backend:latest
+        image: objecta-labs/backend:latest
         ports:
         - containerPort: 4000
         env:

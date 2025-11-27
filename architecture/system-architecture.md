@@ -1,8 +1,8 @@
-# AgentForge System Architecture
+# ObjectaLabs System Architecture
 
 ## Architecture Overview
 
-AgentForge follows a modern, cloud-native microservices architecture designed for scalability, reliability, and flexibility.
+ObjectaLabs follows a modern, cloud-native microservices architecture designed for scalability, reliability, and flexibility.
 
 ## High-Level Architecture
 

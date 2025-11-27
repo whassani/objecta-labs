@@ -141,7 +141,7 @@ The complete Objecta Labs platform has been set up with:
 ./setup.sh
 
 # 2. Set up PostgreSQL database
-createdb agentforge
+createdb objecta-labs
 
 # 3. Configure environment variables
 # Edit backend/.env and frontend/.env
@@ -450,10 +450,10 @@ npm run type-check
 ### Database
 ```bash
 # View tables
-psql -d agentforge -c "\dt"
+psql -d objecta-labs -c "\dt"
 
 # Reset database (development)
-psql -d agentforge -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+psql -d objecta-labs -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 ```
 
 ---

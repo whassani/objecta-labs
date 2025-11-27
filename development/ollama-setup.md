@@ -81,7 +81,7 @@ curl http://localhost:11434/api/tags
 
 ## 3. Download Models
 
-### Recommended Models for AgentForge
+### Recommended Models for ObjectaLabs
 
 ```bash
 # Llama 2 7B (Good for general use, fast)
@@ -253,7 +253,7 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: agentforge_dev
+      POSTGRES_DB: objecta-labs_dev
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -296,7 +296,7 @@ services:
       - USE_OLLAMA=true
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral:7b
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/agentforge_dev
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/objecta-labs_dev
       - REDIS_URL=redis://redis:6379
     depends_on:
       - postgres
@@ -472,7 +472,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: agentforge_test
+          POSTGRES_DB: objecta-labs_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
@@ -515,7 +515,7 @@ jobs:
           USE_OLLAMA: true
           OLLAMA_BASE_URL: http://localhost:11434
           OLLAMA_MODEL: mistral:7b
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/agentforge_test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/objecta-labs_test
           REDIS_URL: redis://localhost:6379
         run: |
           npm run test

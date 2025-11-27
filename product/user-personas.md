@@ -1,4 +1,4 @@
-# AgentForge User Personas
+# ObjectaLabs User Personas
 
 ## Overview
 
@@ -59,7 +59,7 @@ An AI agent that can handle 60-70% of repetitive questions, escalates complex is
 ### Quote
 > "I need something that actually works, not just another chatbot that frustrates customers. And I need to set it up myself - I can't wait weeks for IT."
 
-### How AgentForge Helps
+### How ObjectaLabs Helps
 - No-code setup (Sarah can do it herself)
 - Learns from existing documentation
 - Smart escalation to human agents
@@ -128,7 +128,7 @@ A platform with excellent APIs, clear documentation, and the flexibility to cust
 ### Quote
 > "I need to ship AI features next month. I don't have time to become an ML expert or manage infrastructure. But I also won't accept a black box."
 
-### How AgentForge Helps
+### How ObjectaLabs Helps
 - Comprehensive REST API
 - SDKs in multiple languages
 - Clear, detailed documentation
@@ -198,7 +198,7 @@ An AI agent that engages visitors 24/7, qualifies leads through conversation, ca
 ### Quote
 > "I need something that feels like a helpful assistant, not a robot. And I need to see exactly how it impacts our conversion rates."
 
-### How AgentForge Helps
+### How ObjectaLabs Helps
 - Customizable branding
 - Natural conversation flow
 - Lead capture templates
@@ -270,7 +270,7 @@ An enterprise-grade platform with all necessary security certifications, flexibl
 ### Quote
 > "I need to see your security documentation, compliance certifications, and talk to three enterprise customers before we even consider a pilot."
 
-### How AgentForge Helps (Phase 3+)
+### How ObjectaLabs Helps (Phase 3+)
 - SOC 2 Type II certified
 - HIPAA compliance option
 - On-premise deployment available
@@ -339,7 +339,7 @@ A simple, affordable AI agent that handles common questions, can be set up in on
 ### Quote
 > "I just need something simple that works. I don't have time or money for complex enterprise solutions."
 
-### How AgentForge Helps
+### How ObjectaLabs Helps
 - Free tier available
 - Setup in 10 minutes
 - Template for e-commerce

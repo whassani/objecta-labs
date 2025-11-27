@@ -264,7 +264,7 @@ All endpoints are:
 ### 1. Run Database Migration
 ```bash
 cd backend
-psql -U postgres -d agentforge -f src/migrations/create-workflows-tables.sql
+psql -U postgres -d objecta-labs -f src/migrations/create-workflows-tables.sql
 ```
 
 ### 2. Start Backend

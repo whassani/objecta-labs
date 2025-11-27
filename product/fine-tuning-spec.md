@@ -1,4 +1,4 @@
-# AgentForge Fine-Tuning Module Specification
+# ObjectaLabs Fine-Tuning Module Specification
 
 ## Overview
 
@@ -85,7 +85,7 @@ A:`;
 
 ---
 
-## 2. Recommended Approach for AgentForge
+## 2. Recommended Approach for ObjectaLabs
 
 ### Phase 1: MVP (Months 1-6)
 **Use**: **Few-Shot Prompting + RAG** (No fine-tuning)
@@ -769,7 +769,7 @@ export class TrainingExamplesService {
 
 ## Summary: Recommended Stack
 
-### For AgentForge MVP (Months 1-6)
+### For ObjectaLabs MVP (Months 1-6)
 **Use**: **RAG + Few-Shot Prompting** (No fine-tuning)
 - LangChain FewShotPromptTemplate
 - Vector search for examples

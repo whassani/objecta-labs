@@ -13,6 +13,12 @@ import {
   BoltIcon,
   CpuChipIcon,
   QueueListIcon,
+  CreditCardIcon,
+  BellIcon,
+  UsersIcon,
+  ChartBarIcon,
+  KeyIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
 
@@ -25,7 +31,13 @@ const navigation = [
   { name: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: CpuChipIcon },
   { name: 'Background Jobs', href: '/dashboard/jobs', icon: QueueListIcon },
   { name: 'Conversations', href: '/dashboard/conversations', icon: ChatBubbleLeftRightIcon },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: ChartBarIcon },
+  { name: 'Team', href: '/dashboard/team', icon: UsersIcon },
+  { name: 'Permissions', href: '/dashboard/permissions', icon: ShieldCheckIcon },
+  { name: 'Billing', href: '/dashboard/billing', icon: CreditCardIcon },
+  { name: 'Notifications', href: '/dashboard/notifications', icon: BellIcon },
   { name: 'Workspaces', href: '/dashboard/workspaces', icon: FolderIcon },
+  { name: 'API Credentials', href: '/dashboard/settings/credentials', icon: KeyIcon },
   { name: 'Settings', href: '/dashboard/settings', icon: Cog6ToothIcon },
 ]
 

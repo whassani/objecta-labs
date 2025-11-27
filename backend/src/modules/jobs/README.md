@@ -65,7 +65,7 @@ REDIS_PASSWORD=  # Optional
 ### 3. Run Database Migration
 
 ```bash
-psql -U postgres -d agentforge -f src/migrations/create-jobs-table.sql
+psql -U postgres -d objecta-labs -f src/migrations/create-jobs-table.sql
 ```
 
 ## Usage

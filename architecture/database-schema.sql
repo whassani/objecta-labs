@@ -1,4 +1,4 @@
--- AgentForge Database Schema
+-- ObjectaLabs Database Schema
 -- PostgreSQL 15+ with Multi-Tenant Support
 
 -- Enable UUID extension
@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Each organization is an isolated tenant with their own data
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    slug VARCHAR(100) UNIQUE NOT NULL, -- For subdomain: {slug}.agentforge.com
+    slug VARCHAR(100) UNIQUE NOT NULL, -- For subdomain: {slug}.objecta-labs.com
     name VARCHAR(255) NOT NULL,
     plan VARCHAR(50) NOT NULL DEFAULT 'free', -- free, starter, professional, business, enterprise
     status VARCHAR(50) NOT NULL DEFAULT 'active', -- active, suspended, canceled

@@ -1,4 +1,4 @@
-# Next Steps - Getting Started with AgentForge
+# Next Steps - Getting Started with ObjectaLabs
 
 Congratulations! You now have a comprehensive foundation for your AI agent SaaS company. Here's what to do next.
 
@@ -386,4 +386,4 @@ Building a SaaS company is a marathon, not a sprint. Focus on:
 
 You have everything you need to get started. Now it's time to execute!
 
-**Good luck building AgentForge! 🚀**
+**Good luck building ObjectaLabs! 🚀**

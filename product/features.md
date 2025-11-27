@@ -1,4 +1,4 @@
-# AgentForge Feature Specifications
+# ObjectaLabs Feature Specifications
 
 ## Core Features Detail
 
@@ -401,7 +401,7 @@ GET  /api/v1/agents/{agent_id}/conversations/{conv_id}
 
 ### How to Submit
 1. In-app feedback widget
-2. Email: features@agentforge.com
+2. Email: features@objecta-labs.com
 3. Community forum
 4. Customer advisory board
 

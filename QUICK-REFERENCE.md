@@ -1,4 +1,4 @@
-# 🚀 AgentForge Quick Reference Card
+# 🚀 ObjectaLabs Quick Reference Card
 
 ## Complete Stack at a Glance
 
@@ -62,8 +62,8 @@ GitHub Actions      - CI/CD
 │     Organizations (Tenants)     │
 ├─────────────────────────────────┤
 │                                 │
-│  acme-corp.agentforge.com       │
-│  xyz-inc.agentforge.com         │
+│  acme-corp.objecta-labs.com       │
+│  xyz-inc.objecta-labs.com         │
 │                                 │
 │  Each has:                      │
 │  ├─ Users                       │
@@ -79,10 +79,10 @@ GitHub Actions      - CI/CD
 
 ### URL Structure
 ```
-acme-corp.agentforge.com    - Customer app (Acme Corp tenant)
-app.agentforge.com          - Main login/signup
-admin.agentforge.com        - Admin panel (internal)
-api.agentforge.com          - Public API
+acme-corp.objecta-labs.com    - Customer app (Acme Corp tenant)
+app.objecta-labs.com          - Main login/signup
+admin.objecta-labs.com        - Admin panel (internal)
+api.objecta-labs.com          - Public API
 ```
 
 ---
@@ -97,7 +97,7 @@ ollama pull mistral:7b                 # Pull model
 
 # 2. Clone & setup
 git clone <repo>
-cd agentforge
+cd objecta-labs
 
 # 3. Backend
 cd backend

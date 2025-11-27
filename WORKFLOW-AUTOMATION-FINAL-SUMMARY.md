@@ -247,8 +247,8 @@ The **Complete Automation Stack (Option A)** has been successfully implemented w
 **1. Database Setup**
 ```bash
 cd backend
-psql -U postgres -d agentforge -f src/migrations/create-workflows-tables.sql
-psql -U postgres -d agentforge -f src/migrations/seed-workflow-templates.sql
+psql -U postgres -d objecta-labs -f src/migrations/create-workflows-tables.sql
+psql -U postgres -d objecta-labs -f src/migrations/seed-workflow-templates.sql
 ```
 
 **2. Install Dependencies**

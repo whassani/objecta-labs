@@ -1,8 +1,8 @@
-# AgentForge NestJS Development Guide
+# ObjectaLabs NestJS Development Guide
 
 ## Getting Started with NestJS Backend
 
-This guide will help you set up your NestJS backend development environment for AgentForge.
+This guide will help you set up your NestJS backend development environment for ObjectaLabs.
 
 ## Prerequisites
 
@@ -30,8 +30,8 @@ This guide will help you set up your NestJS backend development environment for 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-org/agentforge.git
-cd agentforge
+git clone https://github.com/your-org/objecta-labs.git
+cd objecta-labs
 ```
 
 ### 2. Backend Setup
@@ -74,7 +74,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
-DB_DATABASE=agentforge_dev
+DB_DATABASE=objecta-labs_dev
 
 # Redis
 REDIS_HOST=localhost
@@ -96,7 +96,7 @@ ANTHROPIC_API_KEY=your-anthropic-key
 # Pinecone
 PINECONE_API_KEY=your-pinecone-key
 PINECONE_ENVIRONMENT=us-west1-gcp
-PINECONE_INDEX=agentforge
+PINECONE_INDEX=objecta-labs
 
 # Stripe
 STRIPE_SECRET_KEY=sk_test_your-stripe-key
@@ -106,11 +106,11 @@ STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
-S3_BUCKET=agentforge-documents
+S3_BUCKET=objecta-labs-documents
 
 # Email (SendGrid)
 SENDGRID_API_KEY=your-sendgrid-key
-FROM_EMAIL=noreply@agentforge.com
+FROM_EMAIL=noreply@objecta-labs.com
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000

@@ -1,4 +1,4 @@
-# AgentForge MVP Specification
+# ObjectaLabs MVP Specification
 
 ## MVP Philosophy
 
@@ -293,9 +293,9 @@
 
 **Code Snippet**:
 ```html
-<script src="https://cdn.agentforge.com/widget.js"></script>
+<script src="https://cdn.objecta-labs.com/widget.js"></script>
 <script>
-  AgentForge.init({
+  ObjectaLabs.init({
     agentId: 'agent_123456',
     position: 'bottom-right',
     primaryColor: '#4F46E5'
@@ -415,7 +415,7 @@
 - 10 documents (100MB total)
 - GPT-3.5-turbo only
 - Community support
-- AgentForge branding
+- ObjectaLabs branding
 - Price: $0
 
 **Starter**:
@@ -500,7 +500,7 @@
 
 **Options**:
 - Help Center (link to docs)
-- Email support (support@agentforge.com)
+- Email support (support@objecta-labs.com)
 - Feature requests (link to feedback board)
 
 **Contact Form**:

@@ -1,10 +1,10 @@
-# AgentForge Admin Platform Specification
+# ObjectaLabs Admin Platform Specification
 
 ## Overview
 
-The **Admin Platform** is an internal tool for AgentForge team members to manage, monitor, and support the entire platform. This is separate from the customer-facing application.
+The **Admin Platform** is an internal tool for ObjectaLabs team members to manage, monitor, and support the entire platform. This is separate from the customer-facing application.
 
-**Access**: Internal team only (admin.agentforge.com)
+**Access**: Internal team only (admin.objecta-labs.com)
 
 ---
 
@@ -70,7 +70,7 @@ The **Admin Platform** is an internal tool for AgentForge team members to manage
 **Metrics at a Glance**:
 ```
 ┌─────────────────────────────────────────────────────┐
-│              AgentForge Admin Dashboard             │
+│              ObjectaLabs Admin Dashboard             │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  📊 Platform Health                                 │
@@ -137,7 +137,7 @@ The **Admin Platform** is an internal tool for AgentForge team members to manage
 **Organization Row Display**:
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ 🏢 Acme Corp (acme-corp.agentforge.com)                      │
+│ 🏢 Acme Corp (acme-corp.objecta-labs.com)                      │
 │ Plan: Professional | Status: ✅ Active | MRR: $299           │
 │ Signup: 45 days ago | Last Active: 2 hours ago               │
 │ Users: 3/5 | Agents: 7/10 | Messages: 24,567/50,000         │
@@ -151,7 +151,7 @@ The **Admin Platform** is an internal tool for AgentForge team members to manage
 **Overview Tab**:
 ```
 Organization: Acme Corp
-Subdomain: acme-corp.agentforge.com
+Subdomain: acme-corp.objecta-labs.com
 Status: Active
 Created: 2024-03-15
 
@@ -908,7 +908,7 @@ export class AdminModule {}
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  🏢 AgentForge Admin                    🔔 ⚙️ 👤 John    │
+│  🏢 ObjectaLabs Admin                    🔔 ⚙️ 👤 John    │
 ├──────────────────────────────────────────────────────────┤
 │                                                           │
 │  [Dashboard] [Users] [Agents] [Support] [Analytics]      │
@@ -928,10 +928,10 @@ export class AdminModule {}
 ## 18. Access URL Structure
 
 **URLs**:
-- Main App: `app.agentforge.com` (customers)
-- Admin Panel: `admin.agentforge.com` (internal team)
-- API: `api.agentforge.com` (public API)
-- Admin API: `admin-api.agentforge.com` (admin backend)
+- Main App: `app.objecta-labs.com` (customers)
+- Admin Panel: `admin.objecta-labs.com` (internal team)
+- API: `api.objecta-labs.com` (public API)
+- Admin API: `admin-api.objecta-labs.com` (admin backend)
 
 ---
 

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { EmailService } from '../email/email.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
@@ -14,7 +15,10 @@ export class BackupService {
   private readonly backupDir: string;
   private readonly retentionDays: number;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private emailService: EmailService,
+  ) {
     this.backupDir = this.configService.get('BACKUP_DIR', './backups');
     this.retentionDays = this.configService.get('BACKUP_RETENTION_DAYS', 30);
     
@@ -41,7 +45,23 @@ export class BackupService {
       this.logger.log('Scheduled backup completed successfully');
     } catch (error) {
       this.logger.error('Scheduled backup failed:', error);
-      // TODO: Send alert email
+      
+      // Send alert email to admin
+      const adminEmail = this.configService.get('ADMIN_EMAIL');
+      if (adminEmail) {
+        try {
+          await this.emailService.sendBackupAlert({
+            adminEmail,
+            timestamp: new Date().toISOString(),
+            databaseName: this.configService.get('DATABASE_NAME', 'objecta-labs'),
+            errorMessage: error.message || error.toString(),
+          });
+          
+          this.logger.log(`Backup failure alert sent to ${adminEmail}`);
+        } catch (emailError) {
+          this.logger.error(`Failed to send backup alert email: ${emailError.message}`);
+        }
+      }
     }
   }
 

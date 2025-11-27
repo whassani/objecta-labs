@@ -1,8 +1,8 @@
-# AgentForge Platform Overview
+# ObjectaLabs Platform Overview
 
-## What is AgentForge?
+## What is ObjectaLabs?
 
-AgentForge is a comprehensive SaaS platform designed to democratize AI agent creation. We enable businesses to build, deploy, and manage customized AI agents without requiring extensive technical expertise or AI knowledge.
+ObjectaLabs is a comprehensive SaaS platform designed to democratize AI agent creation. We enable businesses to build, deploy, and manage customized AI agents without requiring extensive technical expertise or AI knowledge.
 
 ## Core Value Proposition
 
