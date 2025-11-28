@@ -55,4 +55,22 @@ export class ConversationsController {
     }
     return this.conversationsService.remove(id, req.user.organizationId);
   }
+
+  @Get('metrics/total')
+  @ApiOperation({ summary: 'Get user total token usage' })
+  async getTotalMetrics(@Request() req) {
+    return this.conversationsService.getUserTotalMetrics(
+      req.user.id,
+      req.user.organizationId
+    );
+  }
+
+  @Get(':id/metrics')
+  @ApiOperation({ summary: 'Get conversation token usage stats' })
+  async getConversationMetrics(@Param('id') conversationId: string, @Request() req) {
+    return this.conversationsService.getConversationMetrics(
+      conversationId,
+      req.user.organizationId
+    );
+  }
 }

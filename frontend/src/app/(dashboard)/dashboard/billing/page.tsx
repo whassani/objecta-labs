@@ -1,261 +1,330 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, Check, Zap, Crown } from 'lucide-react';
 
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  interval: string;
-  features: {
-    agents: number;
-    messagesPerMonth: number;
-    users: number;
-    storage: number;
-    knowledgeBase: boolean;
-    workflows: boolean;
-    fineTuning?: boolean;
-    support: string;
+interface BillingData {
+  summary: {
+    totalTokens: number;
+    totalCost: number;
+    totalMessages: number;
+    totalConversations: number;
+    avgTokensPerMessage: number;
+    avgCostPerMessage: number;
   };
+  usageByDay: Array<{
+    date: string;
+    totalTokens: number;
+    promptTokens: number;
+    completionTokens: number;
+    cost: number;
+    messageCount: number;
+  }>;
+  usageByAgent: Array<{
+    agentId: string;
+    agentName: string;
+    totalTokens: number;
+    cost: number;
+    messageCount: number;
+    conversationCount: number;
+  }>;
+  usageByModel: Array<{
+    model: string;
+    totalTokens: number;
+    cost: number;
+    messageCount: number;
+    avgTokensPerMessage: number;
+  }>;
+  topConversations: Array<{
+    conversationId: string;
+    title: string;
+    totalTokens: number;
+    cost: number;
+    messageCount: number;
+  }>;
 }
 
-interface Subscription {
-  id: string;
-  plan: string;
-  status: string;
-  currentPeriodEnd: string;
-  cancelAtPeriodEnd: boolean;
-}
+type Period = 'today' | 'week' | 'month' | 'year';
 
 export default function BillingPage() {
-  const router = useRouter();
-  const [plans, setPlans] = useState<Record<string, Plan>>({});
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [period, setPeriod] = useState<Period>('month');
+  const [data, setData] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    fetchBillingData();
+  }, [period]);
 
-  const loadData = async () => {
+  const fetchBillingData = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const [plansResponse, subResponse] = await Promise.all([
-        api.get('/billing/plans'),
-        api.get('/billing/subscription'),
-      ]);
-      setPlans(plansResponse.data);
-      setSubscription(subResponse.data);
-    } catch (error) {
-      console.error('Failed to load billing data:', error);
+      const token = localStorage.getItem('token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(
+        `${apiUrl}/api/v1/analytics/billing?period=${period}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch billing data');
+      }
+
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      console.error('Error fetching billing data:', err);
+      setError('Failed to load billing data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpgrade = async (planId: string) => {
-    setSelectedPlan(planId);
-    // In a real implementation, you would integrate Stripe Elements here
-    alert(`Upgrade to ${planId} - Stripe integration coming soon!`);
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription?')) return;
-
-    try {
-      await api.delete('/billing/subscription');
-      await loadData();
-    } catch (error) {
-      console.error('Failed to cancel subscription:', error);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-lg text-gray-600">Loading billing data...</div>
+        </div>
       </div>
     );
   }
 
-  const currentPlan = subscription?.plan || 'free';
-  const plansList = Object.values(plans);
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-red-600 text-lg mb-4">{error}</div>
+          <Button onClick={fetchBillingData}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-lg text-gray-600">No billing data available</div>
+          <p className="text-sm text-gray-500 mt-2">
+            Start using AI agents to see your usage and costs here
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-        <p className="text-gray-600 mt-2">Manage your subscription and billing information</p>
-      </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Billing & Usage</h1>
+          <p className="text-gray-600 mt-1">
+            Track your token usage and costs across all AI conversations
+          </p>
+        </div>
 
-      {/* Current Subscription */}
-      {subscription && subscription.plan !== 'free' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Subscription</CardTitle>
-            <CardDescription>Your active plan and billing details</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-lg font-semibold capitalize">{subscription.plan} Plan</p>
-                <p className="text-sm text-gray-600">
-                  Status: <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
-                    {subscription.status}
-                  </Badge>
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold">
-                  ${plans[subscription.plan]?.price || 0}/month
-                </p>
-                <p className="text-sm text-gray-600">
-                  Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            {subscription.cancelAtPeriodEnd && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
-                <p className="text-sm text-yellow-800">
-                  Your subscription will be canceled at the end of the current billing period.
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-4">
-              <Button variant="outline" onClick={() => router.push('/dashboard/billing/invoices')}>
-                View Invoices
-              </Button>
-              <Button variant="outline" onClick={() => router.push('/dashboard/billing/usage')}>
-                View Usage
-              </Button>
-              {!subscription.cancelAtPeriodEnd && (
-                <Button variant="destructive" onClick={handleCancelSubscription}>
-                  Cancel Subscription
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Pricing Plans */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">Available Plans</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plansList.map((plan) => {
-            const isCurrent = plan.id === currentPlan;
-            const isUpgrade = plansList.findIndex(p => p.id === currentPlan) < plansList.findIndex(p => p.id === plan.id);
-
-            return (
-              <Card key={plan.id} className={isCurrent ? 'border-blue-600 border-2' : ''}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      {plan.id === 'free' && <Zap className="h-5 w-5" />}
-                      {plan.id === 'starter' && <CreditCard className="h-5 w-5" />}
-                      {plan.id === 'professional' && <Check className="h-5 w-5" />}
-                      {plan.id === 'enterprise' && <Crown className="h-5 w-5" />}
-                      {plan.name}
-                    </CardTitle>
-                    {isCurrent && <Badge>Current</Badge>}
-                  </div>
-                  <CardDescription>
-                    {plan.price === 0 ? (
-                      <span className="text-2xl font-bold">Free</span>
-                    ) : plan.price === null ? (
-                      <span className="text-2xl font-bold">Custom</span>
-                    ) : (
-                      <span className="text-2xl font-bold">${plan.price}<span className="text-sm font-normal">/mo</span></span>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      {plan.features.agents === -1 ? 'Unlimited' : plan.features.agents} agents
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      {plan.features.messagesPerMonth === -1 
-                        ? 'Unlimited messages' 
-                        : `${plan.features.messagesPerMonth.toLocaleString()} messages/mo`}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      {plan.features.users === -1 ? 'Unlimited' : plan.features.users} users
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      {plan.features.storage === -1 
-                        ? 'Unlimited storage' 
-                        : `${plan.features.storage} MB storage`}
-                    </li>
-                    {plan.features.knowledgeBase && (
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        Knowledge Base
-                      </li>
-                    )}
-                    {plan.features.workflows && (
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        Workflows
-                      </li>
-                    )}
-                    {plan.features.fineTuning && (
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-600" />
-                        Fine-tuning
-                      </li>
-                    )}
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
-                      {plan.features.support} support
-                    </li>
-                  </ul>
-
-                  {!isCurrent && (
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleUpgrade(plan.id)}
-                      disabled={plan.id === 'free' || selectedPlan === plan.id}
-                      variant={isUpgrade ? 'default' : 'outline'}
-                    >
-                      {plan.id === 'free' ? 'Current Plan' : isUpgrade ? 'Upgrade' : 'Downgrade'}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Period Selector */}
+        <div className="flex gap-2 flex-wrap">
+          {(['today', 'week', 'month', 'year'] as Period[]).map((p) => (
+            <Button
+              key={p}
+              variant={period === p ? 'default' : 'outline'}
+              onClick={() => setPeriod(p)}
+              className="capitalize"
+            >
+              {p}
+            </Button>
+          ))}
         </div>
       </div>
 
-      {/* Additional Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600">
-            Contact our sales team for custom enterprise plans or if you have questions about billing.
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <div className="text-sm font-medium text-blue-900">Total Cost</div>
+          <div className="text-3xl font-bold mt-2 text-blue-900">
+            ${data.summary.totalCost.toFixed(2)}
+          </div>
+          <div className="text-xs text-blue-700 mt-1">
+            {data.summary.totalMessages} messages
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <div className="text-sm font-medium text-green-900">Total Tokens</div>
+          <div className="text-3xl font-bold mt-2 text-green-900">
+            {data.summary.totalTokens.toLocaleString()}
+          </div>
+          <div className="text-xs text-green-700 mt-1">
+            Avg {data.summary.avgTokensPerMessage.toLocaleString()} per message
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <div className="text-sm font-medium text-purple-900">Avg Cost/Message</div>
+          <div className="text-3xl font-bold mt-2 text-purple-900">
+            ${data.summary.avgCostPerMessage.toFixed(4)}
+          </div>
+          <div className="text-xs text-purple-700 mt-1">
+            Per message average
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <div className="text-sm font-medium text-orange-900">Conversations</div>
+          <div className="text-3xl font-bold mt-2 text-orange-900">
+            {data.summary.totalConversations}
+          </div>
+          <div className="text-xs text-orange-700 mt-1">
+            Total conversations
+          </div>
+        </Card>
+      </div>
+
+      {/* Usage by Day Chart */}
+      {data.usageByDay.length > 0 && (
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Daily Usage</h2>
+          <div className="space-y-2">
+            {data.usageByDay.map((day) => (
+              <div
+                key={day.date}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {new Date(day.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {day.messageCount} messages • {day.promptTokens.toLocaleString()} prompt + {day.completionTokens.toLocaleString()} completion
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">${day.cost.toFixed(2)}</div>
+                  <div className="text-sm text-gray-600">
+                    {day.totalTokens.toLocaleString()} tokens
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Usage by Agent */}
+      {data.usageByAgent.length > 0 && (
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Usage by Agent</h2>
+          <div className="space-y-2">
+            {data.usageByAgent.map((agent) => (
+              <div
+                key={agent.agentId}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{agent.agentName}</div>
+                  <div className="text-sm text-gray-600">
+                    {agent.messageCount} messages • {agent.conversationCount} conversations
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">${agent.cost.toFixed(2)}</div>
+                  <div className="text-sm text-gray-600">
+                    {agent.totalTokens.toLocaleString()} tokens
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Usage by Model */}
+      {data.usageByModel.length > 0 && (
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Usage by Model</h2>
+          <div className="space-y-2">
+            {data.usageByModel.map((model) => (
+              <div
+                key={model.model}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{model.model}</div>
+                  <div className="text-sm text-gray-600">
+                    {model.messageCount} messages • Avg {model.avgTokensPerMessage.toLocaleString()} tokens
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">${model.cost.toFixed(2)}</div>
+                  <div className="text-sm text-gray-600">
+                    {model.totalTokens.toLocaleString()} tokens
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Top Conversations */}
+      {data.topConversations.length > 0 && (
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Top Conversations by Cost</h2>
+          <div className="space-y-2">
+            {data.topConversations.map((conv, index) => (
+              <div
+                key={conv.conversationId}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-semibold text-sm">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{conv.title}</div>
+                    <div className="text-sm text-gray-600">
+                      {conv.messageCount} messages
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900">${conv.cost.toFixed(2)}</div>
+                  <div className="text-sm text-gray-600">
+                    {conv.totalTokens.toLocaleString()} tokens
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {data.usageByDay.length === 0 && (
+        <Card className="p-12 text-center">
+          <div className="text-gray-400 text-6xl mb-4">📊</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            No usage data for this period
+          </h3>
+          <p className="text-gray-600">
+            Start conversations with AI agents to see your usage and costs here
           </p>
-          <Button variant="outline" className="mt-4">
-            Contact Sales
-          </Button>
-        </CardContent>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

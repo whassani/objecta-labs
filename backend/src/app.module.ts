@@ -34,9 +34,11 @@ import { HealthModule } from './health/health.module';
       port: parseInt(process.env.DATABASE_PORT) || 5432,
       username: process.env.DATABASE_USER || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'postgres',
-      database: process.env.DATABASE_NAME || 'objecta-labs',
+      database: process.env.DATABASE_NAME || 'objecta_labs',
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV === 'development', // Disable in production
+      synchronize: true, // Disabled - use migrations instead
+      logging: true,
+      
     }),
     EmailModule, // Global email service
     AuthModule,

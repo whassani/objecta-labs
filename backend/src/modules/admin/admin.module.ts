@@ -14,6 +14,8 @@ import { SettingsController } from './settings.controller';
 import { SettingsService } from './services/settings.service';
 import { SecretsController } from './secrets.controller';
 import { SecretsVaultService } from './services/secrets-vault.service';
+import { SubscriptionPlansController } from './subscription-plans.controller';
+import { SubscriptionPlansService } from './services/subscription-plans.service';
 import { PlatformUser } from './entities/platform-user.entity';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { AdminAuditLog } from './entities/admin-audit-log.entity';
@@ -28,6 +30,7 @@ import { SecretsRotationHistory } from './entities/secrets-rotation-history.enti
 import { Organization } from '../organizations/entities/organization.entity';
 import { User } from '../auth/entities/user.entity';
 import { Subscription } from '../billing/entities/subscription.entity';
+import { SubscriptionPlan } from '../billing/entities/subscription-plan.entity';
 
 @Module({
   imports: [
@@ -39,6 +42,7 @@ import { Subscription } from '../billing/entities/subscription.entity';
       AdminAuditLog,
       User,
       Subscription,
+      SubscriptionPlan,
       Organization,
       SystemSetting,
       FeatureFlag,
@@ -62,6 +66,7 @@ import { Subscription } from '../billing/entities/subscription.entity';
     UserManagementController, 
     SettingsController,
     SecretsController,
+    SubscriptionPlansController,
   ],
   providers: [
     AdminService, 
@@ -70,6 +75,7 @@ import { Subscription } from '../billing/entities/subscription.entity';
     UserManagementService, 
     SettingsService,
     SecretsVaultService,
+    SubscriptionPlansService,
   ],
   exports: [
     AdminService, 

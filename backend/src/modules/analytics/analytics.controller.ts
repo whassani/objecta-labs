@@ -12,10 +12,11 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { MetricsService } from './metrics.service';
 import { TrackEventDto, AnalyticsQueryDto, AgentAnalyticsQueryDto } from './dto/analytics.dto';
+import { BillingAnalyticsQueryDto } from './dto/billing-analytics.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('analytics')
-@Controller('api/v1/analytics')
+@Controller('v1/analytics')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class AnalyticsController {
@@ -128,6 +129,19 @@ export class AnalyticsController {
       organizationId,
       startDate,
       endDate,
+    );
+  }
+
+  @Get('billing')
+  @ApiOperation({ summary: 'Get billing analytics (token usage and costs)' })
+  async getBillingAnalytics(
+    @Request() req,
+    @Query() query: BillingAnalyticsQueryDto,
+  ) {
+    return this.analyticsService.getBillingAnalytics(
+      req.user.organizationId,
+      req.user.id,
+      query,
     );
   }
 }
