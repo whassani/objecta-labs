@@ -8,6 +8,21 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Organization } from '../../organizations/entities/organization.entity';
+import { SubscriptionPlan } from './subscription-plan.entity';
+
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  TRIALING = 'trialing',
+  PAST_DUE = 'past_due',
+  CANCELED = 'canceled',
+  INCOMPLETE = 'incomplete',
+  INCOMPLETE_EXPIRED = 'incomplete_expired',
+}
+
+export enum BillingCycle {
+  MONTHLY = 'monthly',
+  YEARLY = 'yearly',
+}
 
 @Entity('subscriptions')
 export class Subscription {
@@ -21,6 +36,13 @@ export class Subscription {
   @JoinColumn({ name: 'organization_id' })
   organization: Organization;
 
+  @Column({ name: 'plan_id', nullable: true })
+  planId: string;
+
+  @ManyToOne(() => SubscriptionPlan)
+  @JoinColumn({ name: 'plan_id' })
+  subscriptionPlan: SubscriptionPlan;
+
   @Column({ name: 'stripe_customer_id', unique: true, nullable: true })
   stripeCustomerId: string;
 
@@ -28,10 +50,13 @@ export class Subscription {
   stripeSubscriptionId: string;
 
   @Column({ default: 'free' })
-  plan: string; // free, starter, professional, enterprise
+  plan: string; // Legacy field - kept for backward compatibility
 
-  @Column({ default: 'active' })
-  status: string; // active, canceled, past_due, trialing
+  @Column({ type: 'varchar', default: SubscriptionStatus.ACTIVE })
+  status: SubscriptionStatus;
+
+  @Column({ name: 'billing_cycle', type: 'varchar', default: BillingCycle.MONTHLY })
+  billingCycle: BillingCycle;
 
   @Column({ name: 'current_period_start', nullable: true })
   currentPeriodStart: Date;
@@ -44,6 +69,21 @@ export class Subscription {
 
   @Column({ name: 'trial_end', nullable: true })
   trialEnd: Date;
+
+  @Column({ name: 'usage_tokens_current_period', default: 0 })
+  usageTokensCurrentPeriod: number;
+
+  @Column({ name: 'usage_reset_at', nullable: true })
+  usageResetAt: Date;
+
+  @Column({ name: 'discount_percentage', default: 0 })
+  discountPercentage: number;
+
+  @Column({ name: 'discount_end_date', nullable: true })
+  discountEndDate: Date;
+
+  @Column({ name: 'admin_notes', nullable: true, type: 'text' })
+  adminNotes: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

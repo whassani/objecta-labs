@@ -1,7 +1,11 @@
 import * as React from "react"
 
-const Tabs = ({ children, defaultValue, className = '' }: any) => {
-  const [value, setValue] = React.useState(defaultValue);
+const Tabs = ({ children, defaultValue, value: controlledValue, onValueChange, className = '' }: any) => {
+  const [internalValue, setInternalValue] = React.useState(defaultValue || 'basic');
+  
+  // Support both controlled and uncontrolled usage
+  const value = controlledValue !== undefined ? controlledValue : internalValue;
+  const setValue = onValueChange || setInternalValue;
 
   return (
     <div className={className}>
@@ -31,6 +35,7 @@ const TabsTrigger = ({ children, value, currentValue, onValueChange, className =
   
   return (
     <button
+      type="button"
       className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 ${
         isActive ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
       } ${className}`}

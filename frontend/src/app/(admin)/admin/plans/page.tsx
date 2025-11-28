@@ -26,7 +26,7 @@ export default function SubscriptionPlansPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="p-8 space-y-8">
         <PlansHeader onCreatePlan={() => setShowCreateModal(true)} />
         <PlansLoading />
       </div>
@@ -35,7 +35,7 @@ export default function SubscriptionPlansPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+      <div className="p-8 space-y-8">
         <PlansHeader onCreatePlan={() => setShowCreateModal(true)} />
         <PlansError error={error} onRetry={refetch} />
       </div>
@@ -43,7 +43,7 @@ export default function SubscriptionPlansPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-8">
       <PlansHeader onCreatePlan={() => setShowCreateModal(true)} />
       
       <PlansGrid

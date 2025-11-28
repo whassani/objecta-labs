@@ -75,6 +75,29 @@ export const workspacesApi = {
   create: (data: any) => api.post('/workspaces', data),
   update: (id: string, data: any) => api.put(`/workspaces/${id}`, data),
   delete: (id: string) => api.delete(`/workspaces/${id}`),
+  
+  // Members
+  getMembers: (id: string) => api.get(`/workspaces/${id}/members`),
+  inviteMember: (id: string, data: { email: string; role?: string }) => 
+    api.post(`/workspaces/${id}/members/invite`, data),
+  getInvitations: (id: string) => api.get(`/workspaces/${id}/members/invitations`),
+  cancelInvitation: (id: string, invitationId: string) => 
+    api.post(`/workspaces/${id}/members/invitations/${invitationId}/cancel`),
+  acceptInvitation: (token: string) => api.post('/workspaces/members/accept-invitation', { token }),
+  updateMemberRole: (id: string, memberId: string, role: string) => 
+    api.put(`/workspaces/${id}/members/${memberId}`, { role }),
+  removeMember: (id: string, memberId: string) => api.delete(`/workspaces/${id}/members/${memberId}`),
+  
+  // Analytics
+  getStats: (id: string) => api.get(`/workspaces/${id}/analytics/stats`),
+  getActivity: (id: string, days?: number) => 
+    api.get(`/workspaces/${id}/analytics/activity`, { params: { days } }),
+  getActivityByType: (id: string, days?: number) => 
+    api.get(`/workspaces/${id}/analytics/activity-by-type`, { params: { days } }),
+  getDailyActivity: (id: string, days?: number) => 
+    api.get(`/workspaces/${id}/analytics/daily-activity`, { params: { days } }),
+  getMostActiveUsers: (id: string, days?: number, limit?: number) => 
+    api.get(`/workspaces/${id}/analytics/most-active-users`, { params: { days, limit } }),
 }
 
 // Agents API

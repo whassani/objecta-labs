@@ -51,9 +51,9 @@ export default function PlanCard({
   };
 
   return (
-    <Card className="p-6 hover:shadow-lg transition-shadow">
+    <Card className="p-7 hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200">
       {/* Plan Header */}
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-5">
         <div>
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-bold">{plan.name}</h3>
@@ -77,10 +77,10 @@ export default function PlanCard({
       </div>
 
       {/* Description */}
-      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{plan.description}</p>
+      <p className="text-gray-600 text-sm mb-5 line-clamp-2 leading-relaxed">{plan.description}</p>
 
       {/* Pricing */}
-      <div className="mb-4">
+      <div className="mb-5">
         <div className="text-3xl font-bold text-gray-900">
           ${plan.priceMonthly}
           <span className="text-base font-normal text-gray-600">/month</span>
@@ -97,7 +97,7 @@ export default function PlanCard({
 
       {/* Statistics */}
       {statistics && (
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-3 mb-4 border border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 mb-5 border border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <ChartBarIcon className="h-4 w-4 text-gray-600" />
             <span className="text-sm font-medium text-gray-700">Usage Statistics</span>
@@ -122,22 +122,22 @@ export default function PlanCard({
       )}
 
       {/* Key Limits */}
-      <div className="space-y-2 mb-4">
-        <div className="text-sm font-medium text-gray-700 mb-2">Key Limits:</div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="flex justify-between bg-gray-50 px-2 py-1 rounded">
+      <div className="space-y-3 mb-5">
+        <div className="text-sm font-medium text-gray-700 mb-3">Key Limits:</div>
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
             <span className="text-gray-600">Agents:</span>
             <span className="font-semibold">{formatLimit(plan.limits.maxAgents)}</span>
           </div>
-          <div className="flex justify-between bg-gray-50 px-2 py-1 rounded">
+          <div className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
             <span className="text-gray-600">Workflows:</span>
             <span className="font-semibold">{formatLimit(plan.limits.maxWorkflows)}</span>
           </div>
-          <div className="flex justify-between bg-gray-50 px-2 py-1 rounded">
+          <div className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
             <span className="text-gray-600">Team:</span>
             <span className="font-semibold">{formatLimit(plan.limits.maxTeamMembers)}</span>
           </div>
-          <div className="flex justify-between bg-gray-50 px-2 py-1 rounded">
+          <div className="flex justify-between bg-gray-50 px-3 py-2 rounded-lg">
             <span className="text-gray-600">Tokens/mo:</span>
             <span className="font-semibold">{formatLimit(plan.limits.monthlyTokenLimit)}</span>
           </div>
@@ -146,9 +146,9 @@ export default function PlanCard({
 
       {/* Key Features */}
       {getKeyFeatures().length > 0 && (
-        <div className="space-y-2 mb-4">
-          <div className="text-sm font-medium text-gray-700 mb-2">Key Features:</div>
-          <div className="flex flex-wrap gap-1">
+        <div className="space-y-3 mb-5">
+          <div className="text-sm font-medium text-gray-700 mb-3">Key Features:</div>
+          <div className="flex flex-wrap gap-2">
             {getKeyFeatures().map((feature, idx) => (
               <span key={idx} className={`text-xs px-2 py-1 rounded font-medium ${feature.color}`}>
                 {feature.label}
@@ -159,7 +159,7 @@ export default function PlanCard({
       )}
 
       {/* Actions */}
-      <div className="flex gap-2 pt-4 border-t">
+      <div className="flex gap-3 pt-5 border-t">
         <Button
           variant="outline"
           size="sm"

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { Subscription } from './entities/subscription.entity';
+import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { Invoice } from './entities/invoice.entity';
 import { UsageRecord } from './entities/usage-record.entity';
 import { CreateSubscriptionDto, UpdateSubscriptionDto } from './dto/subscription.dto';
@@ -116,11 +116,12 @@ export class BillingService {
 
     if (!subscription) {
       // Create a free subscription if none exists
-      return this.subscriptionsRepository.save({
+      const freeSubscription = this.subscriptionsRepository.create({
         organizationId,
         plan: 'free',
-        status: 'active',
+        status: SubscriptionStatus.ACTIVE,
       });
+      return this.subscriptionsRepository.save(freeSubscription);
     }
 
     return subscription;
@@ -184,7 +185,7 @@ export class BillingService {
         subscription.stripeCustomerId = stripeCustomerId;
         subscription.stripeSubscriptionId = stripeSubscription.id;
         subscription.plan = dto.planId;
-        subscription.status = stripeSubscription.status;
+        subscription.status = stripeSubscription.status as SubscriptionStatus;
         subscription.currentPeriodStart = new Date((stripeSubscription as any).current_period_start * 1000);
         subscription.currentPeriodEnd = new Date((stripeSubscription as any).current_period_end * 1000);
         subscription.trialEnd = (stripeSubscription as any).trial_end 
@@ -196,7 +197,7 @@ export class BillingService {
           stripeCustomerId,
           stripeSubscriptionId: stripeSubscription.id,
           plan: dto.planId,
-          status: stripeSubscription.status,
+          status: stripeSubscription.status as SubscriptionStatus,
           currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
           currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
           trialEnd: (stripeSubscription as any).trial_end 
@@ -258,7 +259,7 @@ export class BillingService {
         );
 
         subscription.plan = dto.planId;
-        subscription.status = updatedSubscription.status;
+        subscription.status = updatedSubscription.status as SubscriptionStatus;
         subscription.currentPeriodStart = new Date((updatedSubscription as any).current_period_start * 1000);
         subscription.currentPeriodEnd = new Date((updatedSubscription as any).current_period_end * 1000);
       }
@@ -297,7 +298,7 @@ export class BillingService {
     try {
       if (immediate) {
         await this.stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
-        subscription.status = 'canceled';
+        subscription.status = SubscriptionStatus.CANCELED;
         subscription.plan = 'free';
       } else {
         await this.stripe.subscriptions.update(subscription.stripeSubscriptionId, {

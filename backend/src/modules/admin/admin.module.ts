@@ -16,6 +16,9 @@ import { SecretsController } from './secrets.controller';
 import { SecretsVaultService } from './services/secrets-vault.service';
 import { SubscriptionPlansController } from './subscription-plans.controller';
 import { SubscriptionPlansService } from './services/subscription-plans.service';
+import { PermissionsController } from './permissions.controller';
+import { PlatformUsersController } from './platform-users.controller';
+import { LLMSettingsController } from './llm-settings.controller';
 import { PlatformUser } from './entities/platform-user.entity';
 import { SupportTicket } from './entities/support-ticket.entity';
 import { AdminAuditLog } from './entities/admin-audit-log.entity';
@@ -64,9 +67,12 @@ import { SubscriptionPlan } from '../billing/entities/subscription-plan.entity';
     AdminController, 
     AdminAuthController, 
     UserManagementController, 
+    PlatformUsersController,
     SettingsController,
     SecretsController,
     SubscriptionPlansController,
+    PermissionsController,
+    LLMSettingsController,
   ],
   providers: [
     AdminService, 

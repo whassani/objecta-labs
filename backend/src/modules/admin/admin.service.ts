@@ -5,7 +5,7 @@ import { PlatformUser } from './entities/platform-user.entity';
 import { AdminAuditLog } from './entities/admin-audit-log.entity';
 import { Organization } from '../organizations/entities/organization.entity';
 import { User } from '../auth/entities/user.entity';
-import { Subscription } from '../billing/entities/subscription.entity';
+import { Subscription, SubscriptionStatus } from '../billing/entities/subscription.entity';
 
 @Injectable()
 export class AdminService {
@@ -40,13 +40,13 @@ export class AdminService {
       }),
       this.usersRepository.count(),
       this.subscriptionsRepository.count({
-        where: { status: 'active' },
+        where: { status: SubscriptionStatus.ACTIVE },
       }),
     ]);
 
     // Calculate MRR (simplified - would need to sum actual subscription amounts)
     const subscriptions = await this.subscriptionsRepository.find({
-      where: { status: 'active' },
+      where: { status: SubscriptionStatus.ACTIVE },
     });
 
     const mrr = subscriptions.reduce((total, sub) => {

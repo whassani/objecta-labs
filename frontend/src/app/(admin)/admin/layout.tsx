@@ -17,7 +17,8 @@ import {
   ChevronDown,
   Shield,
   Flag,
-  CreditCard
+  CreditCard,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -179,6 +180,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Customers', href: '/admin/customers', icon: Users },
+    { name: 'Permissions', href: '/admin/permissions', icon: Lock },
     { name: 'Subscription Plans', href: '/admin/plans', icon: CreditCard },
     { name: 'Support Tickets', href: '/admin/tickets', icon: Ticket },
     { name: 'Audit Logs', href: '/admin/audit', icon: FileText },

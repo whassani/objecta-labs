@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Stripe from 'stripe';
-import { Subscription } from './entities/subscription.entity';
+import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { Invoice } from './entities/invoice.entity';
 import { User } from '../auth/entities/user.entity';
 import { EmailService } from '../email/email.service';
@@ -117,11 +117,11 @@ export class StripeWebhookController {
       where: { stripeSubscriptionId: stripeSubscription.id },
     });
 
-    const subscriptionData = {
+    const subscriptionData: Partial<Subscription> = {
       organizationId,
       stripeCustomerId: stripeSubscription.customer as string,
       stripeSubscriptionId: stripeSubscription.id,
-      status: stripeSubscription.status,
+      status: stripeSubscription.status as SubscriptionStatus,
       currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
       currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
       cancelAtPeriodEnd: (stripeSubscription as any).cancel_at_period_end,
@@ -132,11 +132,11 @@ export class StripeWebhookController {
 
     if (subscription) {
       Object.assign(subscription, subscriptionData);
+      await this.subscriptionsRepository.save(subscription);
     } else {
       subscription = this.subscriptionsRepository.create(subscriptionData);
+      await this.subscriptionsRepository.save(subscription);
     }
-
-    await this.subscriptionsRepository.save(subscription);
     this.logger.log(`Subscription updated for organization: ${organizationId}`);
   }
 
@@ -146,7 +146,7 @@ export class StripeWebhookController {
     });
 
     if (subscription) {
-      subscription.status = 'canceled';
+      subscription.status = SubscriptionStatus.CANCELED;
       subscription.plan = 'free';
       await this.subscriptionsRepository.save(subscription);
       this.logger.log(`Subscription canceled for organization: ${subscription.organizationId}`);
@@ -255,7 +255,7 @@ export class StripeWebhookController {
     });
 
     if (subscription) {
-      subscription.status = 'past_due';
+      subscription.status = SubscriptionStatus.PAST_DUE;
       await this.subscriptionsRepository.save(subscription);
       this.logger.log(`Subscription marked as past_due for organization: ${organizationId}`);
     }

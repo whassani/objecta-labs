@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SubscriptionPlan } from '../../billing/entities/subscription-plan.entity';
-import { Subscription } from '../../billing/entities/subscription.entity';
+import { Subscription, SubscriptionStatus } from '../../billing/entities/subscription.entity';
 import { CreateSubscriptionPlanDto, UpdateSubscriptionPlanDto } from '../dto/subscription-plan.dto';
 
 @Injectable()
@@ -167,11 +167,11 @@ export class SubscriptionPlansService {
     const plan = await this.findOne(id);
 
     const totalSubscriptions = await this.subscriptionsRepository.count({
-      where: { plan: plan.tier as any },
+      where: { planId: plan.id },
     });
 
     const activeSubscriptions = await this.subscriptionsRepository.count({
-      where: { plan: plan.tier as any, status: 'active' },
+      where: { planId: plan.id, status: SubscriptionStatus.ACTIVE },
     });
 
     const revenue = {

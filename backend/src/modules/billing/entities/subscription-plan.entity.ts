@@ -94,10 +94,10 @@ export class SubscriptionPlan {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ name: 'price_monthly', type: 'decimal', precision: 10, scale: 2, default: 0 })
   priceMonthly: number; // Monthly price in USD
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ name: 'price_yearly', type: 'decimal', precision: 10, scale: 2, default: 0 })
   priceYearly: number; // Yearly price in USD (usually discounted)
 
   @Column({ type: 'jsonb' })
@@ -106,13 +106,13 @@ export class SubscriptionPlan {
   @Column({ type: 'jsonb' })
   features: PlanFeatures;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @Column({ default: false })
+  @Column({ name: 'is_popular', default: false })
   isPopular: boolean; // Highlight as "Most Popular"
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number; // Display order
 
   @Column({ name: 'stripe_price_id_monthly', nullable: true })

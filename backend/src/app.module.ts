@@ -36,7 +36,7 @@ import { HealthModule } from './health/health.module';
       password: process.env.DATABASE_PASSWORD || 'postgres',
       database: process.env.DATABASE_NAME || 'objecta_labs',
       autoLoadEntities: true,
-      synchronize: true, // Disabled - use migrations instead
+      synchronize: false, // Disabled - use migrations instead
       logging: true,
       
     }),
