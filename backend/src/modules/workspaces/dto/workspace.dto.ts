@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsObject } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateWorkspaceDto {
@@ -15,6 +15,11 @@ export class CreateWorkspaceDto {
   @IsOptional()
   @IsString()
   icon?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsObject()
+  settings?: any;
 }
 
 export class UpdateWorkspaceDto {
@@ -32,6 +37,11 @@ export class UpdateWorkspaceDto {
   @IsOptional()
   @IsString()
   icon?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsObject()
+  settings?: any;
 
   @ApiProperty({ required: false })
   @IsOptional()

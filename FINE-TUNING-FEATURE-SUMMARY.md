@@ -246,7 +246,7 @@ OPENAI_API_KEY=sk-...  # Required for OpenAI fine-tuning
 ### Database Migration
 ```bash
 # Run the migration
-psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql
+psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql
 ```
 
 ## 🧪 Testing Checklist

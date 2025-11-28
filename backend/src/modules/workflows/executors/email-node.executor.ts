@@ -1,10 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseNodeExecutor, NodeExecutionResult } from './base-node.executor';
 import { ExecutionContext } from '../workflow-executor.service';
+import { EmailService } from '../../email/email.service';
 
 @Injectable()
 export class EmailNodeExecutor extends BaseNodeExecutor {
   private readonly logger = new Logger(EmailNodeExecutor.name);
+
+  constructor(private emailService: EmailService) {
+    super();
+  }
 
   async execute(node: any, context: ExecutionContext): Promise<NodeExecutionResult> {
     try {
@@ -42,35 +47,50 @@ export class EmailNodeExecutor extends BaseNodeExecutor {
       this.logger.log(`Sending email to: ${interpolatedTo}`);
       this.logger.log(`Subject: ${interpolatedSubject}`);
 
-      // TODO: Integrate with actual email service (SendGrid, AWS SES, Nodemailer, etc.)
-      // For now, return a placeholder response
-      // 
-      // Example integration:
-      // const emailService = this.emailService;
-      // await emailService.send({
-      //   to: interpolatedTo,
-      //   subject: interpolatedSubject,
-      //   body: interpolatedBody,
-      //   cc: interpolatedCc,
-      //   bcc: interpolatedBcc,
-      //   attachments
-      // });
+      // Send email using the email service
+      try {
+        await this.emailService.sendNotification({
+          email: interpolatedTo,
+          title: interpolatedSubject,
+          message: interpolatedBody,
+          metadata: {
+            source: 'workflow',
+            cc: interpolatedCc,
+            bcc: interpolatedBcc,
+          },
+        });
 
-      return {
-        success: true,
-        data: {
-          to: interpolatedTo,
-          subject: interpolatedSubject,
-          body: interpolatedBody,
-          cc: interpolatedCc,
-          bcc: interpolatedBcc,
-          sent: true,
-          sentAt: new Date().toISOString(),
-          messageId: `msg_${Date.now()}`, // Placeholder
-          status: 'Email sent successfully (placeholder)',
-          note: 'Email service integration pending. Add SendGrid, AWS SES, or Nodemailer.',
-        },
-      };
+        this.logger.log(`Email sent successfully to ${interpolatedTo}`);
+
+        return {
+          success: true,
+          data: {
+            to: interpolatedTo,
+            subject: interpolatedSubject,
+            body: interpolatedBody,
+            cc: interpolatedCc,
+            bcc: interpolatedBcc,
+            sent: true,
+            sentAt: new Date().toISOString(),
+            provider: 'sendgrid',
+            status: 'Email sent successfully',
+          },
+        };
+      } catch (emailError) {
+        this.logger.error(`Email sending failed: ${emailError.message}`);
+        
+        // Return success: false but don't throw to allow workflow to continue
+        return {
+          success: false,
+          error: `Failed to send email: ${emailError.message}`,
+          data: {
+            to: interpolatedTo,
+            subject: interpolatedSubject,
+            sent: false,
+            sentAt: new Date().toISOString(),
+          },
+        };
+      }
     } catch (error) {
       this.logger.error(`Email sending failed: ${error.message}`, error.stack);
       return {

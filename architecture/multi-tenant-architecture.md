@@ -1,8 +1,8 @@
-# AgentForge Multi-Tenant Cloud-Native Architecture
+# ObjectaLabs Multi-Tenant Cloud-Native Architecture
 
 ## Overview
 
-AgentForge is built as a **multi-tenant SaaS platform** with **cloud-native** architecture principles for scalability, isolation, and cost-efficiency.
+ObjectaLabs is built as a **multi-tenant SaaS platform** with **cloud-native** architecture principles for scalability, isolation, and cost-efficiency.
 
 ---
 
@@ -280,21 +280,21 @@ CMD ["node", "dist/main.js"]
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: agentforge-api
-  namespace: agentforge
+  name: objecta-labs-api
+  namespace: objecta-labs
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: agentforge-api
+      app: objecta-labs-api
   template:
     metadata:
       labels:
-        app: agentforge-api
+        app: objecta-labs-api
     spec:
       containers:
       - name: api
-        image: agentforge/api:latest
+        image: objecta-labs/api:latest
         ports:
         - containerPort: 4000
         env:
@@ -336,13 +336,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: agentforge-api-hpa
-  namespace: agentforge
+  name: objecta-labs-api-hpa
+  namespace: objecta-labs
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: agentforge-api
+    name: objecta-labs-api
   minReplicas: 3
   maxReplicas: 50
   metrics:
@@ -378,11 +378,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: agentforge-api
-  namespace: agentforge
+  name: objecta-labs-api
+  namespace: objecta-labs
 spec:
   selector:
-    app: agentforge-api
+    app: objecta-labs-api
   ports:
   - protocol: TCP
     port: 80
@@ -395,8 +395,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: agentforge-ingress
-  namespace: agentforge
+  name: objecta-labs-ingress
+  namespace: objecta-labs
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/rate-limit: "100"
@@ -404,18 +404,18 @@ spec:
   ingressClassName: nginx
   tls:
   - hosts:
-    - api.agentforge.com
-    - "*.agentforge.com"
-    secretName: agentforge-tls
+    - api.objecta-labs.com
+    - "*.objecta-labs.com"
+    secretName: objecta-labs-tls
   rules:
-  - host: api.agentforge.com
+  - host: api.objecta-labs.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: agentforge-api
+            name: objecta-labs-api
             port:
               number: 80
 ```
@@ -656,13 +656,13 @@ export class TenantProvisioningService {
 ### Subdomain-Based Multi-Tenancy
 
 **URL Pattern**:
-- `acme.agentforge.com` - Acme Corp's instance
-- `xyz.agentforge.com` - XYZ Inc's instance
-- `app.agentforge.com` - Main login page
+- `acme.objecta-labs.com` - Acme Corp's instance
+- `xyz.objecta-labs.com` - XYZ Inc's instance
+- `app.objecta-labs.com` - Main login page
 
 **DNS Configuration**:
 ```
-*.agentforge.com → Load Balancer (Ingress)
+*.objecta-labs.com → Load Balancer (Ingress)
 ```
 
 **Tenant Resolution**:
@@ -676,7 +676,7 @@ export class TenantResolutionMiddleware implements NestMiddleware {
 
   async use(req: Request, res: Response, next: NextFunction) {
     // Extract subdomain from hostname
-    const hostname = req.hostname; // acme.agentforge.com
+    const hostname = req.hostname; // acme.objecta-labs.com
     const subdomain = hostname.split('.')[0];
     
     if (subdomain && subdomain !== 'app' && subdomain !== 'api') {
@@ -811,10 +811,10 @@ async chat(
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: agentforge-api
+  name: objecta-labs-api
 spec:
   hosts:
-  - api.agentforge.com
+  - api.objecta-labs.com
   http:
   - match:
     - headers:
@@ -822,12 +822,12 @@ spec:
           exact: enterprise-tenant-123
     route:
     - destination:
-        host: agentforge-api-enterprise
+        host: objecta-labs-api-enterprise
         port:
           number: 80
   - route:
     - destination:
-        host: agentforge-api
+        host: objecta-labs-api
         port:
           number: 80
 ```
@@ -922,7 +922,7 @@ export class TenantBackupService {
     
     // 3. Store in S3 with versioning
     await this.s3.upload({
-      Bucket: 'agentforge-backups',
+      Bucket: 'objecta-labs-backups',
       Key: `tenants/${tenantId}/backup-${Date.now()}.enc`,
       Body: encrypted,
       StorageClass: 'GLACIER', // Cost-effective for backups

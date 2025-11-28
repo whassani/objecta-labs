@@ -2,7 +2,7 @@
 
 ## Overview
 
-Build a visual workflow automation engine that allows users to create, manage, and execute automated workflows using AI agents, tools, and integrations - similar to Zapier, n8n, or Make.com but integrated with AgentForge's AI capabilities.
+Build a visual workflow automation engine that allows users to create, manage, and execute automated workflows using AI agents, tools, and integrations - similar to Zapier, n8n, or Make.com but integrated with ObjectaLabs's AI capabilities.
 
 ---
 

@@ -62,6 +62,8 @@ export default function ConversationPage() {
             setStreamingSources(data.sources)
           } else if (data.type === 'done') {
             setIsStreaming(false)
+            setStreamingMessage('')
+            setStreamingSources([])
             // Refresh to get the complete saved message
             queryClient.invalidateQueries({ queryKey: ['conversation', params.id] })
           } else if (data.type === 'error') {

@@ -5,12 +5,14 @@ import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
+import { ConversationMetrics } from './entities/conversation-metrics.entity';
 import { CreateConversationDto, SendMessageDto } from './dto/conversation.dto';
 import { AgentsService } from '../agents/agents.service';
 import { VectorStoreService } from '../knowledge-base/vector-store.service';
 import { AnalyticsService } from '../knowledge-base/analytics.service';
 import { ToolExecutorService } from '../tools/tool-executor.service';
 import { LangChainToolAdapter } from '../tools/langchain-tool.adapter';
+import { TokenCounterService } from './services/token-counter.service';
 
 @Injectable()
 export class ConversationsService {
@@ -21,10 +23,13 @@ export class ConversationsService {
     private conversationsRepository: Repository<Conversation>,
     @InjectRepository(Message)
     private messagesRepository: Repository<Message>,
+    @InjectRepository(ConversationMetrics)
+    private metricsRepository: Repository<ConversationMetrics>,
     private agentsService: AgentsService,
     private vectorStoreService: VectorStoreService,
     private analyticsService: AnalyticsService,
     private toolExecutorService: ToolExecutorService,
+    private tokenCounterService: TokenCounterService,
   ) {}
 
   async findAll(organizationId: string, userId: string, agentId?: string): Promise<Conversation[]> {
@@ -76,13 +81,11 @@ export class ConversationsService {
     // Get agent configuration
     const agent = await this.agentsService.findOne(conversation.agentId, organizationId);
 
-    // Get conversation history (last 10 messages for context)
-    const historyMessages = await this.messagesRepository.find({
-      where: { conversationId: conversation.id },
-      order: { createdAt: 'DESC' },
-      take: 10,
-    });
-    historyMessages.reverse(); // Oldest first
+    // Get token-aware conversation history
+    const historyMessages = await this.getTokenAwareHistory(
+      conversation.id,
+      agent.maxHistoryTokens || 3000
+    );
 
     // RAG: Search for relevant document chunks if agent has knowledge base enabled
     let contextFromDocs = '';
@@ -288,5 +291,214 @@ export class ConversationsService {
     if (result.affected === 0) {
       throw new NotFoundException('Conversation not found');
     }
+  }
+
+  /**
+   * Get token-aware conversation history
+   * Loads messages until token budget is reached
+   */
+  private async getTokenAwareHistory(
+    conversationId: string,
+    maxTokens: number = 3000
+  ): Promise<Message[]> {
+    const allMessages = await this.messagesRepository.find({
+      where: { conversationId },
+      order: { createdAt: 'ASC' }
+    });
+    
+    // Start from most recent and work backwards
+    const history: Message[] = [];
+    let tokenCount = 0;
+    
+    for (let i = allMessages.length - 1; i >= 0; i--) {
+      const msg = allMessages[i];
+      const msgTokens = this.tokenCounterService.estimateTokens(msg.content);
+      
+      if (tokenCount + msgTokens > maxTokens) {
+        break;
+      }
+      
+      history.unshift(msg);
+      tokenCount += msgTokens;
+    }
+    
+    this.logger.debug(
+      `Loaded ${history.length} messages using ${tokenCount}/${maxTokens} tokens`
+    );
+    
+    return history;
+  }
+
+  /**
+   * Get RAG context with token limit
+   */
+  private async getTokenAwareRagContext(
+    query: string,
+    organizationId: string,
+    maxTokens: number = 1500,
+    topK: number = 10,
+    threshold: number = 0.7
+  ): Promise<{ context: string; sources: any[]; tokensUsed: number }> {
+    try {
+      const results = await this.vectorStoreService.searchSimilar(
+        query,
+        organizationId,
+        topK,
+        threshold
+      );
+      
+      let context = '';
+      let tokenCount = 0;
+      const sources = [];
+      
+      for (const result of results) {
+        const chunkText = `[Source: ${result.metadata?.documentTitle || 'Document'}]\n${result.content}\n\n`;
+        const chunkTokens = this.tokenCounterService.estimateTokens(chunkText);
+        
+        if (tokenCount + chunkTokens > maxTokens) {
+          break;
+        }
+        
+        context += chunkText;
+        tokenCount += chunkTokens;
+        sources.push(result);
+      }
+      
+      this.logger.debug(
+        `Loaded ${sources.length} RAG sources using ${tokenCount}/${maxTokens} tokens`
+      );
+      
+      return { context, sources, tokensUsed: tokenCount };
+    } catch (error) {
+      this.logger.error('Error fetching RAG context:', error);
+      return { context: '', sources: [], tokensUsed: 0 };
+    }
+  }
+
+  /**
+   * Save token usage metrics
+   */
+  private async saveMetrics(data: {
+    conversationId: string;
+    messageId: string;
+    model: string;
+    promptTokens: number;
+    completionTokens: number;
+    systemTokens: number;
+    historyTokens: number;
+    ragTokens: number;
+    userMessageTokens: number;
+    historyMessagesCount: number;
+    ragDocumentsUsed: number;
+  }): Promise<void> {
+    try {
+      const totalTokens = data.promptTokens + data.completionTokens;
+      const cost = this.tokenCounterService.calculateCost({
+        promptTokens: data.promptTokens,
+        completionTokens: data.completionTokens,
+        model: data.model
+      });
+      
+      const metrics = this.metricsRepository.create({
+        conversationId: data.conversationId,
+        messageId: data.messageId,
+        model: data.model,
+        promptTokens: data.promptTokens,
+        completionTokens: data.completionTokens,
+        totalTokens,
+        systemTokens: data.systemTokens,
+        historyTokens: data.historyTokens,
+        ragTokens: data.ragTokens,
+        userMessageTokens: data.userMessageTokens,
+        cost,
+        historyMessagesCount: data.historyMessagesCount,
+        ragDocumentsUsed: data.ragDocumentsUsed,
+      });
+      
+      await this.metricsRepository.save(metrics);
+      
+      this.logger.log(
+        `Saved metrics: ${totalTokens} tokens, $${cost.toFixed(4)} cost`
+      );
+    } catch (error) {
+      this.logger.error('Error saving metrics:', error);
+    }
+  }
+
+  /**
+   * Get metrics for a conversation
+   */
+  async getConversationMetrics(
+    conversationId: string,
+    organizationId: string
+  ): Promise<{
+    totalTokens: number;
+    totalCost: number;
+    messageCount: number;
+    avgTokensPerMessage: number;
+    breakdown: any;
+  }> {
+    const conversation = await this.conversationsRepository.findOne({
+      where: { id: conversationId },
+    });
+    
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+    
+    const metrics = await this.metricsRepository.find({
+      where: { conversationId },
+      order: { createdAt: 'ASC' }
+    });
+    
+    const totalTokens = metrics.reduce((sum, m) => sum + m.totalTokens, 0);
+    const totalCost = metrics.reduce((sum, m) => sum + Number(m.cost), 0);
+    
+    return {
+      totalTokens,
+      totalCost,
+      messageCount: metrics.length,
+      avgTokensPerMessage: metrics.length > 0 ? Math.round(totalTokens / metrics.length) : 0,
+      breakdown: {
+        promptTokens: metrics.reduce((sum, m) => sum + m.promptTokens, 0),
+        completionTokens: metrics.reduce((sum, m) => sum + m.completionTokens, 0),
+        systemTokens: metrics.reduce((sum, m) => sum + m.systemTokens, 0),
+        historyTokens: metrics.reduce((sum, m) => sum + m.historyTokens, 0),
+        ragTokens: metrics.reduce((sum, m) => sum + m.ragTokens, 0),
+      }
+    };
+  }
+
+  /**
+   * Get total metrics for a user
+   */
+  async getUserTotalMetrics(userId: string, organizationId: string) {
+    const conversations = await this.conversationsRepository.find({
+      where: { userId },
+      select: ['id']
+    });
+    
+    const conversationIds = conversations.map(c => c.id);
+    
+    if (conversationIds.length === 0) {
+      return {
+        totalTokens: 0,
+        totalCost: 0,
+        conversationCount: 0,
+        messageCount: 0
+      };
+    }
+    
+    const metrics = await this.metricsRepository
+      .createQueryBuilder('metrics')
+      .where('metrics.conversation_id IN (:...ids)', { ids: conversationIds })
+      .getMany();
+    
+    return {
+      totalTokens: metrics.reduce((sum, m) => sum + m.totalTokens, 0),
+      totalCost: metrics.reduce((sum, m) => sum + Number(m.cost), 0),
+      conversationCount: conversations.length,
+      messageCount: metrics.length,
+    };
   }
 }

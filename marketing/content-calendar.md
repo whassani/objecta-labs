@@ -1,4 +1,4 @@
-# AgentForge Content Calendar
+# ObjectaLabs Content Calendar
 
 ## Content Strategy Overview
 
@@ -24,13 +24,13 @@
 ### Week 1: Foundation
 
 **Monday**: Blog Post
-- **Title**: "Introducing AgentForge: Build Custom AI Agents in Minutes"
+- **Title**: "Introducing ObjectaLabs: Build Custom AI Agents in Minutes"
 - **Type**: Product announcement
 - **Keywords**: AI agent platform, custom chatbot
 - **CTA**: Sign up for free
 
 **Tuesday**: Video
-- **Title**: "AgentForge Platform Tour - Quick Demo"
+- **Title**: "ObjectaLabs Platform Tour - Quick Demo"
 - **Length**: 5 minutes
 - **Platform**: YouTube + Twitter
 - **CTA**: Try it free
@@ -43,7 +43,7 @@
 
 **Thursday**: Social Thread
 - **Platform**: Twitter
-- **Topic**: Behind the scenes of building AgentForge
+- **Topic**: Behind the scenes of building ObjectaLabs
 - **Format**: 10-tweet thread
 
 **Friday**: Blog Post
@@ -101,7 +101,7 @@
 - Promote 3 days in advance
 
 **Friday**: Blog Post
-- **Title**: "AgentForge vs Traditional Chatbots: Key Differences"
+- **Title**: "ObjectaLabs vs Traditional Chatbots: Key Differences"
 - **Type**: Comparison
 - **Keywords**: AI vs chatbot, intelligent agents
 
@@ -155,9 +155,9 @@
 - Executive guide to AI agents
 
 **Week 8: Comparison & Alternatives**
-- AgentForge vs OpenAI GPT Builder
-- AgentForge vs Microsoft Copilot Studio
-- AgentForge vs Traditional Development
+- ObjectaLabs vs OpenAI GPT Builder
+- ObjectaLabs vs Microsoft Copilot Studio
+- ObjectaLabs vs Traditional Development
 - Alternatives analysis post
 
 ---
@@ -219,7 +219,7 @@
 ### Case Study Structure
 1. Customer background
 2. Challenge/problem
-3. Solution (how they used AgentForge)
+3. Solution (how they used ObjectaLabs)
 4. Implementation process
 5. Results (metrics)
 6. Key takeaways

@@ -1,8 +1,8 @@
-# AgentForge Legal & Compliance Checklist
+# ObjectaLabs Legal & Compliance Checklist
 
 ## Overview
 
-This document outlines the legal and compliance requirements for AgentForge. Compliance is critical for building trust and serving enterprise customers.
+This document outlines the legal and compliance requirements for ObjectaLabs. Compliance is critical for building trust and serving enterprise customers.
 
 ---
 
@@ -38,14 +38,14 @@ This document outlines the legal and compliance requirements for AgentForge. Com
 ### Trademarks
 - [ ] Search existing trademarks
 - [ ] File trademark application (USPTO)
-  - Word mark: "AgentForge"
+  - Word mark: "ObjectaLabs"
   - Logo mark
   - Taglines
 - [ ] International trademark registration (if applicable)
 - [ ] Monitor for infringement
 
 ### Domain Names
-- [ ] Register primary domain (agentforge.com)
+- [ ] Register primary domain (objecta-labs.com)
 - [ ] Register variations (.ai, .io, .co)
 - [ ] Register typo domains (defensive)
 - [ ] Set up brand monitoring

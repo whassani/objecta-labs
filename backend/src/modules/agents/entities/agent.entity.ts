@@ -38,6 +38,23 @@ export class Agent {
   @Column({ name: 'max_tokens', default: 2000 })
   maxTokens: number;
 
+  // Token budget settings
+  @Column({ name: 'max_context_tokens', default: 6000 })
+  maxContextTokens: number;
+
+  @Column({ name: 'max_history_tokens', default: 3000 })
+  maxHistoryTokens: number;
+
+  @Column({ name: 'max_rag_tokens', default: 1500 })
+  maxRagTokens: number;
+
+  // Summarization settings
+  @Column({ name: 'enable_summarization', default: false })
+  enableSummarization: boolean;
+
+  @Column({ name: 'summarize_threshold', default: 10 })
+  summarizeThreshold: number;
+
   @Column({ type: 'jsonb', default: '{}' })
   settings: any;
 

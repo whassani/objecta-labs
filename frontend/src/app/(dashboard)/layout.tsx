@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
+import { UserMenu } from '@/components/layout/user-menu'
 
 export default function DashboardLayout({
   children,
@@ -69,6 +70,7 @@ export default function DashboardLayout({
           </div>
         </main>
       </div>
+      <UserMenu />
     </div>
   )
 }

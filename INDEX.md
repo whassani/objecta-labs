@@ -1,4 +1,4 @@
-# AgentForge - Complete Documentation Index
+# ObjectaLabs - Complete Documentation Index
 
 ## 🎯 New Here? Start With These
 

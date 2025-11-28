@@ -1,8 +1,8 @@
-# AgentForge Technology Stack
+# ObjectaLabs Technology Stack
 
 ## Overview
 
-This document provides a detailed breakdown of all technologies used in AgentForge, rationale for choices, and alternatives considered.
+This document provides a detailed breakdown of all technologies used in ObjectaLabs, rationale for choices, and alternatives considered.
 
 ---
 

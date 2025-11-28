@@ -1,8 +1,8 @@
-# AgentForge Development Guide
+# ObjectaLabs Development Guide
 
 ## Getting Started
 
-This guide will help you set up your development environment and start building AgentForge.
+This guide will help you set up your development environment and start building ObjectaLabs.
 
 ## Prerequisites
 
@@ -30,8 +30,8 @@ This guide will help you set up your development environment and start building 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-org/agentforge.git
-cd agentforge
+git clone https://github.com/your-org/objecta-labs.git
+cd objecta-labs
 ```
 
 ### 2. Environment Setup
@@ -126,7 +126,7 @@ pnpm dev
 ## Project Structure
 
 ```
-agentforge/
+objecta-labs/
 ├── backend/                    # NestJS backend
 │   ├── src/
 │   │   ├── main.ts            # Application entry point
@@ -785,8 +785,8 @@ npm install
 ## Getting Help
 
 - **Slack**: #engineering channel
-- **Email**: dev@agentforge.com
-- **Documentation**: docs.agentforge.internal
+- **Email**: dev@objecta-labs.com
+- **Documentation**: docs.objecta-labs.internal
 - **Office Hours**: Tuesdays 2-3 PM
 
 ## Next Steps

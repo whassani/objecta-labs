@@ -32,7 +32,7 @@
 ### 1. Backup Current State
 - [ ] Backup PostgreSQL database
   ```bash
-  pg_dump -U postgres -d agentforge > backup_$(date +%Y%m%d).sql
+  pg_dump -U postgres -d objecta-labs > backup_$(date +%Y%m%d).sql
   ```
 - [ ] Document current Qdrant stats
   ```bash
@@ -169,7 +169,7 @@ For each organization/tenant:
 
 2. **Restore Database** (if needed)
    ```bash
-   psql -U postgres -d agentforge < backup_YYYYMMDD.sql
+   psql -U postgres -d objecta-labs < backup_YYYYMMDD.sql
    ```
 
 3. **Note:** Qdrant vectors are not in backup

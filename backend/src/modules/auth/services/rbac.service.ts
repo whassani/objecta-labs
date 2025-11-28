@@ -161,4 +161,97 @@ export class RbacService {
   async getAllRoles(): Promise<Role[]> {
     return this.rolesRepository.find({ order: { level: 'DESC' } });
   }
+
+  /**
+   * Create custom role
+   */
+  async createCustomRole(data: {
+    name: string;
+    displayName: string;
+    description?: string;
+    permissions: string[];
+    level?: number;
+  }): Promise<Role> {
+    const role = this.rolesRepository.create({
+      name: data.name,
+      displayName: data.displayName,
+      description: data.description,
+      permissions: data.permissions,
+      level: data.level || 0,
+      isSystem: false,
+      isDefault: false,
+    });
+
+    await this.rolesRepository.save(role);
+    this.logger.log(`Created custom role: ${role.name}`);
+
+    return role;
+  }
+
+  /**
+   * Update custom role
+   */
+  async updateCustomRole(
+    roleId: string,
+    data: {
+      displayName?: string;
+      description?: string;
+      permissions?: string[];
+      level?: number;
+    },
+  ): Promise<Role> {
+    const role = await this.rolesRepository.findOne({ where: { id: roleId } });
+
+    if (!role) {
+      throw new Error('Role not found');
+    }
+
+    if (role.isSystem) {
+      throw new Error('Cannot update system role');
+    }
+
+    if (data.displayName) role.displayName = data.displayName;
+    if (data.description !== undefined) role.description = data.description;
+    if (data.permissions) role.permissions = data.permissions;
+    if (data.level !== undefined) role.level = data.level;
+
+    await this.rolesRepository.save(role);
+    this.logger.log(`Updated custom role: ${role.name}`);
+
+    return role;
+  }
+
+  /**
+   * Delete custom role
+   */
+  async deleteCustomRole(roleId: string): Promise<void> {
+    const role = await this.rolesRepository.findOne({ where: { id: roleId } });
+
+    if (!role) {
+      throw new Error('Role not found');
+    }
+
+    if (role.isSystem) {
+      throw new Error('Cannot delete system role');
+    }
+
+    // Check if role is assigned to any users
+    const assignmentCount = await this.userRolesRepository.count({
+      where: { roleId },
+    });
+
+    if (assignmentCount > 0) {
+      throw new Error(`Cannot delete role with ${assignmentCount} active assignments`);
+    }
+
+    await this.rolesRepository.delete(roleId);
+    this.logger.log(`Deleted custom role: ${role.name}`);
+  }
+
+  /**
+   * Get role by ID
+   */
+  async getRoleById(roleId: string): Promise<Role | null> {
+    return this.rolesRepository.findOne({ where: { id: roleId } });
+  }
 }

@@ -1,4 +1,4 @@
-# AgentForge Pitch Deck Outline
+# ObjectaLabs Pitch Deck Outline
 
 ## Slide-by-Slide Guide for Investor Presentation
 
@@ -63,7 +63,7 @@
 
 ## Slide 4: Solution
 
-**Headline**: "AgentForge: The AI Agent Platform for Everyone"
+**Headline**: "ObjectaLabs: The AI Agent Platform for Everyone"
 
 **Key Features** (with icons):
 1. 🎨 **No-Code Builder**: Create agents without programming
@@ -232,7 +232,7 @@ Initial target segments
 
 **Competitive Matrix**:
 
-| Feature | AgentForge | OpenAI Builder | Enterprise Platforms | Basic Chatbots |
+| Feature | ObjectaLabs | OpenAI Builder | Enterprise Platforms | Basic Chatbots |
 |---------|-----------|----------------|---------------------|----------------|
 | No-code | ✅ | ⚠️ | ❌ | ✅ |
 | Multi-LLM | ✅ | ❌ | ⚠️ | ❌ |
@@ -370,9 +370,9 @@ Initial target segments
 **Vision**: "Every business will have custom AI agents that automate routine work, freeing humans for creative and strategic tasks."
 
 **Call to Action**:
-- Email: founders@agentforge.com
+- Email: founders@objecta-labs.com
 - Calendar link: [Book time]
-- Website: www.agentforge.com
+- Website: www.objecta-labs.com
 
 **Thank you**: "Questions?"
 
@@ -513,7 +513,7 @@ Initial target segments
 ## File Naming
 
 Use clear naming convention:
-- `AgentForge_Pitch_Deck_2024_v1.pdf`
-- `AgentForge_Pitch_Deck_[Investor_Name]_2024.pdf`
+- `ObjectaLabs_Pitch_Deck_2024_v1.pdf`
+- `ObjectaLabs_Pitch_Deck_[Investor_Name]_2024.pdf`
 
 Keep track of versions and customizations!

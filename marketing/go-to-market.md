@@ -1,8 +1,8 @@
-# AgentForge Go-to-Market Strategy
+# ObjectaLabs Go-to-Market Strategy
 
 ## Executive Summary
 
-AgentForge's go-to-market strategy focuses on a bottom-up, product-led growth approach initially, evolving to enterprise sales as we scale. We'll leverage content marketing, community building, and strategic partnerships to establish market presence.
+ObjectaLabs's go-to-market strategy focuses on a bottom-up, product-led growth approach initially, evolving to enterprise sales as we scale. We'll leverage content marketing, community building, and strategic partnerships to establish market presence.
 
 ---
 
@@ -91,7 +91,7 @@ AgentForge's go-to-market strategy focuses on a bottom-up, product-led growth ap
 
 **For** businesses that need AI automation
 **Who** want customized agents without coding
-**AgentForge** is an AI agent platform
+**ObjectaLabs** is an AI agent platform
 **That** enables creation, deployment, and management of intelligent agents
 **Unlike** rigid chatbot builders or complex AI frameworks
 **We** offer the perfect balance of power and simplicity
@@ -177,12 +177,12 @@ AgentForge's go-to-market strategy focuses on a bottom-up, product-led growth ap
 
 **Content Types**:
 - Ultimate guides (3,000+ words)
-- Comparison pages ("AgentForge vs X")
+- Comparison pages ("ObjectaLabs vs X")
 - Tool pages (calculators, generators)
 - Template libraries
 
 #### Video Content
-**YouTube Channel**: "AgentForge Academy"
+**YouTube Channel**: "ObjectaLabs Academy"
 - Tutorial videos (weekly)
 - Feature demos
 - Customer interviews
@@ -338,7 +338,7 @@ AgentForge's go-to-market strategy focuses on a bottom-up, product-led growth ap
 - Networking
 
 **Year 2+**: Host own conference
-- "AgentForge Summit"
+- "ObjectaLabs Summit"
 - Customer conference
 - Partner gathering
 

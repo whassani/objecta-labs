@@ -57,7 +57,7 @@ See the `/docs` folder and project markdown files for detailed documentation:
 ## 🏗️ Project Structure
 
 ```
-agentforge/
+objecta-labs/
 ├── backend/           # NestJS API
 │   ├── src/
 │   │   ├── modules/   # Feature modules
@@ -108,7 +108,7 @@ agentforge/
 
 ```bash
 # Create PostgreSQL database
-createdb agentforge
+createdb objecta-labs
 
 # Run migrations (auto with synchronize in dev)
 npm run start:dev
@@ -122,7 +122,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_USER=postgres
 DATABASE_PASSWORD=postgres
-DATABASE_NAME=agentforge
+DATABASE_NAME=objecta-labs
 JWT_SECRET=your-secret-key
 OPENAI_API_KEY=sk-...
 ```

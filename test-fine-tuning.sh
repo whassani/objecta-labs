@@ -28,7 +28,7 @@ fi
 echo ""
 echo "2️⃣  Database Migration"
 echo "Run this command to create fine-tuning tables:"
-echo -e "${YELLOW}psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql${NC}"
+echo -e "${YELLOW}psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql${NC}"
 echo ""
 read -p "Have you run the database migration? (y/n) " -n 1 -r
 echo

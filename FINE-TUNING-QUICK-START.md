@@ -15,7 +15,7 @@ The fine-tuning feature allows you to train custom AI models on your own data, i
 ### 1. Run Database Migration
 
 ```bash
-psql -d agentforge -f backend/src/migrations/create-fine-tuning-tables.sql
+psql -d objecta-labs -f backend/src/migrations/create-fine-tuning-tables.sql
 ```
 
 This creates 5 new tables:

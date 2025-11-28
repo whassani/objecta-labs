@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { agentsApi } from '@/lib/api'
+import { agentsApi, workspacesApi } from '@/lib/api'
 import Link from 'next/link'
 import { 
   PlusIcon, 
@@ -12,14 +12,21 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { Badge } from '@/components/ui/badge'
 
 export default function AgentsPage() {
   const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
+  const [filterWorkspace, setFilterWorkspace] = useState('')
 
   const { data: agents, isLoading } = useQuery({
     queryKey: ['agents'],
     queryFn: () => agentsApi.getAll().then(res => res.data),
+  })
+  
+  const { data: workspaces } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: () => workspacesApi.getAll().then(res => res.data),
   })
 
   const deleteMutation = useMutation({
@@ -33,10 +40,13 @@ export default function AgentsPage() {
     },
   })
 
-  const filteredAgents = agents?.filter((agent: any) =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredAgents = agents?.filter((agent: any) => {
+    const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesWorkspace = !filterWorkspace || agent.workspaceId === filterWorkspace || 
+      (filterWorkspace === 'none' && !agent.workspaceId)
+    return matchesSearch && matchesWorkspace
+  })
 
   return (
     <div className="space-y-6">
@@ -57,7 +67,7 @@ export default function AgentsPage() {
         </Link>
       </div>
 
-      {/* Search */}
+      {/* Search & Filter */}
       <div className="flex items-center space-x-4">
         <div className="flex-1">
           <input
@@ -68,6 +78,19 @@ export default function AgentsPage() {
             className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
           />
         </div>
+        <select
+          value={filterWorkspace}
+          onChange={(e) => setFilterWorkspace(e.target.value)}
+          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-600 focus:border-transparent"
+        >
+          <option value="">All Workspaces</option>
+          <option value="none">No Workspace</option>
+          {workspaces?.map((ws: any) => (
+            <option key={ws.id} value={ws.id}>
+              {ws.icon} {ws.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Agents Grid */}
@@ -129,9 +152,17 @@ export default function AgentsPage() {
               </p>
 
               <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
-                  {agent.model}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                    {agent.model}
+                  </span>
+                  {agent.workspaceId && workspaces && (
+                    <Badge variant="secondary" className="text-xs">
+                      {workspaces.find((ws: any) => ws.id === agent.workspaceId)?.icon}{' '}
+                      {workspaces.find((ws: any) => ws.id === agent.workspaceId)?.name}
+                    </Badge>
+                  )}
+                </div>
                 <span>{new Date(agent.createdAt).toLocaleDateString()}</span>
               </div>
             </div>

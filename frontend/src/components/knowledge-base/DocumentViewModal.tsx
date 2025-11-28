@@ -14,7 +14,9 @@ interface DocumentViewModalProps {
 
 export default function DocumentViewModal({ documentId, isOpen, onClose }: DocumentViewModalProps) {
   const [document, setDocument] = useState<any>(null)
+  const [chunks, setChunks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingChunks, setLoadingChunks] = useState(false)
   const [activeTab, setActiveTab] = useState<'content' | 'chunks' | 'metadata'>('content')
 
   useEffect(() => {
@@ -22,6 +24,12 @@ export default function DocumentViewModal({ documentId, isOpen, onClose }: Docum
       loadDocument()
     }
   }, [isOpen, documentId])
+
+  useEffect(() => {
+    if (activeTab === 'chunks' && documentId && chunks.length === 0) {
+      loadChunks()
+    }
+  }, [activeTab, documentId])
 
   const loadDocument = async () => {
     setLoading(true)
@@ -32,6 +40,18 @@ export default function DocumentViewModal({ documentId, isOpen, onClose }: Docum
       console.error('Failed to load document:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadChunks = async () => {
+    setLoadingChunks(true)
+    try {
+      const response = await api.get(`/knowledge-base/documents/${documentId}/chunks`)
+      setChunks(response.data)
+    } catch (error) {
+      console.error('Failed to load chunks:', error)
+    } finally {
+      setLoadingChunks(false)
     }
   }
 
@@ -172,25 +192,42 @@ export default function DocumentViewModal({ documentId, isOpen, onClose }: Docum
 
                       {activeTab === 'chunks' && (
                         <div className="space-y-4">
-                          {document.chunks?.map((chunk: any, index: number) => (
-                            <div
-                              key={chunk.id}
-                              className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
-                            >
-                              <div className="flex items-center gap-2 mb-2">
-                                <HashtagIcon className="w-4 h-4 text-gray-500" />
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  Chunk {index + 1}
-                                </span>
+                          {loadingChunks ? (
+                            <div className="flex items-center justify-center py-8">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                              <span className="ml-2 text-gray-600">Loading chunks...</span>
+                            </div>
+                          ) : chunks.length > 0 ? (
+                            chunks.map((chunk: any, index: number) => (
+                              <div
+                                key={chunk.id}
+                                className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <HashtagIcon className="w-4 h-4 text-gray-500" />
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      Chunk {index + 1}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs text-gray-500">
+                                    {chunk.content.length} characters
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+                                  {chunk.content}
+                                </p>
                               </div>
-                              <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
-                                {chunk.content}
+                            ))
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500">No chunks available</p>
+                              <p className="text-xs text-gray-400 mt-2">
+                                {document?.chunkCount > 0 
+                                  ? 'Chunks exist but failed to load'
+                                  : 'This document has not been chunked yet'}
                               </p>
                             </div>
-                          )) || (
-                            <p className="text-center text-gray-500 py-8">
-                              No chunks available
-                            </p>
                           )}
                         </div>
                       )}

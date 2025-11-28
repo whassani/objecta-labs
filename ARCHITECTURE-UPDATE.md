@@ -2,7 +2,7 @@
 
 ## Summary of Changes
 
-AgentForge architecture has been updated to reflect **multi-tenant SaaS** and **cloud-native** design.
+ObjectaLabs architecture has been updated to reflect **multi-tenant SaaS** and **cloud-native** design.
 
 ---
 
@@ -59,7 +59,7 @@ AgentForge architecture has been updated to reflect **multi-tenant SaaS** and **
 ├────────────────────────────────────────────────┤
 │                                                │
 │  🏢 Acme Corp          🏢 XYZ Inc              │
-│  (acme.agentforge)    (xyz.agentforge)         │
+│  (acme.objecta-labs)    (xyz.objecta-labs)         │
 │  org_id: uuid-1       org_id: uuid-2           │
 │                                                │
 │  ┌──────────┐         ┌──────────┐            │
@@ -142,10 +142,10 @@ const agents = await agentRepository.find({
 ### 3. Subdomain-Based Access
 
 **URL Structure:**
-- `acme-corp.agentforge.com` → Acme Corp's instance
-- `xyz-inc.agentforge.com` → XYZ Inc's instance
-- `app.agentforge.com` → Main login/signup
-- `admin.agentforge.com` → Admin panel
+- `acme-corp.objecta-labs.com` → Acme Corp's instance
+- `xyz-inc.objecta-labs.com` → XYZ Inc's instance
+- `app.objecta-labs.com` → Main login/signup
+- `admin.objecta-labs.com` → Admin panel
 
 ### 4. Resource Quotas
 
@@ -266,14 +266,14 @@ export class AgentsService {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: agentforge-api
+  name: objecta-labs-api
 spec:
   replicas: 3
   template:
     spec:
       containers:
       - name: api
-        image: agentforge/api:latest
+        image: objecta-labs/api:latest
         resources:
           requests:
             memory: "256Mi"
@@ -285,7 +285,7 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: agentforge-api-hpa
+  name: objecta-labs-api-hpa
 spec:
   minReplicas: 3
   maxReplicas: 50

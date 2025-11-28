@@ -7,6 +7,7 @@ import { User } from './entities/user.entity';
 import { Organization } from '../organizations/entities/organization.entity';
 import { RegisterDto } from './dto/auth.dto';
 import { RbacService } from './services/rbac.service';
+import { UserHelperService } from './services/user-helper.service';
 import { UserRole } from './enums/role.enum';
 
 @Injectable()
@@ -18,6 +19,7 @@ export class AuthService {
     private organizationsRepository: Repository<Organization>,
     private jwtService: JwtService,
     private rbacService: RbacService,
+    private userHelperService: UserHelperService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -53,7 +55,6 @@ export class AuthService {
       firstName: registerDto.firstName,
       lastName: registerDto.lastName,
       passwordHash: hashedPassword,
-      role: 'admin', // First user is admin
       organizationId: savedOrganization.id,
     });
 
@@ -111,7 +112,6 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       organizationId: user.organizationId,
-      role: user.role, // Legacy field, keep for backward compatibility
       roles: roles.map(r => r.name),
       permissions,
     };
@@ -120,7 +120,8 @@ export class AuthService {
   }
 
   private sanitizeUser(user: User) {
-    const { passwordHash, ...result } = user;
-    return result;
+    const { passwordHash, verificationToken, resetToken, ...result } = user;
+    // Use helper to ensure backward compatibility with firstName/lastName
+    return this.userHelperService.sanitizeUserResponse(result as User);
   }
 }
